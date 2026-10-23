@@ -77,8 +77,9 @@
   del rival (`STALL`, `updateStall`, `stallFoul`).
 - [x] 28. Power-up "arco gigante": agranda el arco del rival 6 s (cada arco tiene su
   ancho, `mouth(side)`, `bigGoal`).
-- [ ] 29. Canchas y clima en "Antes de jugar": normal, lluvia (se patina un poco) y en mal
-  estado (pozos que desvían y charcos que frenan, en espejo en las dos mitades).
+- [x] 29. Canchas y clima en "Antes de jugar" de los amistosos: normal, lluvia (se patina
+  un poco), en mal estado (pozos que desvían y charcos que frenan, en espejo) o al azar
+  (`PITCHES`, `PITCH`, `setupPitch`, `terrainBall`).
 
 ## Ideas para después
 - Controles táctiles para celular.

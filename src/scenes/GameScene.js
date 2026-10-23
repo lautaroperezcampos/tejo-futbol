@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import {
   GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R, GOAL_DEPTH,
   PLAYER_R, PLAYER_SPEED, KICKOFF_OFFSET, BALL_R, BALL, KICK, WIN_GOALS, GOAL_PAUSE,
-  KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX, STALL,
+  KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX, STALL, PITCH,
 } from '../config.js';
 import { makeTextures, kitTexture, SPRITE_SCALE } from '../art.js';
 import {
@@ -62,8 +62,14 @@ export default class GameScene extends Phaser.Scene {
     // league clock (MATCH_SECONDS).
     this.winGoals = data.goals ?? WIN_GOALS;
     this.minutes = !this.match && data.minutes ? data.minutes : null;
+    // Pitch (friendlies only): normal, rain or rough; "random" picks one of them now.
+    this.pitchChoice = this.match ? 'normal' : data.pitch ?? 'normal';
+    this.pitch = this.pitchChoice === 'random'
+      ? Phaser.Utils.Array.GetRandom(['normal', 'rain', 'rough'])
+      : this.pitchChoice;
     this.endButtons = null;
     this.stallText = null;
+    this.rainGfx = null;
     this.goldenGoal = false;
   }
 
@@ -173,6 +179,7 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.input.on('pointerdown', unlockAudio);
+    this.setupPitch();
     this.kickoff(Math.random() < 0.5 ? this.p1 : this.p2, true);
 
     // The menu music stops and the opening chant plays; when it's over the background
@@ -302,6 +309,149 @@ export default class GameScene extends Phaser.Scene {
 
   playerOn(side) {
     return this.p1.side === side ? this.p1 : this.p2;
+  }
+
+  // ---------- pitch: rain or in bad shape ----------
+
+  setupPitch() {
+    this.terrain = { holes: [], puddles: [] };
+    this.ball.hole = null;
+    if (this.pitch === 'rough') this.makeTerrain();
+    if (this.pitch === 'rain') {
+      // Darker sky over everything, and drops falling over the screen (fixed camera).
+      this.asUI(() => this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, PITCH.rainTint).setOrigin(0).setDepth(1.9));
+      this.rainGfx = this.asUI(() => this.add.graphics().setDepth(7));
+      this.drops = Array.from({ length: PITCH.rainDrops }, () => ({
+        x: Math.random() * (GAME_W + 200), y: Math.random() * GAME_H,
+        len: 14 + Math.random() * 14, speed: 900 + Math.random() * 500,
+      }));
+    }
+    const notice = { rain: '¡ESTÁ LLOVIENDO!', rough: '¡CANCHA EN MAL ESTADO!' }[this.pitch];
+    if (notice) this.time.delayedCall(300, () => this.shoutUI(notice, PALETTE.cyan));
+  }
+
+  // Holes and puddles in the bottom half, mirrored through the centre spot into the top
+  // half so both players get the same pitch. They keep away from the goals, the centre
+  // circle, the kickoff spots and each other.
+  makeTerrain() {
+    const placed = [];
+    const kickoffSpot = { x: CENTER_X, y: this.startY('bottom') };
+    const spot = (r) => {
+      for (let tries = 0; tries < 60; tries++) {
+        const x = Phaser.Math.Between(FIELD.left + 70, FIELD.right - 70);
+        const y = Phaser.Math.Between(MID_Y + 110, FIELD.bottom - 120);
+        const tooClose = [...placed, kickoffSpot, { x: CENTER_X, y: MID_Y }]
+          .some((o) => Math.hypot(o.x - x, o.y - y) < r + 90);
+        const nearGoal = y > FIELD.bottom - 170 && x > MOUTH_L - 70 && x < MOUTH_R + 70;
+        if (!tooClose && !nearGoal) return { x, y };
+      }
+      return null;
+    };
+    const mirror = (o) => ({ ...o, x: FIELD.left + FIELD.right - o.x, y: 2 * MID_Y - o.y });
+    for (const [kind, count, r] of [['holes', PITCH.holes, PITCH.holeR], ['puddles', PITCH.puddles, PITCH.puddleR]]) {
+      for (let i = 0; i < count; i++) {
+        const p = spot(r);
+        if (!p) continue;
+        const item = { ...p, r };
+        placed.push(item);
+        this.terrain[kind].push(item, mirror(item));
+      }
+    }
+
+    // Drawn once, on the grass (under players and the ball). First the whole pitch goes
+    // dry and brownish, then worn patches (the goalmouths and the centre are the most
+    // trodden), then the puddles and the holes on top.
+    const w = FIELD.right - FIELD.left;
+    const h = FIELD.bottom - FIELD.top;
+    const wash = this.add.graphics().setDepth(0.52);
+    wash.fillStyle(PITCH.dryTint, PITCH.dryAlpha);
+    wash.fillRoundedRect(FIELD.left, FIELD.top, w, h, CORNER_R);
+    const patch = (x, y, sx, sy) => this.add.image(x, y, 'dirt').setDepth(0.53)
+      .setScale(sx, sy).setAngle(Phaser.Math.Between(0, 359));
+    patch(CENTER_X, FIELD.top + 70, 1.6, 0.9);
+    patch(CENTER_X, FIELD.bottom - 70, 1.6, 0.9);
+    patch(CENTER_X, MID_Y, 1.2, 1.2);
+    for (let i = 0; i < PITCH.dirtPatches; i++) {
+      const x = Phaser.Math.Between(FIELD.left + 60, FIELD.right - 60);
+      const y = Phaser.Math.Between(MID_Y + 40, FIELD.bottom - 60);
+      const s = 0.6 + Math.random() * 0.7;
+      patch(x, y, s, s * 0.85);
+      patch(FIELD.left + FIELD.right - x, 2 * MID_Y - y, s, s * 0.85);
+    }
+
+    const g = this.add.graphics().setDepth(0.55);
+    for (const p of this.terrain.puddles) {
+      // Muddy edge, brown-grey water, a reflection of the sky and a ripple.
+      g.fillStyle(0x5b3a22, 0.7);
+      g.fillEllipse(p.x, p.y + 4, p.r * 2.6, p.r * 1.85);
+      g.fillStyle(0x6b5a3e, 1);
+      g.fillEllipse(p.x, p.y + 1, p.r * 2.35, p.r * 1.6);
+      g.fillStyle(0x7d98a6, 0.9);
+      g.fillEllipse(p.x, p.y, p.r * 2.1, p.r * 1.4);
+      g.fillStyle(0xffffff, 0.4);
+      g.fillEllipse(p.x - p.r * 0.35, p.y - p.r * 0.25, p.r * 0.9, p.r * 0.26);
+      g.lineStyle(2, 0xffffff, 0.3);
+      g.strokeEllipse(p.x + p.r * 0.3, p.y + p.r * 0.15, p.r * 0.7, p.r * 0.38);
+    }
+    // Holes: the art is drawn so its dark inside matches the hole's radius.
+    for (const o of this.terrain.holes) {
+      this.add.image(o.x, o.y, 'hole').setDepth(0.56).setScale(o.r / 44);
+    }
+  }
+
+  inPuddle(x, y) {
+    return this.terrain.puddles.some((p) => ((x - p.x) / (p.r * 1.15)) ** 2 + ((y - p.y) / (p.r * 0.78)) ** 2 < 1);
+  }
+
+  // Called on every ball sub-step: a hole knocks the ball off its line (once per hole it
+  // rolls into) and slows it a bit; a puddle drags it down while it's in it.
+  terrainBall(h) {
+    if (this.pitch !== 'rough') return;
+    const b = this.ball;
+    const hole = this.terrain.holes.find((o) => Math.hypot(b.x - o.x, b.y - o.y) < o.r);
+    if (hole && b.hole !== hole) {
+      const turn = (Math.random() < 0.5 ? -1 : 1) * PITCH.holeTurn * (0.6 + Math.random() * 0.4);
+      const cos = Math.cos(turn);
+      const sin = Math.sin(turn);
+      const vx = (b.vx * cos - b.vy * sin) * PITCH.holeSlow;
+      const vy = (b.vx * sin + b.vy * cos) * PITCH.holeSlow;
+      b.vx = vx;
+      b.vy = vy;
+      this.ballSquash = 1;
+      sfx.body();
+      this.dust.emit(b.x, b.y, {
+        count: 10, speed: [60, 180], life: [300, 600], size: [3, 6], colors: [0x7a4a2c, 0xa8794e, 0x5b3a22], drag: 3,
+      });
+    }
+    b.hole = hole ?? null;
+    if (this.inPuddle(b.x, b.y)) {
+      const speed = this.ballSpeed();
+      if (speed > PITCH.puddleMin) {
+        const k = Math.max(PITCH.puddleMin / speed, Math.exp(-PITCH.puddleDrag * h));
+        b.vx *= k;
+        b.vy *= k;
+      }
+      if (Math.random() < 0.3) {
+        this.dust.emit(b.x, b.y, { count: 1, speed: [40, 120], life: [250, 450], size: [3, 5], colors: [0xd8f4ff, 0x4fa3d9], alpha: 0.8 });
+      }
+    }
+  }
+
+  // Rain drops falling slantwise over the screen.
+  drawRain(realDt) {
+    if (!this.rainGfx) return;
+    const g = this.rainGfx;
+    g.clear();
+    g.lineStyle(2.5, 0xe2f2ff, 0.55);
+    for (const d of this.drops) {
+      d.y += d.speed * realDt;
+      d.x -= d.speed * 0.25 * realDt;
+      if (d.y > GAME_H) {
+        d.y = -d.len;
+        d.x = Math.random() * (GAME_W + 200);
+      }
+      g.lineBetween(d.x, d.y, d.x + d.len * 0.25, d.y - d.len);
+    }
   }
 
   // ---------- goals (each one can be big for a while: "arco gigante") ----------
@@ -466,7 +616,7 @@ export default class GameScene extends Phaser.Scene {
     const ballY = from
       ? this.startY(from.side) + (from.side === 'bottom' ? -1 : 1) * (PLAYER_R + BALL_R + 40)
       : MID_Y;
-    Object.assign(this.ball, { x: CENTER_X, y: ballY, vx: 0, vy: 0, lastTouch: null });
+    Object.assign(this.ball, { x: CENTER_X, y: ballY, vx: 0, vy: 0, lastTouch: null, hole: null });
     this.trail.length = 0;
     this.replay.clear();
     this.rally = 0;
@@ -692,7 +842,7 @@ export default class GameScene extends Phaser.Scene {
   rematch() {
     goTo(this, 'Game', {
       mode: this.mode, level: this.level, teams: this.teams, hazards: this.hazardsOn, p1Side: this.p1Side,
-      goals: this.winGoals, minutes: this.minutes,
+      goals: this.winGoals, minutes: this.minutes, pitch: this.pitchChoice,
     });
   }
 
@@ -1311,8 +1461,14 @@ export default class GameScene extends Phaser.Scene {
       p.vx *= HAZARDS.freezeSpeed;
       p.vy *= HAZARDS.freezeSpeed;
     }
-    if (this.playTime < p.slipUntil) {
-      const grip = 1 - Math.exp(-HAZARDS.soapGrip * dt);
+    if (this.pitch === 'rough' && this.inPuddle(p.x, p.y)) {
+      p.vx *= PITCH.puddlePlayer;
+      p.vy *= PITCH.puddlePlayer;
+    }
+    // Soap: very slippery for a while. Rain: a little slippery all match.
+    const soap = this.playTime < p.slipUntil;
+    if (soap || this.pitch === 'rain') {
+      const grip = 1 - Math.exp(-(soap ? HAZARDS.soapGrip : PITCH.rainGrip) * dt);
       p.mvx += (p.vx - p.mvx) * grip;
       p.mvy += (p.vy - p.mvy) * grip;
       p.vx = p.mvx;
@@ -1419,6 +1575,7 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < steps; i++) {
       b.x += b.vx * h;
       b.y += b.vy * h;
+      this.terrainBall(h);
       this.collideWalls();
       for (const post of this.posts()) this.collidePost(post);
       for (const p of [this.p1, this.p2]) this.collidePlayer(p);
@@ -1604,6 +1761,7 @@ export default class GameScene extends Phaser.Scene {
     const live = this.state === 'playing' || this.state === 'replay';
     const ratio = live ? this.speedRatio() : 0;
     this.drawBigGoals(now);
+    this.drawRain(realDt);
 
     this.shadows.clear();
     this.shadows.fillStyle(COLORS.ink, 0.3);

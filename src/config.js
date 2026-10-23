@@ -93,6 +93,32 @@ export const FRIENDLY_LENGTHS = [
 // From `warn` on, a countdown shows over the ball. On a foul the play restarts from the
 // other player's side, heading at the one who held it.
 export const STALL = { limit: 10000, warn: 5000 };
+
+// Pitches for friendlies ("Antes de jugar"): normal, rain or in bad shape; random picks
+// one of the three when the match starts.
+export const PITCHES = [
+  { id: 'normal', label: 'NORMAL' },
+  { id: 'rain', label: 'LLUVIA' },
+  { id: 'rough', label: 'EN MAL ESTADO' },
+  { id: 'random', label: 'AL AZAR' },
+];
+export const PITCH = {
+  rainGrip: 4, // like soap (HAZARDS.soapGrip) but much milder: players slide a little
+  rainDrops: 140,
+  rainTint: 0.18, // darker sky over the pitch
+  holes: 2, // per half (mirrored in the other half, so it's fair)
+  puddles: 2,
+  holeR: 24,
+  puddleR: 38,
+  holeTurn: 0.45, // radians a hole knocks the ball off its line (either way)
+  holeSlow: 0.85, // speed kept after a hole
+  puddleDrag: 8, // per second while the ball is in a puddle (crossing one about halves it)
+  puddleMin: 170, // px/s a puddle can slow the ball down to
+  puddlePlayer: 0.7, // players move slower through puddles
+  dryTint: 0x8a6a3a, // bad pitch: brown wash over the grass...
+  dryAlpha: 0.32,
+  dirtPatches: 5, // ...and worn dirt patches per half (mirrored)
+};
 export const GOAL_PAUSE = 1600; // ms celebrating before the kickoff
 export const KICKOFF_DELAY = 700; // ms the ball waits in the centre
 

@@ -28,6 +28,8 @@ export function makeTextures(scene) {
   canvasTexture(tex, 'ice', 64 * S, 64 * S, (ctx) => drawIce(ctx, 64 * S));
   canvasTexture(tex, 'soap', 64 * S, 64 * S, (ctx) => drawSoap(ctx, 64 * S));
   canvasTexture(tex, 'bigGoal', 64 * S, 64 * S, (ctx) => drawBigGoal(ctx, 64 * S));
+  canvasTexture(tex, 'hole', 180, 160, drawHole);
+  canvasTexture(tex, 'dirt', 200, 200, drawDirt);
   canvasTexture(tex, 'target', 100 * S, 100 * S, (ctx) => drawTarget(ctx, 100 * S));
 
   const bSize = (BALL_R + 3) * 2 * S;
@@ -448,6 +450,103 @@ function drawIce(ctx, size) {
 }
 
 // Pink bar of soap with bubbles.
+// Pothole for the bad pitch, seen from above at 2x: torn-up dirt around it, a dirt rim,
+// and a hole that gets darker toward the bottom so it reads as deep. Light comes from
+// the top-left, so the inner wall is lit at the bottom-right and in shadow at the top.
+function drawHole(ctx, w, h) {
+  const cx = w / 2;
+  const cy = h / 2 + 4;
+  const rand = rng(7);
+
+  // Torn-up dirt and dead grass around it (irregular blob).
+  for (let i = 0; i < 22; i++) {
+    const a = rand() * Math.PI * 2;
+    const d = 34 + rand() * 20;
+    circle(ctx, cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.8, 12 + rand() * 12);
+    ctx.fillStyle = rand() < 0.5 ? 'rgba(150, 110, 62, 0.75)' : 'rgba(128, 92, 50, 0.75)';
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 64, 52, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#8c6435';
+  ctx.fill();
+
+  // Rim.
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 52, 41, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#6a4523';
+  ctx.fill();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(29, 18, 64, 0.8)';
+  ctx.stroke();
+
+  // The hole: dark radial gradient, deepest a bit below the middle.
+  const deep = ctx.createRadialGradient(cx + 6, cy + 8, 4, cx, cy, 46);
+  deep.addColorStop(0, '#0a0503');
+  deep.addColorStop(0.55, '#24150a');
+  deep.addColorStop(1, '#4e3119');
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 44, 34, 0, 0, Math.PI * 2);
+  ctx.fillStyle = deep;
+  ctx.fill();
+
+  // Inner wall: shadow along the top, lit edge along the bottom-right.
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 40, 30, 0, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(196, 150, 96, 0.8)';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 41, 31, 0, Math.PI * 0.05, Math.PI * 0.75);
+  ctx.stroke();
+
+  // Pebbles on the rim and grass tufts sticking out of the dirt.
+  for (let i = 0; i < 9; i++) {
+    const a = rand() * Math.PI * 2;
+    circle(ctx, cx + Math.cos(a) * 58, cy + Math.sin(a) * 46, 3 + rand() * 3);
+    ctx.fillStyle = rand() < 0.5 ? '#c9b28a' : '#9d8a6a';
+    ctx.fill();
+  }
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 14; i++) {
+    const a = rand() * Math.PI * 2;
+    const x = cx + Math.cos(a) * (62 + rand() * 8);
+    const y = cy + Math.sin(a) * (50 + rand() * 6);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = rand() < 0.5 ? '#6fae2a' : '#8bbf3a';
+    for (const dx of [-3, 0, 3]) {
+      ctx.beginPath();
+      ctx.moveTo(x + dx, y + 4);
+      ctx.lineTo(x + dx * 1.6, y - 6 - rand() * 4);
+      ctx.stroke();
+    }
+  }
+}
+
+// Worn patch of dry grass and dirt (soft-edged, irregular) for the bad pitch.
+function drawDirt(ctx, w, h) {
+  const rand = rng(21);
+  for (let i = 0; i < 26; i++) {
+    const x = w / 2 + (rand() - 0.5) * w * 0.55;
+    const y = h / 2 + (rand() - 0.5) * h * 0.55;
+    const r = 18 + rand() * 26;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const tone = rand() < 0.5 ? '140, 100, 55' : '165, 128, 72';
+    g.addColorStop(0, `rgba(${tone}, 0.55)`);
+    g.addColorStop(1, `rgba(${tone}, 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // A few loose clods.
+  for (let i = 0; i < 10; i++) {
+    circle(ctx, w / 2 + (rand() - 0.5) * w * 0.5, h / 2 + (rand() - 0.5) * h * 0.5, 2 + rand() * 3);
+    ctx.fillStyle = 'rgba(95, 65, 35, 0.8)';
+    ctx.fill();
+  }
+}
+
 // "Arco gigante" power-up: a little goal (posts, crossbar, net) on a yellow badge with
 // arrows pointing out on both sides.
 function drawBigGoal(ctx, size) {

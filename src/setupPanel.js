@@ -61,7 +61,7 @@ export default class SetupPanel {
       parts.push(row.btn.container, row.btn.zone);
     });
     const hazardsY = top + 250 + (rows.length - 1) * 90;
-    parts.push(uiText(scene, cx, hazardsY + 48, 'Pegale con la pelota: hielo (congela), jabón (patina) o arco gigante (agranda el del rival)', 15, PALETTE.cyan));
+    parts.push(uiText(scene, cx, hazardsY + 48, 'Pegales con la pelota: hielo, jabón o arco gigante', 15, PALETTE.cyan));
 
     this.play = button(scene, cx, top + height - 60, 340, 70, '¡A JUGAR!', () => this.start(), 30);
     this.play.zone.on('pointerover', () => this.focus(rows.length));

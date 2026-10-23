@@ -214,3 +214,18 @@ dominio (porcentaje del tiempo que la pelota estuvo en la mitad del rival). El m
 número de cada fila va en amarillo. Abajo: la pelota más rápida, la racha de rebotes más
 larga y el tiempo jugado. Botones: "Jugar de nuevo" y "Menú" en los amistosos,
 "Continuar" en los torneos.
+
+## Canchas y clima (amistosos)
+En "Antes de jugar" de los amistosos se elige la **CANCHA** (queda recordada):
+- **Normal.**
+- **Lluvia:** la cancha se ve más oscura y cae lluvia; los jugadores **patinan un poco**
+  todo el partido (como el jabón pero mucho más suave).
+- **En mal estado:** el pasto se ve seco y marrón, con manchas de tierra (más gastado en
+  las áreas y en el medio), y hay **pozos** (cráteres de tierra) y **charcos** de agua
+  embarrada en la cancha, puestos en espejo en las
+  dos mitades para que sea justo. Un pozo **desvía** la pelota y la frena un poco; un
+  charco la **frena fuerte** mientras pasa por él, y los jugadores se mueven más lento
+  adentro de un charco.
+- **Al azar:** una de las tres, distinta en cada partido.
+Al empezar el partido aparece "¡ESTÁ LLOVIENDO!" o "¡CANCHA EN MAL ESTADO!". Los torneos
+se juegan siempre en cancha normal. Los números están en `PITCH` de `src/config.js`.
