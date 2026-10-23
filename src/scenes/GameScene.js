@@ -134,6 +134,9 @@ export default class GameScene extends Phaser.Scene {
     else this.bot = this.mode === 'bot' ? new Bot(this.p2, this.ball, this.p1, this.level) : null;
 
     this.score = { p1: 0, p2: 0 };
+    // Match stats for the end-of-match card. attack: ms the ball spent in the rival's half.
+    const blank = () => ({ shots: 0, saves: 0, kicks: 0, dashes: 0, powerups: 0, attack: 0 });
+    this.stats = { p1: blank(), p2: blank(), topSpeed: 1, longestRally: 0 };
     this.timeLeft = m ? MATCH_SECONDS * 1000 : null;
     this.paused = false;
     this.asUI(() => this.makeHud());
@@ -297,6 +300,14 @@ export default class GameScene extends Phaser.Scene {
     return this.p1.side === side ? this.p1 : this.p2;
   }
 
+  rivalOf(p) {
+    return p === this.p1 ? this.p2 : this.p1;
+  }
+
+  statFor(p) {
+    return this.stats[p === this.p1 ? 'p1' : 'p2'];
+  }
+
   // Dash ring around each kit in the score box: fills clockwise from the top, and pulses
   // yellow when the dash is ready.
   drawDashBars(now) {
@@ -384,6 +395,21 @@ export default class GameScene extends Phaser.Scene {
     });
   }
 
+  // Last seconds of a tournament match: a big see-through number in the middle of the
+  // pitch (red for the last 3) that pops and fades, without hiding the play.
+  flashSeconds(secs) {
+    const color = secs <= 3 ? PALETTE.p2 : PALETTE.titleFill;
+    const t = this.asUI(() => titleText(this, CENTER_X, MID_Y, String(secs), 170, color).setDepth(11).setAlpha(0.45).setScale(1.4));
+    this.tweens.add({ targets: t, scale: 1, alpha: 0, duration: 850, ease: 'Cubic.Out', onComplete: () => t.destroy() });
+  }
+
+  // A short notice in the middle of the screen (fixed, not in the zoomed world).
+  shoutUI(text, color) {
+    const t = this.asUI(() => titleText(this, CENTER_X, MID_Y - 150, text, 48, color).setDepth(12).setScale(0.3));
+    this.tweens.add({ targets: t, scale: 1, duration: 260, ease: 'Back.Out' });
+    this.tweens.add({ targets: t, alpha: 0, delay: 1300, duration: 300, onComplete: () => t.destroy() });
+  }
+
   countText(label, color) {
     const t = this.asUI(() => titleText(this, CENTER_X, MID_Y - 150, label, 120, color).setDepth(12).setScale(2).setAlpha(0));
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 220, ease: 'Back.Out' });
@@ -395,6 +421,8 @@ export default class GameScene extends Phaser.Scene {
     const key = scorer === this.p1 ? 'p1' : 'p2';
     const conceder = scorer === this.p1 ? this.p2 : this.p1;
     this.score[key]++;
+    // Every goal was a shot on target, even a lucky bounce the detection missed.
+    this.stats[key].shots = Math.max(this.stats[key].shots, this.score[key]);
     this.updateHud();
     this.popScore(key);
 
@@ -470,11 +498,121 @@ export default class GameScene extends Phaser.Scene {
     stopMatchMusic();
     sfx.win();
     const name = scorer === this.p1 ? this.p1Name : this.p2Name;
+    this.showEndCard({
+      title: '¡GANÓ!',
+      winner: scorer,
+      verdict: [`¡${name.toUpperCase()} GANA EL PARTIDO!`, PALETTE.yellow],
+      buttons: [
+        { title: 'JUGAR DE NUEVO', sub: 'Enter / R / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
+        { title: 'MENÚ', sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
+      ],
+    });
+  }
+
+  rematch() {
+    goTo(this, 'Game', { mode: this.mode, level: this.level, teams: this.teams, hazards: this.hazardsOn, p1Side: this.p1Side });
+  }
+
+  // Back to the league table / cup screen after a tournament match.
+  leaveMatch() {
+    goTo(this, this.match.back.scene, this.match.back.data);
+  }
+
+  // End-of-match card: both kits with the score (a trophy over the winner), a verdict
+  // line, the match stats side by side (the better number of each row in yellow) and
+  // the buttons. Keys keep working as before (see the 'over' state in update()).
+  //   winner: the winning player or null (draw); verdict: [text, colour]
+  //   buttons: [{ title, sub, color, drawIcon, action }]
+  showEndCard({ title, winner, verdict, buttons }) {
+    const cx = CENTER_X;
+    const w = 620;
+    const top = 140;
+    const st = this.stats;
+    const pct = (key) => {
+      const total = st.p1.attack + st.p2.attack;
+      return total ? Math.round((st[key].attack / total) * 100) : 50;
+    };
+    const rows = [
+      ['TIROS AL ARCO', (k) => st[k].shots],
+      ['ATAJADAS', (k) => st[k].saves],
+      ['PATADAS', (k) => st[k].kicks],
+      ['DASH USADOS', (k) => st[k].dashes],
+      ...(this.hazardsOn ? [['POWER-UPS GANADOS', (k) => st[k].powerups]] : []),
+      ['DOMINIO', (k) => pct(k), '%'],
+    ];
+    const rowsTop = top + 300;
+    const rowGap = 42;
+    const extrasY = rowsTop + rows.length * rowGap + 12;
+    const buttonsTop = extrasY + 92;
+    const height = buttonsTop - top + buttons.length * 92 + 10;
+
     this.asUI(() => {
-      this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.5).setOrigin(0).setDepth(9);
-      this.showBanner('¡GANÓ!', name.toUpperCase(), false);
-      uiText(this, CENTER_X, MID_Y + 150, `${this.score.p1}  -  ${this.score.p2}`, 40).setDepth(11);
-      uiText(this, CENTER_X, MID_Y + 220, 'R / A: JUGAR DE NUEVO   ·   ESC / B: MENÚ', 22, PALETTE.yellow).setDepth(11);
+      const parts = [this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.65).setOrigin(0)];
+      const card = this.add.graphics();
+      card.fillStyle(COLORS.ink, 1);
+      card.fillRoundedRect(cx - w / 2 - 6, top + 8, w + 12, height, 30);
+      card.fillStyle(COLORS.purpleDark, 1);
+      card.fillRoundedRect(cx - w / 2, top, w, height, 28);
+      card.fillStyle(COLORS.purple, 1);
+      card.fillRoundedRect(cx - w / 2, top, w, 250, { tl: 28, tr: 28, bl: 0, br: 0 });
+      card.fillStyle(0xffffff, 0.14);
+      card.fillRoundedRect(cx - w / 2 + 14, top + 12, w - 28, 44, 18);
+      card.lineStyle(6, COLORS.ink, 1);
+      card.strokeRoundedRect(cx - w / 2, top, w, height, 28);
+      card.lineBetween(cx - w / 2, top + 250, cx + w / 2, top + 250);
+      parts.push(card);
+
+      // Header: kits, names, score, a trophy over the winner and the verdict.
+      for (const [key, x] of [['p1', cx - 190], ['p2', cx + 190]]) {
+        const p = this[key];
+        const kit = key === 'p1' ? this.p1Kit : this.p2Kit;
+        const name = key === 'p1' ? this.p1Name : this.p2Name;
+        const img = this.add.image(x, top + 120, kitTexture(this, kit, key === 'p1' ? '10' : '9')).setScale(p === winner ? 0.85 : 0.7);
+        if (winner && p !== winner) img.setAlpha(0.75);
+        parts.push(img, uiText(this, x, top + 185, name.toUpperCase(), 16));
+        if (p === winner) {
+          const trophy = this.add.image(x, top + 52, 'trophy').setScale(0.17);
+          this.tweens.add({ targets: trophy, y: top + 44, angle: { from: -8, to: 8 }, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+          parts.push(trophy);
+        }
+      }
+      parts.push(titleText(this, cx, top + 112, `${this.score.p1}  -  ${this.score.p2}`, 64, PALETTE.yellow));
+      if (verdict) parts.push(uiText(this, cx, top + 222, verdict[0], 22, verdict[1]));
+
+      // Stats.
+      parts.push(uiText(this, cx, top + 272, 'ESTADÍSTICAS', 16, '#bfb3ff'));
+      rows.forEach(([label, value, unit = ''], i) => {
+        const y = rowsTop + i * rowGap;
+        const a = value('p1');
+        const b = value('p2');
+        const band = this.add.graphics();
+        band.fillStyle(0xffffff, i % 2 ? 0 : 0.06);
+        band.fillRoundedRect(cx - w / 2 + 24, y - rowGap / 2 + 3, w - 48, rowGap - 6, 10);
+        parts.push(
+          band,
+          uiText(this, cx, y, label, 16, '#d9d3f5'),
+          titleText(this, cx - 210, y, `${a}${unit}`, 26, a > b ? PALETTE.yellow : PALETTE.titleFill),
+          titleText(this, cx + 210, y, `${b}${unit}`, 26, b > a ? PALETTE.yellow : PALETTE.titleFill),
+        );
+      });
+      const secs = Math.round(this.playTime / 1000);
+      const duration = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+      parts.push(
+        uiText(this, cx, extrasY + 10, `PELOTA MÁS RÁPIDA: x${st.topSpeed.toFixed(1)}   ·   MAYOR RACHA: ${st.longestRally} REBOTES`, 15, PALETTE.cyan),
+        uiText(this, cx, extrasY + 38, `TIEMPO JUGADO: ${duration}`, 15, PALETTE.cyan),
+      );
+
+      // Buttons (the first one is highlighted: it's what Enter / A does).
+      buttons.forEach((b, i) => {
+        const btn = iconButton(this, cx, buttonsTop + 40 + i * 92, w - 120, 78, b, () => {
+          if (!this.leaving) b.action();
+        });
+        btn.setActive(i === 0);
+        parts.push(btn.container, btn.zone);
+      });
+
+      const layer = this.add.container(0, 0, parts).setDepth(30).setAlpha(0);
+      this.tweens.add({ targets: layer, alpha: 1, duration: 250 });
     });
   }
 
@@ -519,11 +657,15 @@ export default class GameScene extends Phaser.Scene {
     } else if (p1 > p2) verdict = ['¡GANASTE!  ·  +3 PUNTOS', PALETTE.yellow];
     else if (p1 < p2) verdict = ['PERDISTE  ·  0 PUNTOS', '#ff9aa3'];
     if (p1 > p2) sfx.win();
-    this.asUI(() => {
-      this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.5).setOrigin(0).setDepth(9);
-      this.showBanner(title, `${this.p1Name} ${p1} - ${p2} ${this.p2Name}`, false);
-      uiText(this, CENTER_X, MID_Y + 160, verdict[0], 34, verdict[1]).setDepth(11);
-      uiText(this, CENTER_X, MID_Y + 230, 'ENTER / A: CONTINUAR', 22).setDepth(11);
+    let winner = null;
+    if (p1 !== p2) winner = p1 > p2 ? this.p1 : this.p2;
+    this.showEndCard({
+      title,
+      winner,
+      verdict,
+      buttons: [
+        { title: 'CONTINUAR', sub: 'Enter / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.leaveMatch() },
+      ],
     });
   }
 
@@ -708,6 +850,7 @@ export default class GameScene extends Phaser.Scene {
   // Counts every bounce of the rally and celebrates every 10.
   touch() {
     this.rally++;
+    this.stats.longestRally = Math.max(this.stats.longestRally, this.rally);
     if (this.rally % 10 === 0) this.shout('rally', `¡${this.rally} REBOTES!`, PALETTE.cyan, 0, 28);
   }
 
@@ -778,11 +921,11 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.state === 'over') {
       if (this.match) {
-        if (pressed(k.enter) || pressed(k.space) || padPressed(BTN.A, BTN.START)) goTo(this, this.match.back.scene, this.match.back.data);
+        if (pressed(k.enter) || pressed(k.space) || padPressed(BTN.A, BTN.START)) this.leaveMatch();
       } else if (pressed(k.esc) || padPressed(BTN.B, BTN.START)) {
         goTo(this, 'Menu');
-      } else if (pressed(k.r) || padPressed(BTN.A)) {
-        goTo(this, 'Game', { mode: this.mode, level: this.level, teams: this.teams, hazards: this.hazardsOn, p1Side: this.p1Side });
+      } else if (pressed(k.r) || pressed(k.enter) || padPressed(BTN.A)) {
+        this.rematch();
       }
       return;
     }
@@ -829,8 +972,14 @@ export default class GameScene extends Phaser.Scene {
       this.timeLeft -= delta * scale;
       const after = Math.ceil(this.timeLeft / 1000);
       if (after !== before && after <= 10 && after > 0) {
-        sfx.tick();
-        this.tweens.add({ targets: this.clockText, scale: 1.25, duration: 90, yoyo: true });
+        // Last 10 seconds: a beep each second and the number flashes in the middle.
+        sfx.clockBeep(after);
+        this.tweens.add({ targets: this.clockText, scale: 1.35, duration: 90, yoyo: true });
+        this.flashSeconds(after);
+      } else if (before > 60 && after <= 60) {
+        sfx.oneMinute();
+        this.tweens.add({ targets: this.clockText, scale: 1.35, duration: 120, yoyo: true, repeat: 1 });
+        this.shoutUI('¡QUEDA 1 MINUTO!', PALETTE.yellow);
       }
       this.updateClock();
       if (this.timeLeft <= 0) {
@@ -880,6 +1029,11 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.state === 'playing') this.playTime += dt * 1000;
+    if (this.state === 'playing') {
+      // Whoever has the ball in the rival's half is attacking.
+      const attacker = this.playerOn(this.ball.y < MID_Y ? 'bottom' : 'top');
+      this.statFor(attacker).attack += dt * 1000;
+    }
     this.updateDash(dt);
     for (const p of [this.p1, this.p2]) this.applyStatus(p, dt);
     for (const p of [this.p1, this.p2]) this.movePlayer(p, dt);
@@ -936,6 +1090,7 @@ export default class GameScene extends Phaser.Scene {
         p.dash = 0;
         p.squash = 0.8;
         sfx.dash();
+        this.statFor(p).dashes++;
         this.cameras.main.shake(80, 0.003);
         this.dust.emit(p.x - p.dashDir.x * PLAYER_R, p.y - p.dashDir.y * PLAYER_R, {
           count: 8, speed: [60, 160], angle: Phaser.Math.RadToDeg(Math.atan2(-p.dashDir.y, -p.dashDir.x)), spread: 70,
@@ -1038,6 +1193,8 @@ export default class GameScene extends Phaser.Scene {
       b.y = p.y + ny * (PLAYER_R + BALL_R + 0.5);
     }
     p.lastKick = time;
+    this.statFor(p).kicks++;
+    if (headingIntoGoal(b, b.vx, b.vy, this.rivalOf(p).side)) this.statFor(p).shots++;
     p.armedUntil = 0;
     p.squash = 1;
     b.lastTouch = p;
@@ -1054,7 +1211,10 @@ export default class GameScene extends Phaser.Scene {
       this.hitstop = 45 + 70 * Math.max(ratio, 0.6);
       this.shout('zap', dashing ? '¡SUPER ZAPATAZO!' : '¡ZAPATAZO!', PALETTE.yellow);
     }
-    if (wasShot) this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
+    if (wasShot) {
+      this.statFor(p).saves++;
+      this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
+    }
     this.touch();
   }
 
@@ -1166,10 +1326,14 @@ export default class GameScene extends Phaser.Scene {
       b.vy = rvy - 2 * dot * ny + p.vy;
       this.setBallSpeed(this.ballSpeed() * (this.botCfg(p)?.bodyDamp ?? BALL.bodyDamp));
       b.lastTouch = p;
+      // A body touch that turns the ball toward the rival's goal also counts as a shot.
+      const rivalSide = this.rivalOf(p).side;
+      if (headingIntoGoal(b, b.vx, b.vy, rivalSide) && !headingIntoGoal(b, preVx, preVy, rivalSide)) this.statFor(p).shots++;
       sfx.body();
       p.squash = Math.max(p.squash, 0.4 + 0.6 * preRatio);
       if (preRatio > 0.5) this.hitstop = Math.max(this.hitstop, 40);
       if (headingIntoGoal(b, preVx, preVy, p.side) && !headingIntoGoal(b, b.vx, b.vy, p.side)) {
+        this.statFor(p).saves++;
         this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
       }
       this.touch();
@@ -1376,6 +1540,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateCamera(realDt);
 
     if (this.state === 'playing') this.speedText.setText(`x${(speed / BALL.baseSpeed).toFixed(1)}`);
+    if (this.state === 'playing') this.stats.topSpeed = Math.max(this.stats.topSpeed, speed / BALL.baseSpeed);
   }
 
   // Gentle zoom that follows the ball as it speeds up; punches in on goals and slow

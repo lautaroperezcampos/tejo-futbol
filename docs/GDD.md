@@ -24,8 +24,10 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   Vélez, Argentinos Juniors, Platense, Defensa y Justicia, Belgrano, Tigre, Banfield y
   Atlético Tucumán.
 - Todos contra todos a una rueda: 19 fechas. Cada equipo es local 9 o 10 veces.
-- Partidos de **90 segundos**; se puede empatar. Los últimos 10 segundos el reloj se pone
-  rojo y suena un tic-tac. El reloj se frena durante el festejo de cada gol.
+- Partidos de **90 segundos**; se puede empatar. Cuando queda 1 minuto suena un silbato
+  doble y aparece "¡QUEDA 1 MINUTO!". Los últimos 10 segundos el reloj se pone rojo,
+  suena un pitido por segundo (más agudo en los últimos 3) y el número aparece grande y
+  transparente en el medio. El reloj se frena durante el festejo de cada gol.
 - Puntos: 3 por ganar, 1 por empatar (para los dos), 0 por perder.
 - Tabla: Pts, PJ, G, E, P, GF, GC, DG. Desempate: diferencia de gol, después goles a favor.
 - Cada fecha jugás tu partido; los otros 9 se simulan según la fuerza de cada equipo.
@@ -192,3 +194,12 @@ Cuatro niveles que suben de a escalones parejos:
    última elección.
 4. Partido: marcador arriba.
 5. Fin: muestra quién ganó y deja jugar de nuevo o volver al menú.
+
+## Fin del partido
+Al terminar cualquier partido aparece una tarjeta con las camisetas de los dos, el
+resultado (trofeo arriba del ganador), cómo terminó y las **estadísticas** de cada uno:
+tiros al arco, atajadas, patadas, dash usados, power-ups ganados (si estaban activados) y
+dominio (porcentaje del tiempo que la pelota estuvo en la mitad del rival). El mejor
+número de cada fila va en amarillo. Abajo: la pelota más rápida, la racha de rebotes más
+larga y el tiempo jugado. Botones: "Jugar de nuevo" y "Menú" en los amistosos,
+"Continuar" en los torneos.

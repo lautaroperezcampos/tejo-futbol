@@ -144,6 +144,10 @@ export const sfx = {
   // Quiet under the recorded goal shout (music.js).
   goal: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, { type: 'triangle', volume: 0.07, delay: i * 0.09 })),
   tick: () => tone(1200, 0.05, { type: 'square', volume: 0.08 }),
+  // Match clock: a beep every second in the last 10 (higher and longer in the last 3),
+  // and a double whistle when one minute is left.
+  clockBeep: (secs) => tone(secs <= 3 ? 1320 : 990, secs <= 3 ? 0.16 : 0.09, { type: 'square', volume: secs <= 3 ? 0.13 : 0.1 }),
+  oneMinute: () => [0, 0.2].forEach((delay) => tone(2500, 0.15, { type: 'sine', volume: 0.14, slideTo: 2300, delay })),
   // Referee whistle: two short trills and a long one.
   whistle: () => [0, 0.22, 0.44].forEach((delay, i) => tone(2600, i === 2 ? 0.55 : 0.16, { type: 'sine', volume: 0.12, slideTo: 2350, delay })),
   win: () => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, { type: 'square', volume: 0.09, delay: i * 0.13 })),

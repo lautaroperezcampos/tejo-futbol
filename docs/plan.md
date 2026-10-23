@@ -68,6 +68,8 @@
   en 5 s. En el 1 vs 1 se elige antes de jugar de qué lado va el jugador 1.
 - [x] 24. El proyecto pasa a https://github.com/lautaroperezcampos/tejo-futbol, conectado
   directo a Vercel (ya no hace falta el workflow de GitHub Actions para publicar).
+- [x] 25. Reloj: aviso con silbato al quedar 1 minuto y pitido + número grande en los
+  últimos 10 segundos. Tarjeta de fin de partido con estadísticas (`showEndCard`).
 
 ## Ideas para después
 - Controles táctiles para celular.

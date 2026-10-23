@@ -109,6 +109,7 @@ export default class Hazards {
     this.remove(item, true);
     const s = this.scene;
     owner.squash = 0.6;
+    s.statFor(owner).powerups++;
     this.shatter(item);
 
     // Now the player knows how it works: no more hints, in this match or the next ones.
