@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import {
   GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R,
   PLAYER_R, PLAYER_SPEED, KICKOFF_OFFSET, BALL_R, BALL, KICK, WIN_GOALS, GOAL_PAUSE,
-  KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX,
+  KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX, STALL,
 } from '../config.js';
 import { makeTextures, kitTexture, SPRITE_SCALE } from '../art.js';
 import {
@@ -67,6 +67,7 @@ export default class GameScene extends Phaser.Scene {
     this.winGoals = data.goals ?? WIN_GOALS;
     this.minutes = !this.match && data.minutes ? data.minutes : null;
     this.endButtons = null;
+    this.stallText = null;
     this.goldenGoal = false;
   }
 
@@ -360,8 +361,12 @@ export default class GameScene extends Phaser.Scene {
   // The first kickoff of a match gets a full "3, 2, 1, ¡YA!" countdown.
   // Both players start every kickoff (the first one and after each goal) with a full
   // dash bar.
-  kickoff(receiver, countdown = false) {
+  // `from`: after a stalling foul the ball starts in front of that player (the one who
+  // didn't hold it) instead of the centre, and the power-ups on the pitch stay.
+  kickoff(receiver, countdown = false, from = null) {
     this.state = 'kickoff';
+    this.stall = { side: null, ms: 0 };
+    this.stallText?.setVisible(false);
     for (const p of [this.p1, this.p2]) {
       p.x = CENTER_X;
       p.y = this.startY(p.side);
@@ -373,9 +378,12 @@ export default class GameScene extends Phaser.Scene {
       p.frozenUntil = p.slipUntil = 0;
       p.mvx = p.mvy = 0;
     }
-    this.hazards?.reset(this.playTime);
+    if (!from) this.hazards?.reset(this.playTime);
     // lastTouch: the player who last kicked or touched the ball (power-ups go to them).
-    Object.assign(this.ball, { x: CENTER_X, y: MID_Y, vx: 0, vy: 0, lastTouch: null });
+    const ballY = from
+      ? this.startY(from.side) + (from.side === 'bottom' ? -1 : 1) * (PLAYER_R + BALL_R + 40)
+      : MID_Y;
+    Object.assign(this.ball, { x: CENTER_X, y: ballY, vx: 0, vy: 0, lastTouch: null });
     this.trail.length = 0;
     this.replay.clear();
     this.rally = 0;
@@ -416,6 +424,44 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 0, delay: 1300, duration: 300, onComplete: () => t.destroy() });
   }
 
+  // Anti-stalling: counts how long the ball stays in one half. From STALL.warn a
+  // countdown follows the ball; at STALL.limit the one keeping it there gets a foul.
+  updateStall(dt) {
+    const side = this.ball.y > MID_Y ? 'bottom' : 'top';
+    if (side !== this.stall.side) {
+      this.stall = { side, ms: 0 };
+      this.stallText?.setVisible(false);
+      return;
+    }
+    this.stall.ms += dt * 1000;
+    const left = STALL.limit - this.stall.ms;
+    if (left <= 0) {
+      this.stallFoul(this.playerOn(side));
+      return;
+    }
+    if (this.stall.ms < STALL.warn) return;
+    if (!this.stallText) this.stallText = titleText(this, 0, 0, '', 34).setDepth(6);
+    const secs = Math.ceil(left / 1000);
+    if (this.stallText.text !== String(secs)) {
+      this.stallText.setText(String(secs)).setScale(1.5);
+      this.tweens.add({ targets: this.stallText, scale: 1, duration: 200, ease: 'Back.Out' });
+      sfx.tick();
+    }
+    this.stallText.setColor(secs <= 2 ? PALETTE.p2 : PALETTE.yellow);
+    this.stallText.setPosition(this.ball.x, this.ball.y - 38).setVisible(true);
+  }
+
+  // The ball stayed too long in `holder`'s half: whistle, "¡DEMORA!", and the play
+  // restarts from the rival's side, heading at the holder.
+  stallFoul(holder) {
+    this.stallText?.setVisible(false);
+    sfx.whistle();
+    this.shoutUI('¡DEMORA!', PALETTE.p2);
+    holder.mood = 'dizzy';
+    holder.moodUntil = this.time.now + 1500;
+    this.kickoff(holder, false, this.rivalOf(holder));
+  }
+
   countText(label, color) {
     const t = this.asUI(() => titleText(this, CENTER_X, MID_Y - 150, label, 120, color).setDepth(12).setScale(2).setAlpha(0));
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 220, ease: 'Back.Out' });
@@ -424,6 +470,7 @@ export default class GameScene extends Phaser.Scene {
 
   goal(scorer) {
     this.state = 'goal';
+    this.stallText?.setVisible(false);
     const key = scorer === this.p1 ? 'p1' : 'p2';
     const conceder = scorer === this.p1 ? this.p2 : this.p1;
     this.score[key]++;
@@ -1091,6 +1138,7 @@ export default class GameScene extends Phaser.Scene {
       // Whoever has the ball in the rival's half is attacking.
       const attacker = this.playerOn(this.ball.y < MID_Y ? 'bottom' : 'top');
       this.statFor(attacker).attack += dt * 1000;
+      this.updateStall(dt);
     }
     this.updateDash(dt);
     for (const p of [this.p1, this.p2]) this.applyStatus(p, dt);

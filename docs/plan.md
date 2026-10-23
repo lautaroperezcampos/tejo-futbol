@@ -73,6 +73,11 @@
 - [x] 26. Amistosos: elegir el largo del partido (a 3/5/7/10 goles o 1/2/3/5 minutos,
   `FRIENDLY_LENGTHS`); con reloj, si terminan empatados sigue con gol de oro. La tarjeta
   del final se maneja con flechas / cruz / palanca (y el mouse).
+- [x] 27. Demora: 10 s seguidos con la pelota en una mitad es falta y se saca del lado
+  del rival (`STALL`, `updateStall`, `stallFoul`).
+- [ ] 28. Power-up "arco gigante": agranda el arco del rival unos 6 s.
+- [ ] 29. Canchas y clima en "Antes de jugar": normal, lluvia (se patina un poco) y en mal
+  estado (pozos que desvían y charcos que frenan, en espejo en las dos mitades).
 
 ## Ideas para después
 - Controles táctiles para celular.

@@ -130,6 +130,11 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Después de cada gol la pelota vuelve a la velocidad normal y sale del centro hacia
   el jugador que **recibió** el gol.
 - Al inicio del partido la pelota sale hacia un jugador al azar.
+- **Demora:** la pelota no puede quedarse más de **10 segundos seguidos** en la mitad de un
+  jugador. A los 5 segundos aparece una cuenta arriba de la pelota (en rojo los últimos
+  2). Si llega a 0, suena el silbato, sale "¡DEMORA!" y la pelota se saca **desde el lado
+  del rival** (delante de él) hacia el que la retuvo. La cuenta vuelve a cero cada vez que
+  la pelota cruza la mitad de la cancha. Vale en todos los modos.
 - En el 1 vs 1 contra un amigo, en "Antes de jugar" **eligen de qué lado juega el
   jugador 1** (abajo o arriba; el jugador 2 va al otro). No cambia durante el partido y
   queda recordado para el siguiente. Las teclas de cada uno no dependen del lado. Contra

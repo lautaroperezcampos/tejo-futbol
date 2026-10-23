@@ -86,6 +86,10 @@ export const FRIENDLY_LENGTHS = [
   { goals: 3 }, { goals: 5 }, { goals: 7 }, { goals: 10 },
   { minutes: 1 }, { minutes: 2 }, { minutes: 3 }, { minutes: 5 },
 ];
+// Anti-stalling: the ball may stay this long in one half before it's a foul ("¡DEMORA!").
+// From `warn` on, a countdown shows over the ball. On a foul the play restarts from the
+// other player's side, heading at the one who held it.
+export const STALL = { limit: 10000, warn: 5000 };
 export const GOAL_PAUSE = 1600; // ms celebrating before the kickoff
 export const KICKOFF_DELAY = 700; // ms the ball waits in the centre
 
