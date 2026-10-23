@@ -71,7 +71,8 @@
 - [x] 25. Reloj: aviso con silbato al quedar 1 minuto y pitido + número grande en los
   últimos 10 segundos. Tarjeta de fin de partido con estadísticas (`showEndCard`).
 - [x] 26. Amistosos: elegir el largo del partido (a 3/5/7/10 goles o 1/2/3/5 minutos,
-  `FRIENDLY_LENGTHS`); con reloj puede terminar en empate.
+  `FRIENDLY_LENGTHS`); con reloj, si terminan empatados sigue con gol de oro. La tarjeta
+  del final se maneja con flechas / cruz / palanca (y el mouse).
 
 ## Ideas para después
 - Controles táctiles para celular.

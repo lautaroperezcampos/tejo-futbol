@@ -66,6 +66,7 @@ export default class GameScene extends Phaser.Scene {
     // league clock (MATCH_SECONDS).
     this.winGoals = data.goals ?? WIN_GOALS;
     this.minutes = !this.match && data.minutes ? data.minutes : null;
+    this.endButtons = null;
     this.goldenGoal = false;
   }
 
@@ -474,7 +475,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.time.delayedCall(GOAL_PAUSE, () => this.startReplay(() => {
       if (won) this.showWin(scorer);
-      else if (golden) this.endLeagueMatch();
+      else if (golden && this.match) this.endLeagueMatch();
+      else if (golden) this.showWin(scorer);
       else this.kickoff(conceder);
     }));
   }
@@ -514,14 +516,14 @@ export default class GameScene extends Phaser.Scene {
 
   friendlyButtons() {
     return [
-      { title: 'JUGAR DE NUEVO', sub: 'Enter / R / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
+      { title: 'JUGAR DE NUEVO', sub: 'R', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
       { title: 'MENÚ', sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
     ];
   }
 
-  // Final whistle of a friendly played to the clock: the one ahead wins; a tie is a draw.
+  // Final whistle of a friendly played to the clock with someone ahead (a tie goes to
+  // golden goal instead): the one ahead wins.
   endTimedFriendly() {
-    this.state = 'over';
     stopChant();
     this.timeLeft = 0;
     this.updateClock();
@@ -529,22 +531,32 @@ export default class GameScene extends Phaser.Scene {
     this.trailGfx.clear();
     this.speedText.setText('x1.0');
     sfx.whistle();
-    const { p1, p2 } = this.score;
-    if (p1 !== p2) {
-      this.showWin(p1 > p2 ? this.p1 : this.p2);
-      return;
-    }
-    stopMatchMusic();
-    for (const p of [this.p1, this.p2]) {
-      p.mood = 'normal';
-      p.moodUntil = 0;
-    }
-    this.showEndCard({
-      title: '¡EMPATE!',
-      winner: null,
-      verdict: ['NADIE SE LLEVÓ EL PARTIDO', PALETTE.white],
-      buttons: this.friendlyButtons(),
-    });
+    this.showWin(this.score.p1 > this.score.p2 ? this.p1 : this.p2);
+  }
+
+  endFocus(i, silent = false) {
+    if (!silent && i !== this.endIndex) sfx.select();
+    this.endIndex = i;
+    this.endButtons.forEach((btn, j) => btn.setActive(j === i));
+  }
+
+  endAction(i) {
+    if (this.leaving) return;
+    this.endFocus(i, true);
+    this.endButtons[i].action();
+  }
+
+  // Up/down for the pause menu and the end card: arrows, W / S, the cross, or the stick
+  // (one step each time it's pushed). Returns -1, 1 or 0.
+  menuUpDown(pressed, padPressed, pads) {
+    const k = this.keys;
+    const stickY = pads.map((p) => p.move.y).find((y) => Math.abs(y) > 0.5) ?? 0;
+    const stickDir = Math.sign(stickY);
+    const stickMoved = stickDir !== 0 && stickDir !== this.menuStick;
+    this.menuStick = stickDir;
+    if (pressed(k.up) || pressed(k.w) || padPressed(BTN.UP) || (stickMoved && stickDir < 0)) return -1;
+    if (pressed(k.down) || pressed(k.s) || padPressed(BTN.DOWN) || (stickMoved && stickDir > 0)) return 1;
+    return 0;
   }
 
   rematch() {
@@ -643,14 +655,16 @@ export default class GameScene extends Phaser.Scene {
         uiText(this, cx, extrasY + 38, `TIEMPO JUGADO: ${duration}`, 15, PALETTE.cyan),
       );
 
-      // Buttons (the first one is highlighted: it's what Enter / A does).
-      buttons.forEach((b, i) => {
-        const btn = iconButton(this, cx, buttonsTop + 40 + i * 92, w - 120, 78, b, () => {
-          if (!this.leaving) b.action();
-        });
-        btn.setActive(i === 0);
+      // Buttons: up/down (keys, cross or stick) or the mouse pick one, Enter / A presses it.
+      this.endButtons = buttons.map((b, i) => {
+        const btn = iconButton(this, cx, buttonsTop + 40 + i * 92, w - 120, 78, b, () => this.endAction(i));
+        btn.zone.on('pointerover', () => this.endFocus(i));
+        btn.action = b.action;
         parts.push(btn.container, btn.zone);
+        return btn;
       });
+      this.endIndex = 0;
+      this.endFocus(0, true);
 
       const layer = this.add.container(0, 0, parts).setDepth(30).setAlpha(0);
       this.tweens.add({ targets: layer, alpha: 1, duration: 250 });
@@ -961,28 +975,27 @@ export default class GameScene extends Phaser.Scene {
     const padPressed = (...btns) => pads.some((p) => btns.some((b) => p.pressed(b)));
 
     if (this.state === 'over') {
-      if (this.match) {
-        if (pressed(k.enter) || pressed(k.space) || padPressed(BTN.A, BTN.START)) this.leaveMatch();
-      } else if (pressed(k.esc) || padPressed(BTN.B, BTN.START)) {
-        goTo(this, 'Menu');
-      } else if (pressed(k.r) || pressed(k.enter) || padPressed(BTN.A)) {
-        this.rematch();
-      }
+      // End card: move between its buttons and press one; R and Esc are shortcuts too.
+      if (!this.endButtons || this.leaving) return;
+      const n = this.endButtons.length;
+      const dir = this.menuUpDown(pressed, padPressed, pads);
+      if (dir) this.endFocus((this.endIndex + dir + n) % n);
+      else if (pressed(k.enter) || pressed(k.space) || padPressed(BTN.A)) this.endAction(this.endIndex);
+      else if (this.match) {
+        if (padPressed(BTN.START)) this.leaveMatch();
+      } else if (pressed(k.esc) || padPressed(BTN.B, BTN.START)) goTo(this, 'Menu');
+      else if (pressed(k.r)) this.rematch();
       return;
     }
     if (this.paused) {
       // Pause menu: up/down (keys, cross or stick) pick a button, Enter / A presses it.
-      const stickY = pads.map((p) => p.move.y).find((y) => Math.abs(y) > 0.5) ?? 0;
-      const stickDir = Math.sign(stickY);
-      const stickMoved = stickDir !== 0 && stickDir !== this.pauseStick;
-      this.pauseStick = stickDir;
       const n = this.pauseButtons.length;
+      const dir = this.menuUpDown(pressed, padPressed, pads);
       if (pressed(k.c) || padPressed(BTN.Y)) openOptions(this);
       else if (pressed(k.esc) || padPressed(BTN.START, BTN.B)) this.togglePause();
       else if (pressed(k.enter) || pressed(k.space) || padPressed(BTN.A)) this.pauseAction(this.pauseIndex);
       else if (pressed(k.q) || padPressed(BTN.SELECT)) this.quitFromPause();
-      else if (pressed(k.up) || pressed(k.w) || padPressed(BTN.UP) || (stickMoved && stickDir < 0)) this.pauseFocus((this.pauseIndex + n - 1) % n);
-      else if (pressed(k.down) || pressed(k.s) || padPressed(BTN.DOWN) || (stickMoved && stickDir > 0)) this.pauseFocus((this.pauseIndex + 1) % n);
+      else if (dir) this.pauseFocus((this.pauseIndex + dir + n) % n);
       return;
     }
     if (pressed(k.esc) || padPressed(BTN.START)) {
@@ -1023,15 +1036,15 @@ export default class GameScene extends Phaser.Scene {
         this.shoutUI('¡QUEDA 1 MINUTO!', PALETTE.yellow);
       }
       this.updateClock();
-      if (this.timeLeft <= 0 && !this.match) {
-        this.endTimedFriendly();
-        return;
-      }
       if (this.timeLeft <= 0) {
-        if (this.match.knockout && this.score.p1 === this.score.p2) {
+        // Tied at the end of a timed friendly or a cup knockout: golden goal. Otherwise
+        // the match is over (a league match can end in a draw).
+        const tied = this.score.p1 === this.score.p2;
+        if (tied && (!this.match || this.match.knockout)) {
           this.startGoldenGoal();
         } else {
-          this.endLeagueMatch();
+          if (this.match) this.endLeagueMatch();
+          else this.endTimedFriendly();
           return;
         }
       }

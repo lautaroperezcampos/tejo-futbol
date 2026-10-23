@@ -126,7 +126,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - En los amistosos (contra la IA o contra un amigo) se elige en "Antes de jugar" cómo es
   el partido: **a 3, 5, 7 o 10 goles** (gana el primero en llegar; por defecto 5) o **de
   1, 2, 3 o 5 minutos** con reloj (gana el que va arriba cuando termina; si están iguales
-  es empate). La elección queda recordada. Los torneos son siempre de 90 segundos.
+  sigue con **gol de oro**: el próximo gol gana). La elección queda recordada. Los torneos son siempre de 90 segundos.
 - Después de cada gol la pelota vuelve a la velocidad normal y sale del centro hacia
   el jugador que **recibió** el gol.
 - Al inicio del partido la pelota sale hacia un jugador al azar.
