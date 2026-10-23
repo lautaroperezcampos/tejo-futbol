@@ -66,6 +66,8 @@
 - [x] 23. Marcador en un recuadro en la esquina de arriba a la izquierda (ya no tapa el
   arco), con la bolita de cada jugador y un aro que se llena con el dash. Dash se carga
   en 5 s. En el 1 vs 1 se elige antes de jugar de qué lado va el jugador 1.
+- [x] 24. El proyecto pasa a https://github.com/lautaroperezcampos/tejo-futbol, conectado
+  directo a Vercel (ya no hace falta el workflow de GitHub Actions para publicar).
 
 ## Ideas para después
 - Controles táctiles para celular.

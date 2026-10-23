@@ -31,7 +31,8 @@ npm run dev
 Después abrí http://localhost:5173
 
 ## Publicar cambios
-El repositorio está conectado a Vercel: **cada push a `main` se publica solo** en
+El repositorio (https://github.com/lautaroperezcampos/tejo-futbol) está conectado a
+Vercel con la integración de Git: **cada push a `main` se publica solo** en
 https://tejo-futbol.vercel.app (Vercel corre `npm run build` y sirve `dist`).
 ```bash
 git add -A
