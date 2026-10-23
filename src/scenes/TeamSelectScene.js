@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H, COLORS, PALETTE } from '../config.js';
+import { GAME_W, GAME_H, COLORS, PALETTE, WIN_GOALS, FRIENDLY_LENGTHS } from '../config.js';
 import { makeTextures, kitTexture } from '../art.js';
 import {
   titleText, uiText, button, goTo, wipeIn, playMenuMusic, optionsButton, sportsCard, levelBadge, levelOf, starsOf,
@@ -253,23 +253,35 @@ export default class TeamSelectScene extends Phaser.Scene {
     const sideRow = vsBot ? [] : [{
       key: 'p1Side', label: 'JUGADOR 1', values: sides, index: this.registry.get('p1Side') === 'top' ? 1 : 0,
     }];
+    // How long the match is: first to N goals, or a number of minutes (remembered too).
+    const lengths = FRIENDLY_LENGTHS.map((l) => ({
+      id: l, label: l.goals ? `A ${l.goals} GOLES` : `${l.minutes} ${l.minutes === 1 ? 'MINUTO' : 'MINUTOS'}`,
+    }));
+    const savedLength = this.registry.get('friendlyLength');
+    const lengthRow = {
+      key: 'length', label: 'PARTIDO', values: lengths,
+      index: Math.max(0, FRIENDLY_LENGTHS.findIndex((l) => l === savedLength || (!savedLength && l.goals === WIN_GOALS))),
+    };
     this.openSetup({
-      extraRows: sideRow,
+      extraRows: [lengthRow, ...sideRow],
       icons: [
         { texture: kitTexture(this, kits.home, '10'), scale: 0.55 },
         { texture: kitTexture(this, kits.away, '9'), scale: 0.55 },
       ],
-      subtitle: `${t1.short} vs ${t2.short}${vsBot ? ' (bot)' : ''}  ·  gana el primero a 5 goles`,
+      subtitle: `${t1.short} vs ${t2.short}${vsBot ? ' (bot)' : ''}`,
       difficulty: vsBot ? this.friendly.level : null,
       rememberBotLevel: true,
-      onStart: ({ difficulty, hazards, p1Side }) => {
+      onStart: ({ difficulty, hazards, p1Side, length }) => {
         if (p1Side) this.registry.set('p1Side', p1Side);
+        this.registry.set('friendlyLength', length);
         goTo(this, 'Game', {
           mode: this.friendly.mode,
           level: difficulty ?? this.friendly.level,
           teams: { p1: t1.id, p2: t2.id },
           hazards,
           p1Side,
+          goals: length.goals,
+          minutes: length.minutes,
         });
       },
       // Back to choosing player 2's team.

@@ -70,8 +70,9 @@
   directo a Vercel (ya no hace falta el workflow de GitHub Actions para publicar).
 - [x] 25. Reloj: aviso con silbato al quedar 1 minuto y pitido + número grande en los
   últimos 10 segundos. Tarjeta de fin de partido con estadísticas (`showEndCard`).
+- [x] 26. Amistosos: elegir el largo del partido (a 3/5/7/10 goles o 1/2/3/5 minutos,
+  `FRIENDLY_LENGTHS`); con reloj puede terminar en empate.
 
 ## Ideas para después
 - Controles táctiles para celular.
-- Elegir cantidad de goles.
 - Efectos visuales (estela de la pelota cuando va rápida).

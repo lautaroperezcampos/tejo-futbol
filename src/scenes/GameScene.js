@@ -62,6 +62,10 @@ export default class GameScene extends Phaser.Scene {
     // Which end player 1 defends (1 vs 1 lets them pick it before the match); player 2 gets
     // the other one. Against the AI and in tournaments the player is always at the bottom.
     this.p1Side = this.mode === 'pvp' && data.p1Side === 'top' ? 'top' : 'bottom';
+    // Friendlies: first to `goals`, or `minutes` on the clock. Tournaments always use the
+    // league clock (MATCH_SECONDS).
+    this.winGoals = data.goals ?? WIN_GOALS;
+    this.minutes = !this.match && data.minutes ? data.minutes : null;
     this.goldenGoal = false;
   }
 
@@ -137,7 +141,8 @@ export default class GameScene extends Phaser.Scene {
     // Match stats for the end-of-match card. attack: ms the ball spent in the rival's half.
     const blank = () => ({ shots: 0, saves: 0, kicks: 0, dashes: 0, powerups: 0, attack: 0 });
     this.stats = { p1: blank(), p2: blank(), topSpeed: 1, longestRally: 0 };
-    this.timeLeft = m ? MATCH_SECONDS * 1000 : null;
+    if (m) this.timeLeft = MATCH_SECONDS * 1000;
+    else this.timeLeft = this.minutes ? this.minutes * 60000 : null;
     this.paused = false;
     this.asUI(() => this.makeHud());
     // Options button (gear) in the bottom corner, above the pause screen: it pauses the
@@ -247,8 +252,8 @@ export default class GameScene extends Phaser.Scene {
   // top-right corner.
   makeHud() {
     const { x, y, w, rowH, clockW, kitScale } = SCORE_BOX;
-    const m = this.match;
-    const boxW = w + (m ? clockW : 0);
+    const timed = this.timeLeft !== null;
+    const boxW = w + (timed ? clockW : 0);
     const boxH = rowH * 2 + 12;
     const g = this.add.graphics().setDepth(8);
     g.fillStyle(COLORS.ink, 1);
@@ -274,7 +279,7 @@ export default class GameScene extends Phaser.Scene {
     // The dash rings, redrawn every frame.
     this.dashBars = this.add.graphics().setDepth(9.5);
 
-    if (m) {
+    if (timed) {
       g.lineStyle(2, 0xffffff, 0.15);
       g.lineBetween(x + w, y + 10, x + w, y + boxH - 10);
       this.clockText = this.add.text(x + w + clockW / 2, y + boxH / 2, '', { fontFamily: FONTS.title, fontSize: '24px', color: PALETTE.white })
@@ -451,9 +456,10 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.flash(150, 255, 255, 255);
 
     const name = scorer === this.p1 ? this.p1Name : this.p2Name;
-    // Tournament matches are played against the clock instead of to WIN_GOALS; a golden
+    // Tournament matches and timed friendlies are played against the clock instead of to
+    // a number of goals; a golden
     // goal ends the match.
-    const won = !this.match && (this.score.p1 >= WIN_GOALS || this.score.p2 >= WIN_GOALS);
+    const won = this.timeLeft === null && (this.score.p1 >= this.winGoals || this.score.p2 >= this.winGoals);
     const golden = this.goldenGoal;
 
     sfx.goal();
@@ -502,15 +508,50 @@ export default class GameScene extends Phaser.Scene {
       title: '¡GANÓ!',
       winner: scorer,
       verdict: [`¡${name.toUpperCase()} GANA EL PARTIDO!`, PALETTE.yellow],
-      buttons: [
-        { title: 'JUGAR DE NUEVO', sub: 'Enter / R / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
-        { title: 'MENÚ', sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
-      ],
+      buttons: this.friendlyButtons(),
+    });
+  }
+
+  friendlyButtons() {
+    return [
+      { title: 'JUGAR DE NUEVO', sub: 'Enter / R / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
+      { title: 'MENÚ', sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
+    ];
+  }
+
+  // Final whistle of a friendly played to the clock: the one ahead wins; a tie is a draw.
+  endTimedFriendly() {
+    this.state = 'over';
+    stopChant();
+    this.timeLeft = 0;
+    this.updateClock();
+    this.ball.vx = this.ball.vy = 0;
+    this.trailGfx.clear();
+    this.speedText.setText('x1.0');
+    sfx.whistle();
+    const { p1, p2 } = this.score;
+    if (p1 !== p2) {
+      this.showWin(p1 > p2 ? this.p1 : this.p2);
+      return;
+    }
+    stopMatchMusic();
+    for (const p of [this.p1, this.p2]) {
+      p.mood = 'normal';
+      p.moodUntil = 0;
+    }
+    this.showEndCard({
+      title: '¡EMPATE!',
+      winner: null,
+      verdict: ['NADIE SE LLEVÓ EL PARTIDO', PALETTE.white],
+      buttons: this.friendlyButtons(),
     });
   }
 
   rematch() {
-    goTo(this, 'Game', { mode: this.mode, level: this.level, teams: this.teams, hazards: this.hazardsOn, p1Side: this.p1Side });
+    goTo(this, 'Game', {
+      mode: this.mode, level: this.level, teams: this.teams, hazards: this.hazardsOn, p1Side: this.p1Side,
+      goals: this.winGoals, minutes: this.minutes,
+    });
   }
 
   // Back to the league table / cup screen after a tournament match.
@@ -526,7 +567,7 @@ export default class GameScene extends Phaser.Scene {
   showEndCard({ title, winner, verdict, buttons }) {
     const cx = CENTER_X;
     const w = 620;
-    const top = 140;
+    const top = 170;
     const st = this.stats;
     const pct = (key) => {
       const total = st.p1.attack + st.p2.attack;
@@ -560,7 +601,7 @@ export default class GameScene extends Phaser.Scene {
       card.lineStyle(6, COLORS.ink, 1);
       card.strokeRoundedRect(cx - w / 2, top, w, height, 28);
       card.lineBetween(cx - w / 2, top + 250, cx + w / 2, top + 250);
-      parts.push(card);
+      parts.push(card, titleText(this, cx, top - 10, title, 76).setAngle(-4));
 
       // Header: kits, names, score, a trophy over the winner and the verdict.
       for (const [key, x] of [['p1', cx - 190], ['p2', cx + 190]]) {
@@ -967,7 +1008,7 @@ export default class GameScene extends Phaser.Scene {
 
     const scale = time < this.slowmoUntil ? SLOWMO : 1;
 
-    if (this.match && this.state === 'playing' && !this.goldenGoal) {
+    if (this.timeLeft !== null && this.state === 'playing' && !this.goldenGoal) {
       const before = Math.ceil(this.timeLeft / 1000);
       this.timeLeft -= delta * scale;
       const after = Math.ceil(this.timeLeft / 1000);
@@ -982,6 +1023,10 @@ export default class GameScene extends Phaser.Scene {
         this.shoutUI('¡QUEDA 1 MINUTO!', PALETTE.yellow);
       }
       this.updateClock();
+      if (this.timeLeft <= 0 && !this.match) {
+        this.endTimedFriendly();
+        return;
+      }
       if (this.timeLeft <= 0) {
         if (this.match.knockout && this.score.p1 === this.score.p2) {
           this.startGoldenGoal();
@@ -1060,7 +1105,7 @@ export default class GameScene extends Phaser.Scene {
     for (const side of ['top', 'bottom']) {
       const attacker = this.playerOn(side === 'top' ? 'bottom' : 'top') === this.p1 ? 'p1' : 'p2';
       if (!headingIntoGoal(b, b.vx, b.vy, side, 0.2)) continue;
-      const decisive = this.match ? this.timeLeft < 6000 : this.score[attacker] === WIN_GOALS - 1;
+      const decisive = this.timeLeft !== null ? this.timeLeft < 6000 : this.score[attacker] === this.winGoals - 1;
       if (decisive) {
         this.slowmo(650);
         this.cooldowns.drama = now + 2000;

@@ -78,7 +78,14 @@ export const AUDIO = {
 // height, width of the clock column (tournaments), kit size and dash ring radius.
 export const SCORE_BOX = { x: 16, y: 12, w: 132, rowH: 56, clockW: 72, kitScale: 0.3, ringR: 24 };
 
-export const WIN_GOALS = 5;
+export const WIN_GOALS = 5; // default length of a friendly
+
+// Friendly lengths to pick from in "Antes de jugar": first to N goals, or N minutes on the
+// clock (a draw is possible then).
+export const FRIENDLY_LENGTHS = [
+  { goals: 3 }, { goals: 5 }, { goals: 7 }, { goals: 10 },
+  { minutes: 1 }, { minutes: 2 }, { minutes: 3 }, { minutes: 5 },
+];
 export const GOAL_PAUSE = 1600; // ms celebrating before the kickoff
 export const KICKOFF_DELAY = 700; // ms the ball waits in the centre
 
