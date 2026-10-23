@@ -88,7 +88,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Si te eliminan, podés simular el resto para ver quién sale campeón.
 - Se guarda sola y se puede abandonar para empezar otra.
 
-## Hielo y jabón (opcional)
+## Power-ups: hielo, jabón y arco gigante (opcional)
 - Se activa en la pantalla "ANTES DE JUGAR" (después de elegir los equipos en 1 vs 1 o
   contra el bot, y al crear la liga, junto con la dificultad).
 - Cada 6 a 12 segundos de juego aparece en una mitad al azar un **cubo de hielo** o un
@@ -106,6 +106,9 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   ("¡PLOP!"), con un mini freno y temblor de cámara, y sale volando al rival.
 - **Hielo:** el rival queda congelado 2 s: no se puede mover ni usar el dash.
 - **Jabón:** el rival patina 3 s con muy poco agarre: le cuesta mucho frenar y doblar.
+- **Arco gigante:** el arco del rival se agranda 6 s (de 200 a 320 px de ancho): los palos
+  se abren con una animación, el marco se pone amarillo y titila antes de volver. Si hay
+  gol mientras está grande, en el saque los dos arcos vuelven a la normalidad.
 - Se borran en cada saque.
 
 ## Controles

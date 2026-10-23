@@ -83,7 +83,7 @@ export default class LeagueScene extends Phaser.Scene {
     const round = Math.min(this.league.round + 1, totalRounds(this.league));
     ribbon(this, CX, 58, 'LIGA ARGENTINA', 380, 54).setAngle(-2);
     const level = levelLabel(this.league.difficulty ?? 'medium')
-      + (this.league.hazards ? '  ·  HIELO Y JABÓN' : '');
+      + (this.league.hazards ? '  ·  POWER-UPS' : '');
     const subtitle = isFinished(this.league)
       ? `TORNEO TERMINADO  ·  ${level}`
       : `FECHA ${round} DE ${totalRounds(this.league)}  ·  ${this.user.short}  ·  ${level}`;

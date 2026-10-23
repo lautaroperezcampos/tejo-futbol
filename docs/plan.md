@@ -75,7 +75,8 @@
   del final se maneja con flechas / cruz / palanca (y el mouse).
 - [x] 27. Demora: 10 s seguidos con la pelota en una mitad es falta y se saca del lado
   del rival (`STALL`, `updateStall`, `stallFoul`).
-- [ ] 28. Power-up "arco gigante": agranda el arco del rival unos 6 s.
+- [x] 28. Power-up "arco gigante": agranda el arco del rival 6 s (cada arco tiene su
+  ancho, `mouth(side)`, `bigGoal`).
 - [ ] 29. Canchas y clima en "Antes de jugar": normal, lluvia (se patina un poco) y en mal
   estado (pozos que desvían y charcos que frenan, en espejo en las dos mitades).
 

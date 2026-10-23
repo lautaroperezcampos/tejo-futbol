@@ -187,12 +187,13 @@ export function drawCrowd(g, fans, celebration, now) {
 
 // True if the ball, moving with (vx, vy), is heading into the goal defended by `side`
 // within `horizon` seconds (ignoring bounces).
-export function headingIntoGoal(ball, vx, vy, side, horizon = 0.6) {
+// `mouth`: the goal's posts ({ l, r }); a big goal ("arco gigante") is wider than usual.
+export function headingIntoGoal(ball, vx, vy, side, horizon = 0.6, mouth = { l: MOUTH_L, r: MOUTH_R }) {
   const goalY = side === 'bottom' ? FIELD.bottom : FIELD.top;
   const towards = side === 'bottom' ? vy > 0 : vy < 0;
   if (!towards) return false;
   const t = (goalY - ball.y) / vy;
   if (t < 0 || t > horizon) return false;
   const x = ball.x + vx * t;
-  return x > MOUTH_L - 8 && x < MOUTH_R + 8;
+  return x > mouth.l - 8 && x < mouth.r + 8;
 }

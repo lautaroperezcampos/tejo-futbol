@@ -1,17 +1,19 @@
-// Optional power-ups: ice blocks and soap bars that pop up in either half of the pitch.
-// They're won with the ball: when it hits one, the player who touched it last (kick,
-// body or a bounce off the walls after that) throws it at the rival. Ice freezes them
-// (very slow), soap makes them slippery. Players walking over an item do nothing.
+// Optional power-ups: ice blocks, soap bars and "arco gigante" badges that pop up in
+// either half of the pitch. They're won with the ball: when it hits one, the player who
+// touched it last (kick, body or a bounce off the walls after that) throws it at the
+// rival. Ice freezes them, soap makes them slippery, the big goal widens their goal. Players walking over an item do nothing.
 // Times are in "play time" ms (only advances while the ball is in play), so pauses,
 // goals and replays don't eat into them.
 import * as Phaser from 'phaser';
-import { GAME_W, FIELD, MID_Y, BALL_R, HAZARDS, PALETTE } from '../config.js';
+import { GAME_W, FIELD, MID_Y, CENTER_X, BALL_R, HAZARDS, PALETTE, COLORS } from '../config.js';
 import { SPRITE_SCALE } from '../art.js';
 import { titleText } from '../ui.js';
 import { floatText } from './juice.js';
 import { sfx } from '../sound.js';
 
 const MARGIN = 60; // keep items away from the walls and the halfway line
+// ice: freezes the rival; soap: makes them slip; bigGoal: makes their goal bigger.
+const TYPES = ['ice', 'soap', 'bigGoal'];
 
 export default class Hazards {
   constructor(scene) {
@@ -69,7 +71,7 @@ export default class Hazards {
       if (crowded) continue;
 
       const s = this.scene;
-      const type = Math.random() < 0.5 ? 'ice' : 'soap';
+      const type = Phaser.Utils.Array.GetRandom(TYPES);
       // A bullseye on the grass under the item says "hit this", not "walk over this".
       const target = s.add.image(x, y, 'target').setDepth(3.4).setScale(0).setAlpha(0.7);
       s.tweens.add({ targets: target, scale: SPRITE_SCALE * 1.15, duration: 280, ease: 'Back.Out' });
@@ -129,10 +131,14 @@ export default class Hazards {
     const flight = { t: 0 };
     s.tweens.add({
       targets: flight, t: 1, duration: HAZARDS.throwTime, ease: 'Quad.In',
-      // Homes in on wherever the rival is now, spinning on the way.
+      // Homes in on wherever the rival is now (or flies into their goal for the big goal),
+      // spinning on the way.
       onUpdate: () => {
-        shot.x = item.x + (rival.x - item.x) * flight.t;
-        shot.y = item.y + (rival.y - item.y) * flight.t;
+        const to = item.type === 'bigGoal'
+          ? { x: CENTER_X, y: rival.side === 'top' ? FIELD.top : FIELD.bottom }
+          : rival;
+        shot.x = item.x + (to.x - item.x) * flight.t;
+        shot.y = item.y + (to.y - item.y) * flight.t;
         shot.angle = 720 * flight.t;
       },
       onComplete: () => {
@@ -155,6 +161,13 @@ export default class Hazards {
         count: 24, speed: [180, 440], life: [400, 750], size: [4, 10],
         colors: [0xd4f4ff, 0x7fd6ff, 0xffffff], shape: 'rect', drag: 3,
       });
+    } else if (item.type === 'bigGoal') {
+      sfx.spawn();
+      floatText(s, x, y - 40, '¡ZAS!', PALETTE.yellow, 30);
+      s.dust.emit(x, y, {
+        count: 20, speed: [120, 320], life: [400, 750], size: [4, 8],
+        colors: [COLORS.yellow, 0xffffff, COLORS.pink], drag: 3,
+      });
     } else {
       sfx.splash();
       floatText(s, x, y - 40, '¡PLOP!', '#ff7ac0', 30);
@@ -168,6 +181,11 @@ export default class Hazards {
   apply(type, p) {
     const s = this.scene;
     const now = s.playTime;
+    if (type === 'bigGoal') {
+      sfx.dashReady();
+      s.enlargeGoal(p.side);
+      return;
+    }
     p.squash = 1;
     if (type === 'ice') {
       p.frozenUntil = now + HAZARDS.freezeTime;

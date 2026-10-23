@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import {
-  GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R,
+  GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R, GOAL_DEPTH,
   PLAYER_R, PLAYER_SPEED, KICKOFF_OFFSET, BALL_R, BALL, KICK, WIN_GOALS, GOAL_PAUSE,
   KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX, STALL,
 } from '../config.js';
@@ -25,10 +25,6 @@ import {
 import { MATCH_SECONDS, botConfigFor } from '../league/league.js';
 import { mainColor, pickKits, TEAM_BY_ID } from '../league/teams.js';
 
-const POSTS = [
-  { x: MOUTH_L, y: FIELD.top }, { x: MOUTH_R, y: FIELD.top },
-  { x: MOUTH_L, y: FIELD.bottom }, { x: MOUTH_R, y: FIELD.bottom },
-];
 const TRAIL_LEN = 12;
 const CONFETTI = [COLORS.pink, COLORS.yellow, COLORS.cyan, COLORS.purple, 0xffffff];
 const FIRE_ON = 0.72; // speed ratio where the ball catches fire...
@@ -107,6 +103,7 @@ export default class GameScene extends Phaser.Scene {
 
     // World layers, bottom to top.
     this.netGfx = this.add.graphics().setDepth(0.5);
+    this.bigGoalGfx = this.add.graphics().setDepth(0.6);
     this.crowdGfx = this.add.graphics().setDepth(0.5);
     this.shadows = this.add.graphics().setDepth(1);
     this.dust = new Particles(this, 1.5);
@@ -307,6 +304,88 @@ export default class GameScene extends Phaser.Scene {
     return this.p1.side === side ? this.p1 : this.p2;
   }
 
+  // ---------- goals (each one can be big for a while: "arco gigante") ----------
+
+  // The goal's posts on that side: { l, r } x positions.
+  mouth(side) {
+    const extra = this.bigGoal[side].extra;
+    return { l: MOUTH_L - extra, r: MOUTH_R + extra };
+  }
+
+  posts() {
+    const out = [];
+    for (const [side, y] of [['top', FIELD.top], ['bottom', FIELD.bottom]]) {
+      const { l, r } = this.mouth(side);
+      out.push({ x: l, y }, { x: r, y });
+    }
+    return out;
+  }
+
+  // headingIntoGoal() with that goal's current width.
+  heading(b, vx, vy, side, horizon) {
+    return headingIntoGoal(b, vx, vy, side, horizon, this.mouth(side));
+  }
+
+  // The goal on `side` grows for HAZARDS.bigGoalTime of play.
+  enlargeGoal(side) {
+    this.bigGoal[side].until = this.playTime + HAZARDS.bigGoalTime;
+    const y = side === 'top' ? FIELD.top + 40 : FIELD.bottom - 40;
+    floatText(this, CENTER_X, y, '¡ARCO GIGANTE!', PALETTE.yellow, 30);
+    this.cameras.main.shake(120, 0.005);
+  }
+
+  // The posts slide out while the effect lasts and back when it ends.
+  updateBigGoals(realDt) {
+    const step = (HAZARDS.bigGoalExtra * realDt * 1000) / HAZARDS.bigGoalGrow;
+    for (const g of Object.values(this.bigGoal)) {
+      const target = this.playTime < g.until ? HAZARDS.bigGoalExtra : 0;
+      g.extra = target > g.extra ? Math.min(target, g.extra + step) : Math.max(target, g.extra - step);
+    }
+  }
+
+  // Draws a big goal over the normal one painted on the pitch: wider net, frame and
+  // posts, with the old posts covered by the goal line. Blinks before shrinking back.
+  drawBigGoals(now) {
+    const g = this.bigGoalGfx;
+    g.clear();
+    for (const [side, lineY] of [['top', FIELD.top], ['bottom', FIELD.bottom]]) {
+      const { extra, until } = this.bigGoal[side];
+      if (extra < 0.5) continue;
+      const { l, r } = this.mouth(side);
+      const out = side === 'top' ? -1 : 1;
+      const backY = lineY + out * GOAL_DEPTH;
+      const y0 = Math.min(lineY, backY);
+      g.fillStyle(COLORS.ink, 0.55);
+      g.fillRect(l, y0, r - l, GOAL_DEPTH);
+      g.lineStyle(1.5, 0xffffff, 0.55);
+      for (let x = l + 10; x < r; x += 12) g.lineBetween(x, y0, x, y0 + GOAL_DEPTH);
+      for (let y = y0 + 10; y < y0 + GOAL_DEPTH; y += 12) g.lineBetween(l, y, r, y);
+      // Goal line across the mouth hides the normal posts.
+      g.lineStyle(14, COLORS.ink, 1);
+      g.lineBetween(MOUTH_L - 9, lineY, MOUTH_R + 9, lineY);
+      g.lineStyle(6, 0xffffff, 1);
+      g.lineBetween(MOUTH_L - 9, lineY, MOUTH_R + 9, lineY);
+      // Frame, in yellow so it's clear this goal is special (blinking near the end).
+      const ending = until - this.playTime < 1500;
+      const glow = ending && Math.sin(now / 90) > 0 ? 0xffffff : COLORS.yellow;
+      for (const [w, color] of [[9, COLORS.ink], [4, glow]]) {
+        g.lineStyle(w, color, 1);
+        g.beginPath();
+        g.moveTo(l, lineY);
+        g.lineTo(l, backY);
+        g.lineTo(r, backY);
+        g.lineTo(r, lineY);
+        g.strokePath();
+      }
+      for (const x of [l, r]) {
+        g.fillStyle(COLORS.ink, 1);
+        g.fillCircle(x, lineY, POST_R + 2);
+        g.fillStyle(glow, 1);
+        g.fillCircle(x, lineY, POST_R);
+      }
+    }
+  }
+
   rivalOf(p) {
     return p === this.p1 ? this.p2 : this.p1;
   }
@@ -378,7 +457,11 @@ export default class GameScene extends Phaser.Scene {
       p.frozenUntil = p.slipUntil = 0;
       p.mvx = p.mvy = 0;
     }
-    if (!from) this.hazards?.reset(this.playTime);
+    if (!from) {
+      this.hazards?.reset(this.playTime);
+      // After a goal (or at the start) both goals go back to normal.
+      this.bigGoal = { top: { extra: 0, until: 0 }, bottom: { extra: 0, until: 0 } };
+    }
     // lastTouch: the player who last kicked or touched the ball (power-ups go to them).
     const ballY = from
       ? this.startY(from.side) + (from.side === 'bottom' ? -1 : 1) * (PLAYER_R + BALL_R + 40)
@@ -1134,6 +1217,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.state === 'playing') this.playTime += dt * 1000;
+    this.updateBigGoals(realDt);
     if (this.state === 'playing') {
       // Whoever has the ball in the rival's half is attacking.
       const attacker = this.playerOn(this.ball.y < MID_Y ? 'bottom' : 'top');
@@ -1165,7 +1249,7 @@ export default class GameScene extends Phaser.Scene {
     const b = this.ball;
     for (const side of ['top', 'bottom']) {
       const attacker = this.playerOn(side === 'top' ? 'bottom' : 'top') === this.p1 ? 'p1' : 'p2';
-      if (!headingIntoGoal(b, b.vx, b.vy, side, 0.2)) continue;
+      if (!this.heading(b, b.vx, b.vy, side, 0.2)) continue;
       const decisive = this.timeLeft !== null ? this.timeLeft < 6000 : this.score[attacker] === this.winGoals - 1;
       if (decisive) {
         this.slowmo(650);
@@ -1283,7 +1367,7 @@ export default class GameScene extends Phaser.Scene {
     const dy = b.y - p.y;
     const dist = Math.hypot(dx, dy);
     if (dist > PLAYER_R + BALL_R + KICK.reach || dist === 0) return;
-    const wasShot = headingIntoGoal(b, b.vx, b.vy, p.side);
+    const wasShot = this.heading(b, b.vx, b.vy, p.side);
 
     // Haxball-style: the ball flies along the line from the player's centre to the ball.
     const nx = dx / dist;
@@ -1300,7 +1384,7 @@ export default class GameScene extends Phaser.Scene {
     }
     p.lastKick = time;
     this.statFor(p).kicks++;
-    if (headingIntoGoal(b, b.vx, b.vy, this.rivalOf(p).side)) this.statFor(p).shots++;
+    if (this.heading(b, b.vx, b.vy, this.rivalOf(p).side)) this.statFor(p).shots++;
     p.armedUntil = 0;
     p.squash = 1;
     b.lastTouch = p;
@@ -1336,7 +1420,7 @@ export default class GameScene extends Phaser.Scene {
       b.x += b.vx * h;
       b.y += b.vy * h;
       this.collideWalls();
-      for (const post of POSTS) this.collidePost(post);
+      for (const post of this.posts()) this.collidePost(post);
       for (const p of [this.p1, this.p2]) this.collidePlayer(p);
 
       if (b.y < FIELD.top - BALL_R) return this.goal(this.playerOn('bottom'));
@@ -1349,15 +1433,17 @@ export default class GameScene extends Phaser.Scene {
   collideWalls(boost = true) {
     const b = this.ball;
     const { left, right, top, bottom } = FIELD;
-    const inMouth = b.x > MOUTH_L && b.x < MOUTH_R;
+    // Each goal has its own width (one can be big for a while: "arco gigante").
+    const inMouth = (side) => {
+      const { l, r } = this.mouth(side);
+      return b.x > l && b.x < r;
+    };
     const bounce = (endLine = false) => boost && this.wallBounce(endLine);
 
     if (b.x - BALL_R < left) { b.x = left + BALL_R; b.vx = Math.abs(b.vx); bounce(); }
     if (b.x + BALL_R > right) { b.x = right - BALL_R; b.vx = -Math.abs(b.vx); bounce(); }
-    if (!inMouth) {
-      if (b.y - BALL_R < top) { b.y = top + BALL_R; b.vy = Math.abs(b.vy); bounce(true); }
-      if (b.y + BALL_R > bottom) { b.y = bottom - BALL_R; b.vy = -Math.abs(b.vy); bounce(true); }
-    }
+    if (!inMouth('top') && b.y - BALL_R < top) { b.y = top + BALL_R; b.vy = Math.abs(b.vy); bounce(true); }
+    if (!inMouth('bottom') && b.y + BALL_R > bottom) { b.y = bottom - BALL_R; b.vy = -Math.abs(b.vy); bounce(true); }
 
     // Rounded corners: keep the ball inside the quarter circle and reflect off the curve.
     const corner = cornerCenter(b.x, b.y);
@@ -1434,11 +1520,11 @@ export default class GameScene extends Phaser.Scene {
       b.lastTouch = p;
       // A body touch that turns the ball toward the rival's goal also counts as a shot.
       const rivalSide = this.rivalOf(p).side;
-      if (headingIntoGoal(b, b.vx, b.vy, rivalSide) && !headingIntoGoal(b, preVx, preVy, rivalSide)) this.statFor(p).shots++;
+      if (this.heading(b, b.vx, b.vy, rivalSide) && !this.heading(b, preVx, preVy, rivalSide)) this.statFor(p).shots++;
       sfx.body();
       p.squash = Math.max(p.squash, 0.4 + 0.6 * preRatio);
       if (preRatio > 0.5) this.hitstop = Math.max(this.hitstop, 40);
-      if (headingIntoGoal(b, preVx, preVy, p.side) && !headingIntoGoal(b, b.vx, b.vy, p.side)) {
+      if (this.heading(b, preVx, preVy, p.side) && !this.heading(b, b.vx, b.vy, p.side)) {
         this.statFor(p).saves++;
         this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
       }
@@ -1473,7 +1559,8 @@ export default class GameScene extends Phaser.Scene {
       });
     }
     if (endLine && ratio > 0.15) {
-      const nearPost = Math.min(Math.abs(b.x - MOUTH_L), Math.abs(b.x - MOUTH_R)) < 55;
+      const { l, r } = this.mouth(b.y < MID_Y ? 'top' : 'bottom');
+      const nearPost = Math.min(Math.abs(b.x - l), Math.abs(b.x - r)) < 55;
       if (nearPost && this.shout('uuh', '¡UUUH!', PALETTE.white, 1200)) {
         playSound('ooh');
         this.slowmo(300);
@@ -1516,6 +1603,7 @@ export default class GameScene extends Phaser.Scene {
     const now = this.time.now;
     const live = this.state === 'playing' || this.state === 'replay';
     const ratio = live ? this.speedRatio() : 0;
+    this.drawBigGoals(now);
 
     this.shadows.clear();
     this.shadows.fillStyle(COLORS.ink, 0.3);

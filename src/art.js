@@ -27,6 +27,7 @@ export function makeTextures(scene) {
   canvasTexture(tex, 'chili', 56, 72, drawChili);
   canvasTexture(tex, 'ice', 64 * S, 64 * S, (ctx) => drawIce(ctx, 64 * S));
   canvasTexture(tex, 'soap', 64 * S, 64 * S, (ctx) => drawSoap(ctx, 64 * S));
+  canvasTexture(tex, 'bigGoal', 64 * S, 64 * S, (ctx) => drawBigGoal(ctx, 64 * S));
   canvasTexture(tex, 'target', 100 * S, 100 * S, (ctx) => drawTarget(ctx, 100 * S));
 
   const bSize = (BALL_R + 3) * 2 * S;
@@ -447,6 +448,64 @@ function drawIce(ctx, size) {
 }
 
 // Pink bar of soap with bubbles.
+// "Arco gigante" power-up: a little goal (posts, crossbar, net) on a yellow badge with
+// arrows pointing out on both sides.
+function drawBigGoal(ctx, size) {
+  const s = size / 64;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  circle(ctx, 32 * s, 32 * s, 27 * s);
+  ctx.fillStyle = C.yellow;
+  ctx.fill();
+  ctx.lineWidth = 3.5 * s;
+  ctx.strokeStyle = C.ink;
+  ctx.stroke();
+
+  // Net.
+  ctx.fillStyle = 'rgba(29, 18, 64, 0.35)';
+  ctx.fillRect(20 * s, 22 * s, 24 * s, 16 * s);
+  ctx.strokeStyle = 'rgba(29, 18, 64, 0.55)';
+  ctx.lineWidth = 1.5 * s;
+  ctx.beginPath();
+  for (let x = 24; x < 44; x += 5) {
+    ctx.moveTo(x * s, 22 * s);
+    ctx.lineTo(x * s, 38 * s);
+  }
+  for (let y = 27; y < 38; y += 5) {
+    ctx.moveTo(20 * s, y * s);
+    ctx.lineTo(44 * s, y * s);
+  }
+  ctx.stroke();
+  // Frame.
+  for (const [w, color] of [[6, C.ink], [3, C.white]]) {
+    ctx.lineWidth = w * s;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(20 * s, 40 * s);
+    ctx.lineTo(20 * s, 22 * s);
+    ctx.lineTo(44 * s, 22 * s);
+    ctx.lineTo(44 * s, 40 * s);
+    ctx.stroke();
+  }
+  // Arrows pointing out.
+  for (const dir of [-1, 1]) {
+    const x0 = 32 + dir * 14;
+    const tip = 32 + dir * 25;
+    const arrow = [
+      { x: x0, y: 46 }, { x: tip - dir * 6, y: 46 }, { x: tip - dir * 6, y: 42 },
+      { x: tip, y: 49 }, { x: tip - dir * 6, y: 56 }, { x: tip - dir * 6, y: 52 }, { x: x0, y: 52 },
+    ];
+    ctx.beginPath();
+    arrow.forEach((p, i) => (i ? ctx.lineTo(p.x * s, p.y * s) : ctx.moveTo(p.x * s, p.y * s)));
+    ctx.closePath();
+    ctx.fillStyle = C.p2;
+    ctx.fill();
+    ctx.lineWidth = 2.5 * s;
+    ctx.strokeStyle = C.ink;
+    ctx.stroke();
+  }
+}
+
 function drawSoap(ctx, size) {
   const s = size / 64;
   ctx.lineJoin = 'round';

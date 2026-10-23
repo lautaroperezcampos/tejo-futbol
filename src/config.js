@@ -59,6 +59,9 @@ export const HAZARDS = {
   soapTime: 3000, // ms slippery
   soapGrip: 1.2, // how fast you can change direction on soap (lower = slipperier)
   throwTime: 350, // ms the item takes to fly to the rival
+  bigGoalTime: 6000, // ms the rival's goal stays big ("arco gigante")
+  bigGoalExtra: 60, // px added on each side of that goal (200 -> 320 wide)
+  bigGoalGrow: 350, // ms the posts take to slide out or back
 };
 
 // Volumes (0..1, before the sound button's level). The hits are synthesized and quiet on
