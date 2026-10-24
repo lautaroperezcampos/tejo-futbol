@@ -8,15 +8,14 @@ import {
   loadLeague, clearLeague, standings, nextUserMatch, isFinished, totalRounds, recordUserMatch,
 } from '../league/league.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
-const HINT = '← → / cruz: elegir botón  ·  Enter / A: aceptar  ·  Tab / Y: tabla o resultados  ·  Esc / B: menú';
 const ROW_H = 33;
 const TABLE_TOP = 175;
-// Column centres for the numeric stats.
-const COLS = [
-  ['PJ', 420], ['G', 465], ['E', 510], ['P', 555], ['GF', 605], ['GC', 655], ['DG', 705], ['PTS', 765],
-];
+// Column centres for the numeric stats (played, won, drawn, lost, goals for, against,
+// difference, points); their headers are league.cols in src/lang/.
+const COLS = [420, 465, 510, 555, 605, 655, 705, 765];
 
 // League hub: standings, last round's results, next match and the final screen.
 export default class LeagueScene extends Phaser.Scene {
@@ -81,12 +80,12 @@ export default class LeagueScene extends Phaser.Scene {
 
   drawHeader() {
     const round = Math.min(this.league.round + 1, totalRounds(this.league));
-    ribbon(this, CX, 58, 'LIGA ARGENTINA', 380, 54).setAngle(-2);
+    ribbon(this, CX, 58, t('league.title'), 380, 54).setAngle(-2);
     const level = levelLabel(this.league.difficulty ?? 'medium')
-      + (this.league.hazards ? '  ·  POWER-UPS' : '');
+      + (this.league.hazards ? `  ·  ${t('common.powerups')}` : '');
     const subtitle = isFinished(this.league)
-      ? `TORNEO TERMINADO  ·  ${level}`
-      : `FECHA ${round} DE ${totalRounds(this.league)}  ·  ${this.user.short}  ·  ${level}`;
+      ? t('league.over', { level })
+      : t('league.round', { round, total: totalRounds(this.league), team: this.user.short, level });
     uiText(this, CX, 120, subtitle, 20, PALETTE.yellow);
   }
 
@@ -100,10 +99,10 @@ export default class LeagueScene extends Phaser.Scene {
       const away = TEAM_BY_ID[m.away];
       const kits = pickKits(home, away);
       const rowY = 940;
-      uiText(this, CX, 898, 'PRÓXIMO PARTIDO', 18, PALETTE.yellow);
+      uiText(this, CX, 898, t('common.nextMatch'), 18, PALETTE.yellow);
       this.add.image(CX - 250, rowY, kitTexture(this, kits.home, '10')).setScale(0.38);
       uiText(this, CX - 220, rowY, home.short, 22).setOrigin(0, 0.5);
-      uiText(this, CX, rowY, 'VS', 22, PALETTE.yellow);
+      uiText(this, CX, rowY, t('common.vs'), 22, PALETTE.yellow);
       uiText(this, CX + 220, rowY, away.short, 22).setOrigin(1, 0.5);
       this.add.image(CX + 250, rowY, kitTexture(this, kits.away, '9')).setScale(0.38);
     }
@@ -114,14 +113,14 @@ export default class LeagueScene extends Phaser.Scene {
     if (finished) {
       this.viewBtn = button(this, CX - 220, btnY, 230, 66, '', () => this.toggleView(), 20);
       footer.push([this.viewBtn, () => this.toggleView()]);
-      this.mainBtn = button(this, CX + 110, btnY, 360, 66, 'NUEVA LIGA', () => this.mainAction(), 26);
+      this.mainBtn = button(this, CX + 110, btnY, 360, 66, t('league.new'), () => this.mainAction(), 26);
       footer.push([this.mainBtn, () => this.mainAction()]);
     } else {
       this.viewBtn = button(this, 130, btnY, 200, 66, '', () => this.toggleView(), 19);
       footer.push([this.viewBtn, () => this.toggleView()]);
-      const quit = button(this, 342, btnY, 200, 66, 'ABANDONAR', () => this.openResetModal(), 19);
+      const quit = button(this, 342, btnY, 200, 66, t('common.quit'), () => this.openResetModal(), 19);
       footer.push([quit, () => this.openResetModal()]);
-      this.mainBtn = button(this, 610, btnY, 320, 66, `JUGAR FECHA ${this.league.round + 1}`, () => this.mainAction(), 24);
+      this.mainBtn = button(this, 610, btnY, 320, 66, t('league.play', { n: this.league.round + 1 }), () => this.mainAction(), 24);
       footer.push([this.mainBtn, () => this.mainAction()]);
     }
     this.footer = footer.map(([btn, action]) => ({ btn, action }));
@@ -129,7 +128,7 @@ export default class LeagueScene extends Phaser.Scene {
     this.focusFooter(this.footer.length - 1, true);
     this.updateViewButton();
 
-    this.hint = uiText(this, CX, GAME_H - 28, HINT, 15);
+    this.hint = uiText(this, CX, GAME_H - 28, t('league.hint'), 15);
   }
 
   focusFooter(index, silent = false) {
@@ -142,7 +141,7 @@ export default class LeagueScene extends Phaser.Scene {
   }
 
   updateViewButton() {
-    const label = this.view === 'table' ? (isFinished(this.league) ? 'CAMPEÓN' : 'RESULTADOS') : 'TABLA';
+    const label = t(this.view === 'table' ? (isFinished(this.league) ? 'common.championBtn' : 'common.results') : 'league.table');
     this.viewBtn.container.list[1].setText(label);
   }
 
@@ -202,10 +201,10 @@ export default class LeagueScene extends Phaser.Scene {
     if (this.modal || this.leaving) return;
     sfx.select();
     const finished = isFinished(this.league);
-    const title = finished ? '¿EMPEZAR OTRA LIGA?' : '¿ABANDONAR LA LIGA?';
+    const title = t(finished ? 'league.newTitle' : 'league.quitTitle');
     const detail = finished
-      ? 'Elegís un equipo nuevo y arranca desde la fecha 1.'
-      : `Se pierde la campaña de ${this.user.short} (fecha ${this.league.round + 1} de ${totalRounds(this.league)})\ny empezás de nuevo eligiendo equipo.`;
+      ? t('league.newDetail')
+      : t('league.quitDetail', { team: this.user.short, round: this.league.round + 1, total: totalRounds(this.league) });
 
     // The dim layer swallows clicks so nothing behind the dialog reacts.
     const dim = this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.75).setOrigin(0).setInteractive();
@@ -218,8 +217,8 @@ export default class LeagueScene extends Phaser.Scene {
     panel.strokeRoundedRect(CX - 310, 394, 620, 330, 24);
     const heading = titleText(this, CX, 470, title, 40);
     const text = uiText(this, CX, 555, detail, 19).setLineSpacing(6);
-    const no = button(this, CX - 150, 655, 260, 64, finished ? 'NO' : 'NO, SEGUIR', () => this.closeModal(), 22);
-    const yes = button(this, CX + 150, 655, 260, 64, finished ? 'SÍ, NUEVA' : 'SÍ, ABANDONAR', () => this.confirmReset(), 22);
+    const no = button(this, CX - 150, 655, 260, 64, t(finished ? 'common.no' : 'common.noKeep'), () => this.closeModal(), 22);
+    const yes = button(this, CX + 150, 655, 260, 64, t(finished ? 'common.yesNew' : 'common.yesQuit'), () => this.confirmReset(), 22);
 
     this.modal = {
       sel: 0,
@@ -278,8 +277,8 @@ export default class LeagueScene extends Phaser.Scene {
 
     const head = { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '15px', color: PALETTE.white };
     add(this.add.text(x0 + 24, TABLE_TOP + ROW_H / 2, '#', head).setOrigin(0.5));
-    add(this.add.text(x0 + 95, TABLE_TOP + ROW_H / 2, 'EQUIPO', head).setOrigin(0, 0.5));
-    for (const [label, cx] of COLS) add(this.add.text(cx, TABLE_TOP + ROW_H / 2, label, head).setOrigin(0.5));
+    add(this.add.text(x0 + 95, TABLE_TOP + ROW_H / 2, t('league.team'), head).setOrigin(0, 0.5));
+    t('league.cols').split(',').forEach((label, k) => add(this.add.text(COLS[k], TABLE_TOP + ROW_H / 2, label, head).setOrigin(0.5)));
 
     rows.forEach((r, i) => {
       const y = TABLE_TOP + ROW_H * (i + 1);
@@ -307,8 +306,8 @@ export default class LeagueScene extends Phaser.Scene {
       add(this.add.image(x0 + 78, cy, kitTexture(this, team.home, '')).setScale(0.2));
       add(this.add.text(x0 + 95, cy, team.short, cell).setOrigin(0, 0.5));
       const stats = [r.pj, r.pg, r.pe, r.pp, r.gf, r.gc, r.dg > 0 ? `+${r.dg}` : r.dg, r.pts];
-      COLS.forEach(([label, cx], k) => {
-        const style = label === 'PTS' ? { ...cell, fontFamily: FONTS.title, fontSize: '18px' } : cell;
+      COLS.forEach((cx, k) => {
+        const style = k === COLS.length - 1 ? { ...cell, fontFamily: FONTS.title, fontSize: '18px' } : cell;
         add(this.add.text(cx, cy, String(stats[k]), style).setOrigin(0.5));
       });
     });
@@ -317,7 +316,7 @@ export default class LeagueScene extends Phaser.Scene {
   renderResults() {
     const add = (obj) => this.content.add(obj);
     const round = this.league.results[this.league.results.length - 1];
-    add(uiText(this, CX, TABLE_TOP + 10, `RESULTADOS DE LA FECHA ${this.league.results.length}`, 24));
+    add(uiText(this, CX, TABLE_TOP + 10, t('league.roundResults', { n: this.league.results.length }), 24));
 
     const g = this.add.graphics();
     add(g);
@@ -351,15 +350,15 @@ export default class LeagueScene extends Phaser.Scene {
     add(this.add.image(CX + 105, 450, kitTexture(this, champion.home, '10')).setScale(0.75));
 
     if (won) {
-      add(titleText(this, CX, 640, '¡CAMPEÓN!', 100).setAngle(-5));
+      add(titleText(this, CX, 640, t('common.champion'), 100).setAngle(-5));
       add(ribbon(this, CX, 735, this.user.short, 380, 56).setAngle(-5));
-      add(uiText(this, CX, 820, `${mine.pts} puntos  ·  ${mine.pg} ganados  ·  DG ${mine.dg > 0 ? '+' : ''}${mine.dg}`, 24, PALETTE.yellow));
+      add(uiText(this, CX, 820, t('league.wonStats', { pts: mine.pts, wins: mine.pg, gd: `${mine.dg > 0 ? '+' : ''}${mine.dg}` }), 24, PALETTE.yellow));
       sfx.win();
       this.time.addEvent({ delay: 700, repeat: 4, callback: () => this.confetti() });
     } else {
-      add(titleText(this, CX, 640, `TERMINASTE ${mine.pos}º`, 72).setAngle(-4));
-      add(ribbon(this, CX, 735, `CAMPEÓN: ${champion.short}`, 440, 56).setAngle(-4));
-      add(uiText(this, CX, 820, `${this.user.short}: ${mine.pts} puntos  ·  ¡La próxima es tuya!`, 22, PALETTE.yellow));
+      add(titleText(this, CX, 640, t('league.finishedPos', { pos: mine.pos }), 72).setAngle(-4));
+      add(ribbon(this, CX, 735, t('common.championOf', { team: champion.short }), 440, 56).setAngle(-4));
+      add(uiText(this, CX, 820, t('league.lostStats', { team: this.user.short, pts: mine.pts }), 22, PALETTE.yellow));
     }
   }
 

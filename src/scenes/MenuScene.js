@@ -8,6 +8,7 @@ import { unlockAudio, sfx } from '../sound.js';
 import { loadLeague, totalRounds } from '../league/league.js';
 import { loadCup, stageLabel, isFinished as isCupFinished } from '../cup/cup.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 // Two big buttons, each opening its own page with two cards:
 //   PARTIDO NORMAL -> vs the AI, vs a friend (difficulty and power-ups are chosen after
@@ -18,8 +19,8 @@ const MAIN = { w: 620, h: 196 };
 const SUB = { y: 690, w: 288, h: 250, back: 900 };
 const PAGES = {
   main: { keys: ['normal', 'tournament'] },
-  normal: { title: 'PARTIDO NORMAL', keys: ['bot', 'pvp'] },
-  tournament: { title: 'TORNEO', keys: ['league', 'cup'] },
+  normal: { title: 'menu.normal', keys: ['bot', 'pvp'] },
+  tournament: { title: 'menu.tournament', keys: ['league', 'cup'] },
 };
 const CARDS = {
   normal: { page: 'main', x: CX, y: 590, ...MAIN, color: COLORS.p1 },
@@ -52,7 +53,7 @@ export default class MenuScene extends Phaser.Scene {
     const logo = this.add.container(CX, 205, [
       titleText(this, 0, -60, 'TEJO', 104),
       titleText(this, 0, 50, 'FÚTBOL', 104),
-      ribbon(this, 0, 146, 'LIGA DE BARRIO', 360, 48),
+      ribbon(this, 0, 146, t('menu.subtitle'), 360, 48),
     ]).setAngle(-7);
     this.tweens.add({ targets: logo, scale: 1.03, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
@@ -66,13 +67,13 @@ export default class MenuScene extends Phaser.Scene {
     };
     // Sub-page title and "back" button.
     this.pageRibbon = this.add.container(CX, 500);
-    this.backBtn = button(this, CX, SUB.back, 280, 62, '◀  VOLVER', () => this.showPage('main'), 24);
+    this.backBtn = button(this, CX, SUB.back, 280, 62, t('common.back'), () => this.showPage('main'), 24);
     this.backBtn.zone.on('pointerover', () => this.setFocus('back'));
 
     optionsButton(this, GAME_W - 52, 52);
 
-    uiText(this, CX, 1050, 'Flechas elegir  ·  Enter / A entrar  ·  Esc / B volver', 17);
-    uiText(this, CX, 1080, 'O / Y: opciones (controles y sonido)  ·  M: silenciar', 17, PALETTE.yellow);
+    uiText(this, CX, 1050, t('menu.hint1'), 17);
+    uiText(this, CX, 1080, t('menu.hint2'), 17, PALETTE.yellow);
 
     const onKey = (event) => {
       unlockAudio();
@@ -124,11 +125,8 @@ export default class MenuScene extends Phaser.Scene {
     const p1 = this.add.image(left + 150, 30, 'p1').setScale(0.62);
     this.tweens.add({ targets: robot, angle: { from: -5, to: 5 }, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     this.tweens.add({ targets: p1, y: 22, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    const title = this.cardTitle(left + 210, -50, 'PARTIDO NORMAL', 36, 0);
-    const lines = this.cardLines(left + 212, 4, [
-      '•  Contra la IA: la compu es tu rival',
-      '•  Contra un amigo, en la misma compu',
-    ]);
+    const title = this.cardTitle(left + 210, -50, t('menu.normal'), 36, 0);
+    const lines = this.cardLines(left + 212, 4, [t('menu.normal.line1'), t('menu.normal.line2')]);
     return this.makeCard('normal', [robot, p1, title, ...lines], title);
   }
 
@@ -136,42 +134,39 @@ export default class MenuScene extends Phaser.Scene {
     const left = -MAIN.w / 2;
     const trophy = this.add.image(left + 100, 0, 'trophy').setScale(0.42);
     this.tweens.add({ targets: trophy, angle: { from: -6, to: 6 }, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    const title = this.cardTitle(left + 210, -50, 'TORNEO', 36, 0);
-    const lines = this.cardLines(left + 212, 4, [
-      '•  Liga: 20 clubes argentinos, 19 fechas',
-      '•  Copa: 48 selecciones del mundo',
-    ]);
+    const title = this.cardTitle(left + 210, -50, t('menu.tournament'), 36, 0);
+    const lines = this.cardLines(left + 212, 4, [t('menu.tournament.line1'), t('menu.tournament.line2')]);
     return this.makeCard('tournament', [trophy, title, ...lines], title);
   }
 
   makeBotCard() {
     const robot = this.add.image(0, -50, 'robot').setScale(0.56);
     this.tweens.add({ targets: robot, angle: { from: -5, to: 5 }, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    const title = this.cardTitle(0, 40, 'VS LA IA', 36);
-    const sub = uiText(this, 0, 84, 'La compu juega de rival', 16);
+    const title = this.cardTitle(0, 40, t('menu.bot'), 36);
+    const sub = uiText(this, 0, 84, t('menu.bot.sub'), 16);
     return this.makeCard('bot', [robot, title, sub], title);
   }
 
   makePvpCard() {
     const p1 = this.add.image(-46, -52, 'p1').setScale(0.76);
     const p2 = this.add.image(46, -52, 'p2').setScale(0.76);
-    const vs = titleText(this, 0, -52, 'VS', 24, PALETTE.yellow);
+    const vs = titleText(this, 0, -52, t('common.vs'), 24, PALETTE.yellow);
     // The two players bob out of step, like they're facing off.
     this.tweens.add({ targets: p1, y: -60, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     this.tweens.add({ targets: p2, y: -60, duration: 500, delay: 250, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    const title = this.cardTitle(0, 40, 'VS AMIGO', 36);
-    const sub = uiText(this, 0, 84, 'Los dos en la misma compu', 16);
+    const title = this.cardTitle(0, 40, t('menu.pvp'), 36);
+    const sub = uiText(this, 0, 84, t('menu.pvp.sub'), 16);
     return this.makeCard('pvp', [p1, p2, vs, title, sub], title);
   }
 
   makeLeagueCard() {
     const trophy = this.add.image(0, -46, 'trophy').setScale(0.34);
     this.tweens.add({ targets: trophy, angle: { from: -6, to: 6 }, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    const title = this.cardTitle(0, 40, 'LIGA', 38);
+    const title = this.cardTitle(0, 40, t('menu.league'), 38);
     const saved = loadLeague();
     const subText = saved && saved.round < totalRounds(saved)
-      ? `Seguir: fecha ${saved.round + 1} de ${totalRounds(saved)}`
-      : '20 clubes  ·  19 fechas';
+      ? t('menu.league.continue', { round: saved.round + 1, total: totalRounds(saved) })
+      : t('menu.league.sub');
     const sub = uiText(this, 0, 84, subText, 16);
     return this.makeCard('league', [trophy, title, sub], title);
   }
@@ -179,9 +174,11 @@ export default class MenuScene extends Phaser.Scene {
   makeCupCard() {
     const ball = this.add.image(0, -48, 'ball').setScale(SPRITE_SCALE * 2.8);
     this.tweens.add({ targets: ball, angle: 360, duration: 3000, repeat: -1 });
-    const title = this.cardTitle(0, 40, 'COPA', 38);
+    const title = this.cardTitle(0, 40, t('menu.cup'), 38);
     const saved = loadCup();
-    const subText = saved && !isCupFinished(saved) ? `Seguir: ${stageLabel(saved).split(' · ')[0]}` : '48 selecciones del mundo';
+    const subText = saved && !isCupFinished(saved)
+      ? t('menu.cup.continue', { stage: stageLabel(saved).split(' · ')[0] })
+      : t('menu.cup.sub');
     const sub = uiText(this, 0, 84, subText, 16);
     return this.makeCard('cup', [ball, title, sub], title);
   }
@@ -227,7 +224,10 @@ export default class MenuScene extends Phaser.Scene {
     }
     const sub = page !== 'main';
     this.pageRibbon.removeAll(true);
-    if (sub) this.pageRibbon.add(ribbon(this, 0, 0, PAGES[page].title, PAGES[page].title.length * 24 + 80, 50));
+    if (sub) {
+      const title = t(PAGES[page].title);
+      this.pageRibbon.add(ribbon(this, 0, 0, title, title.length * 24 + 80, 50));
+    }
     this.backBtn.container.setVisible(sub);
     this.backBtn.zone.input.enabled = sub;
 

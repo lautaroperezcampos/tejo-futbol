@@ -10,6 +10,7 @@ import { SPRITE_SCALE } from '../art.js';
 import { titleText } from '../ui.js';
 import { floatText } from './juice.js';
 import { sfx } from '../sound.js';
+import { t } from '../i18n.js';
 
 const MARGIN = 60; // keep items away from the walls and the halfway line
 // ice: freezes the rival; soap: makes them slip; bigGoal: makes their goal bigger.
@@ -83,7 +84,7 @@ export default class Hazards {
 
       // Until the player has won one with the ball, each item explains itself.
       if (!knowsPowerUps()) {
-        const hint = titleText(s, Phaser.Math.Clamp(x, 150, GAME_W - 150), y - 62, '¡PEGALE CON\nLA PELOTA!', 20, PALETTE.yellow)
+        const hint = titleText(s, Phaser.Math.Clamp(x, 150, GAME_W - 150), y - 62, t('hazard.hint'), 20, PALETTE.yellow)
           .setDepth(12).setLineSpacing(-6);
         s.tweens.add({ targets: hint, y: hint.y - 8, duration: 450, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
         parts.push(hint);
@@ -156,21 +157,21 @@ export default class Hazards {
     s.cameras.main.shake(90, 0.006);
     if (item.type === 'ice') {
       sfx.crack();
-      floatText(s, x, y - 40, '¡CRASH!', PALETTE.cyan, 30);
+      floatText(s, x, y - 40, t('hazard.crash'), PALETTE.cyan, 30);
       s.grass.emit(x, y, {
         count: 24, speed: [180, 440], life: [400, 750], size: [4, 10],
         colors: [0xd4f4ff, 0x7fd6ff, 0xffffff], shape: 'rect', drag: 3,
       });
     } else if (item.type === 'bigGoal') {
       sfx.spawn();
-      floatText(s, x, y - 40, '¡ZAS!', PALETTE.yellow, 30);
+      floatText(s, x, y - 40, t('hazard.zap'), PALETTE.yellow, 30);
       s.dust.emit(x, y, {
         count: 20, speed: [120, 320], life: [400, 750], size: [4, 8],
         colors: [COLORS.yellow, 0xffffff, COLORS.pink], drag: 3,
       });
     } else {
       sfx.splash();
-      floatText(s, x, y - 40, '¡PLOP!', '#ff7ac0', 30);
+      floatText(s, x, y - 40, t('hazard.plop'), '#ff7ac0', 30);
       s.dust.emit(x, y, {
         count: 22, speed: [90, 280], life: [450, 850], size: [4, 10], grow: 0.6,
         colors: [0xffffff, 0xffc2e2, 0xd8f4ff], alpha: 0.85, drag: 2,
@@ -192,7 +193,7 @@ export default class Hazards {
       p.slipUntil = 0; // ice beats soap
       p.dashLeft = 0;
       sfx.freeze();
-      floatText(s, p.x, p.y - 50, '¡CONGELADO!', PALETTE.cyan, 28);
+      floatText(s, p.x, p.y - 50, t('hazard.frozen'), PALETTE.cyan, 28);
       s.grass.emit(p.x, p.y, {
         count: 14, speed: [100, 260], life: [350, 650], size: [3, 6],
         colors: [0xd4f4ff, 0x7fd6ff, 0xffffff], shape: 'rect', drag: 3,
@@ -200,7 +201,7 @@ export default class Hazards {
     } else {
       p.slipUntil = now + HAZARDS.soapTime;
       sfx.soap();
-      floatText(s, p.x, p.y - 50, '¡A PATINAR!', '#ff7ac0', 28);
+      floatText(s, p.x, p.y - 50, t('hazard.slip'), '#ff7ac0', 28);
       s.dust.emit(p.x, p.y, {
         count: 16, speed: [40, 140], life: [500, 900], size: [4, 9], grow: 0.4,
         colors: [0xffffff, 0xffc2e2, 0xd8f4ff], alpha: 0.8, drag: 2,

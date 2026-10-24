@@ -229,3 +229,15 @@ En "Antes de jugar" de los amistosos se elige la **CANCHA** (queda recordada):
 - **Al azar:** una de las tres, distinta en cada partido.
 Al empezar el partido aparece "¡ESTÁ LLOVIENDO!" o "¡CANCHA EN MAL ESTADO!". Los torneos
 se juegan siempre en cancha normal. Los números están en `PITCH` de `src/config.js`.
+
+## Idiomas
+El juego está en **español** (el idioma de siempre, el que arranca por defecto),
+**inglés** y **portugués de Brasil**. Se cambia en **OPCIONES → IDIOMA** con ← → (o
+tocando el botón), desde cualquier pantalla; el panel y la pantalla de atrás cambian al
+momento. En medio de un partido el cambio se ve desde la próxima pantalla (no se reinicia
+el partido). La elección queda guardada en el navegador.
+- Se traduce todo lo que se lee: menús, carteles del partido, estadísticas, liga, copa y
+  los nombres de las 48 selecciones (Alemania → Germany / Alemanha).
+- No se traducen el nombre del juego (TEJO FÚTBOL) ni los nombres de los clubes.
+- Los textos están en `src/lang/` (`es.js`, `en.js`, `pt.js`) y se piden con `t()` de
+  `src/i18n.js`.

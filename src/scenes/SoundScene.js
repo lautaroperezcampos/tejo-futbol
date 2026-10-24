@@ -6,16 +6,14 @@ import {
 } from '../sound.js';
 import { playSound } from '../music.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 50, y: 220, w: GAME_W - 100, h: 690 };
 const ROW = { first: 400, gap: 96, h: 80 };
 const BAR = { left: 345, seg: 22, gap: 3 }; // ten segments, one per 10 %
-const SLIDERS = [
-  { ch: 'music', label: 'MÚSICA', sub: 'Menú y partido' },
-  { ch: 'crowd', label: 'HINCHADA', sub: 'Cantos, gol y uuuh' },
-  { ch: 'sfx', label: 'EFECTOS', sub: 'Patadas, rebotes, botones' },
-];
+// Each label and the line under it come from src/lang/ (sound.<ch> and sound.<ch>.sub).
+const SLIDERS = ['music', 'crowd', 'sfx'];
 const MUTE_ROW = SLIDERS.length;
 const DONE_ROW = SLIDERS.length + 1;
 const CROWD_PREVIEW_MS = 900; // the "uuuh" plays at most this often while adjusting
@@ -51,14 +49,14 @@ export default class SoundScene extends Phaser.Scene {
     g.strokeRoundedRect(x, y, w, h, 28);
     // Clicks on the card land here instead of on the dim layer, which closes it.
     this.add.zone(CX, y + h / 2, w, h).setInteractive();
-    titleText(this, CX, y + 70, 'SONIDO', 60).setAngle(-3);
+    titleText(this, CX, y + 70, t('options.sound'), 60).setAngle(-3);
 
-    this.rows = SLIDERS.map((s, i) => this.makeSlider(s, ROW.first + i * ROW.gap, i));
+    this.rows = SLIDERS.map((ch, i) => this.makeSlider(ch, ROW.first + i * ROW.gap, i));
     this.muteBtn = button(this, CX, ROW.first + MUTE_ROW * ROW.gap + 4, w - 100, 66, '', () => this.pressMute(), 22);
     this.muteBtn.zone.on('pointerover', () => this.setFocus(MUTE_ROW));
-    this.doneBtn = button(this, CX, ROW.first + DONE_ROW * ROW.gap + 4, 240, 64, '¡LISTO!', () => this.close(), 26);
+    this.doneBtn = button(this, CX, ROW.first + DONE_ROW * ROW.gap + 4, 240, 64, t('common.ready'), () => this.close(), 26);
     this.doneBtn.zone.on('pointerover', () => this.setFocus(DONE_ROW));
-    uiText(this, CX, y + h - 28, '↑ ↓ elegir  ·  ← → subir o bajar  ·  M: silenciar  ·  Esc: cerrar', 14, '#bfb3ff');
+    uiText(this, CX, y + h - 28, t('sound.hint'), 14, '#bfb3ff');
 
     const stop = onVolumeChange(() => this.refresh());
     this.events.once('shutdown', stop);
@@ -85,10 +83,10 @@ export default class SoundScene extends Phaser.Scene {
   }
 
   // Label + ◀ [ten segments] ▶ + percentage. Every part is clickable.
-  makeSlider({ ch, label, sub }, y, index) {
+  makeSlider(ch, y, index) {
     const bg = this.add.graphics();
-    uiText(this, CARD.x + 40, y - 11, label, 22).setOrigin(0, 0.5);
-    uiText(this, CARD.x + 40, y + 17, sub, 13, '#bfb3ff').setOrigin(0, 0.5);
+    uiText(this, CARD.x + 40, y - 11, t(`sound.${ch}`), 22).setOrigin(0, 0.5);
+    uiText(this, CARD.x + 40, y + 17, t(`sound.${ch}.sub`), 13, '#bfb3ff').setOrigin(0, 0.5);
     const bar = this.add.graphics();
     const percent = this.add.text(CARD.x + CARD.w - 40, y, '', {
       fontFamily: FONTS.title, fontSize: '20px', color: PALETTE.white, stroke: PALETTE.ink, strokeThickness: 5,
@@ -164,9 +162,9 @@ export default class SoundScene extends Phaser.Scene {
         row.bar.fillStyle(i < on ? (muted ? 0x8a84a8 : COLORS.yellow) : 0x3a2a78, 1);
         row.bar.fillRoundedRect(sx, row.y + 20 - segH, BAR.seg, segH, 5);
       }
-      row.percent.setText(muted ? 'MUDO' : `${on * 10}%`).setColor(muted ? '#ff9aa3' : PALETTE.white);
+      row.percent.setText(muted ? t('sound.muted') : `${on * 10}%`).setColor(muted ? '#ff9aa3' : PALETTE.white);
     }
-    this.muteBtn.container.list[1].setText(`SILENCIAR TODO:   ${muted ? 'SÍ' : 'NO'}`);
+    this.muteBtn.container.list[1].setText(t('sound.muteAll', { state: t(muted ? 'common.yes' : 'common.no') }));
   }
 
   setFocus(index, silent = false) {

@@ -1,6 +1,7 @@
 // Shared cartoon UI pieces: chunky outlined text, buttons, the purple ribbon banner and
 // the striped wipe used between screens.
 import { COLORS, PALETTE, FONTS, GAME_W, GAME_H, BOT_LEVELS } from './config.js';
+import { t, botLevelName } from './i18n.js';
 import { startLoop } from './music.js';
 import { unlockAudio, sfx, isMuted, toggleMute, onVolumeChange } from './sound.js';
 
@@ -125,7 +126,7 @@ export function levelBadge(scene, x, y) {
   g.lineStyle(5, COLORS.ink, 1);
   g.strokeCircle(0, 0, 52);
   const text = scene.add.text(0, -6, '', { fontFamily: FONTS.title, fontSize: '40px', color: PALETTE.ink }).setOrigin(0.5);
-  const label = scene.add.text(0, 30, 'NIVEL', { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '14px', color: PALETTE.ink }).setOrigin(0.5);
+  const label = scene.add.text(0, 30, t('level.badge'), { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '14px', color: PALETTE.ink }).setOrigin(0.5);
   const container = scene.add.container(x, y, [g, text, label]).setAngle(-8);
   const setLevel = (n) => {
     text.setText(String(n));
@@ -138,7 +139,7 @@ export function levelBadge(scene, x, y) {
 
 // Bot difficulty id ('veryEasy', 'easy', 'medium', 'hard') as shown on screen: "MUY FÁCIL".
 export function levelLabel(id) {
-  return (BOT_LEVELS[id] ?? BOT_LEVELS.medium).label.toUpperCase();
+  return botLevelName(BOT_LEVELS[id] ? id : 'medium').toUpperCase();
 }
 
 // Strength (0..1) as the 55-97 "level" number and 1-5 stars the pickers show.
@@ -253,6 +254,18 @@ export function drawExitIcon(g) {
   g.fillPoints(arrow, true);
   g.lineStyle(3, COLORS.ink, 1);
   g.strokePoints(arrow, true);
+}
+
+// Globe (language): a circle with a meridian, the equator and two parallels.
+export function drawGlobeIcon(g) {
+  g.fillStyle(COLORS.cyan, 1);
+  g.fillCircle(0, 0, 16);
+  g.lineStyle(3, COLORS.ink, 1);
+  g.strokeEllipse(0, 0, 14, 32);
+  g.lineBetween(-16, 0, 16, 0);
+  g.lineBetween(-13, -8, 13, -8);
+  g.lineBetween(-13, 8, 13, 8);
+  g.strokeCircle(0, 0, 16);
 }
 
 // Gear (options): a toothed wheel with a hole in the middle.
@@ -467,7 +480,7 @@ export function controlsPanel(scene, onClose) {
   g.strokeRoundedRect(left, top, width, height, 26);
   // Clicks on the panel itself land here instead of on the dim layer, which closes it.
   const body = scene.add.zone(cx, top + height / 2, width, height).setInteractive();
-  parts.push(dim, g, body, titleText(scene, cx, top + 62, 'CONTROLES', 50));
+  parts.push(dim, g, body, titleText(scene, cx, top + 62, t('options.controls'), 50));
 
   // One section per way of playing: a coloured header and three or four controls, each
   // with a yellow caption under it.
@@ -483,19 +496,19 @@ export function controlsPanel(scene, onClose) {
   const col = [cx - 200, cx + 10, cx + 200];
 
   let y = top + 140;
-  parts.push(...header(y, 'JUGADOR 1', COLORS.p1));
-  parts.push(...keyCluster(scene, col[0], y + 86, ['W', 'A', 'S', 'D']), caption(col[0], y + 152, 'MOVERSE'));
-  parts.push(...keycap(scene, col[1], y + 113, 'ESPACIO', 150), caption(col[1], y + 152, 'PATEAR'));
-  parts.push(...keycap(scene, col[2], y + 113, 'SHIFT IZQ', 120), caption(col[2], y + 152, 'DASH'));
+  parts.push(...header(y, t('controls.p1'), COLORS.p1));
+  parts.push(...keyCluster(scene, col[0], y + 86, ['W', 'A', 'S', 'D']), caption(col[0], y + 152, t('controls.move')));
+  parts.push(...keycap(scene, col[1], y + 113, t('controls.space'), 150), caption(col[1], y + 152, t('controls.kick')));
+  parts.push(...keycap(scene, col[2], y + 113, t('controls.lshift'), 120), caption(col[2], y + 152, t('controls.dash')));
 
   y += 210;
-  parts.push(...header(y, 'JUGADOR 2', COLORS.p2));
-  parts.push(...keyCluster(scene, col[0], y + 86, ['↑', '←', '↓', '→']), caption(col[0], y + 152, 'MOVERSE'));
-  parts.push(...keycap(scene, col[1], y + 113, 'ENTER', 120), caption(col[1], y + 152, 'PATEAR'));
-  parts.push(...keycap(scene, col[2], y + 113, 'SHIFT DER', 120), caption(col[2], y + 152, 'DASH'));
+  parts.push(...header(y, t('controls.p2'), COLORS.p2));
+  parts.push(...keyCluster(scene, col[0], y + 86, ['↑', '←', '↓', '→']), caption(col[0], y + 152, t('controls.move')));
+  parts.push(...keycap(scene, col[1], y + 113, 'ENTER', 120), caption(col[1], y + 152, t('controls.kick')));
+  parts.push(...keycap(scene, col[2], y + 113, t('controls.rshift'), 120), caption(col[2], y + 152, t('controls.dash')));
 
   y += 210;
-  parts.push(...header(y, 'JOYSTICK', COLORS.purple));
+  parts.push(...header(y, t('controls.gamepad'), COLORS.purple));
   const pad = [cx - 225, cx - 75, cx + 75, cx + 225];
   const stick = scene.add.graphics();
   stick.fillStyle(COLORS.ink, 1);
@@ -506,13 +519,13 @@ export function controlsPanel(scene, onClose) {
   stick.fillCircle(pad[0], y + 74, 14);
   stick.lineStyle(3, COLORS.ink, 1);
   stick.strokeCircle(pad[0], y + 74, 14);
-  parts.push(stick, caption(pad[0], y + 128, 'STICK O CRUZ: MOVERSE'));
-  parts.push(...padButton(scene, pad[1], y + 78, 'A', 0x3dd68c), caption(pad[1], y + 128, 'PATEAR'));
-  parts.push(...padButton(scene, pad[2], y + 78, 'R1', COLORS.p1, 64), caption(pad[2], y + 128, 'DASH'));
-  parts.push(...padButton(scene, pad[3], y + 78, 'START', COLORS.pink, 88), caption(pad[3], y + 128, 'PAUSA'));
+  parts.push(stick, caption(pad[0], y + 128, t('controls.stick')));
+  parts.push(...padButton(scene, pad[1], y + 78, 'A', 0x3dd68c), caption(pad[1], y + 128, t('controls.kick')));
+  parts.push(...padButton(scene, pad[2], y + 78, 'R1', COLORS.p1, 64), caption(pad[2], y + 128, t('controls.dash')));
+  parts.push(...padButton(scene, pad[3], y + 78, 'START', COLORS.pink, 88), caption(pad[3], y + 128, t('controls.pause')));
 
-  parts.push(uiText(scene, cx, top + height - 118, 'Esc / Start: pausa  ·  M: sonido  ·  C: controles', 16, '#bfb3ff'));
-  const ok = button(scene, cx, top + height - 60, 240, 62, '¡LISTO!', () => close(), 26);
+  parts.push(uiText(scene, cx, top + height - 118, t('controls.hint'), 16, '#bfb3ff'));
+  const ok = button(scene, cx, top + height - 60, 240, 62, t('common.ready'), () => close(), 26);
   ok.setActive(true);
   parts.push(ok.container, ok.zone);
 

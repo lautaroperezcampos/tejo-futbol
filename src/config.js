@@ -95,12 +95,12 @@ export const FRIENDLY_LENGTHS = [
 export const STALL = { limit: 10000, warn: 5000 };
 
 // Pitches for friendlies ("Antes de jugar"): normal, rain or in bad shape; random picks
-// one of the three when the match starts.
+// one of the three when the match starts. Their names are in src/lang/ (pitch.<id>).
 export const PITCHES = [
-  { id: 'normal', label: 'NORMAL' },
-  { id: 'rain', label: 'LLUVIA' },
-  { id: 'rough', label: 'EN MAL ESTADO' },
-  { id: 'random', label: 'AL AZAR' },
+  { id: 'normal' },
+  { id: 'rain' },
+  { id: 'rough' },
+  { id: 'random' },
 ];
 export const PITCH = {
   rainGrip: 4, // like soap (HAZARDS.soapGrip) but much milder: players slide a little
@@ -160,13 +160,13 @@ export const BOT_LEVELS = {
   // the ball some of the time (aggression). Easy keeps a little of that; levels without
   // these use the normal values.
   veryEasy: {
-    label: 'Muy fácil', speed: 0.32, reaction: 520, predict: 'none', kickChance: 0.15, error: 90, dash: 'none',
+    speed: 0.32, reaction: 520, predict: 'none', kickChance: 0.15, error: 90, dash: 'none',
     kickPower: 0.6, bodyDamp: 0.6, aggression: 0.3,
   },
   easy: {
-    label: 'Fácil', speed: 0.55, reaction: 260, predict: 'straight', kickChance: 0.5, error: 40, dash: 'none',
+    speed: 0.55, reaction: 260, predict: 'straight', kickChance: 0.5, error: 40, dash: 'none',
     kickPower: 0.85, aggression: 0.75,
   },
-  medium: { label: 'Medio', speed: 0.72, reaction: 160, predict: 'straight', kickChance: 0.75, error: 24, dash: 'defense' },
-  hard: { label: 'Difícil', speed: 1.0, reaction: 45, predict: 'bounces', kickChance: 1, error: 4, dash: 'smart' },
+  medium: { speed: 0.72, reaction: 160, predict: 'straight', kickChance: 0.75, error: 24, dash: 'defense' },
+  hard: { speed: 1.0, reaction: 45, predict: 'bounces', kickChance: 1, error: 4, dash: 'smart' },
 };

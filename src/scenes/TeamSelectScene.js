@@ -9,6 +9,7 @@ import { TEAMS, pickKits } from '../league/teams.js';
 import { newLeague, saveLeague } from '../league/league.js';
 import SetupPanel from '../setupPanel.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 50, y: 170, w: GAME_W - 100, h: 520 };
@@ -17,10 +18,10 @@ const CHOOSE_Y = 990;
 
 // One line under the stars, by how strong the club is.
 function tagline(strength) {
-  if (strength >= 0.9) return '¡UNO DE LOS GRANDES DEL FÚTBOL ARGENTINO!';
-  if (strength >= 0.75) return 'SIEMPRE PELEA ARRIBA';
-  if (strength >= 0.55) return 'UN RIVAL DURO PARA CUALQUIERA';
-  return '¡A DAR LA SORPRESA!';
+  if (strength >= 0.9) return t('team.tag1');
+  if (strength >= 0.75) return t('team.tag2');
+  if (strength >= 0.55) return t('team.tag3');
+  return t('team.tag4');
 }
 
 // FIFA-style club picker (same look as the cup's NationSelectScene): a big card with the
@@ -58,7 +59,7 @@ export default class TeamSelectScene extends Phaser.Scene {
     this.makeStrip();
     this.chooseBtn = button(this, CX, CHOOSE_Y, 460, 70, '', () => this.confirm(), 26);
     this.chooseBtn.setActive(true);
-    uiText(this, CX, GAME_H - 44, '← → equipo  ·  ↑ ↓ fila  ·  Enter / A: elegir  ·  Esc / B: volver', 16);
+    uiText(this, CX, GAME_H - 44, t('team.hint'), 16);
 
     this.updateTitles();
     this.show();
@@ -91,7 +92,7 @@ export default class TeamSelectScene extends Phaser.Scene {
     this.homeKit = this.add.image(CX - 60, 345, kitTexture(this, TEAMS[0].home, '10')).setScale(1.7);
     this.tweens.add({ targets: this.homeKit, y: 333, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     this.awayKit = this.add.image(CX + 215, 372, kitTexture(this, TEAMS[0].away, '10')).setScale(0.95);
-    uiText(this, CX + 215, 446, 'SUPLENTE', 15, '#bfb3ff');
+    uiText(this, CX + 215, 446, t('team.away'), 15, '#bfb3ff');
     this.badge = levelBadge(this, CARD.x + 78, CARD.y + 84);
 
     this.nameText = titleText(this, CX, 530, '', 50);
@@ -128,17 +129,17 @@ export default class TeamSelectScene extends Phaser.Scene {
 
   updateTitles() {
     if (this.purpose === 'league') {
-      this.titleTxt.setText('ELEGÍ TU EQUIPO');
-      this.subTxt.setText('Liga de 19 fechas · partidos de 90 segundos');
+      this.titleTxt.setText(t('team.title.league'));
+      this.subTxt.setText(t('team.sub.league'));
       return;
     }
     const vsBot = this.friendly.mode === 'bot';
     if (this.picks.length === 0) {
-      this.titleTxt.setText('JUGADOR 1: ELEGÍ');
-      this.subTxt.setText(vsBot ? 'Primero tu equipo, después el del bot' : 'Primero el jugador 1, después el jugador 2');
+      this.titleTxt.setText(t('team.title.p1'));
+      this.subTxt.setText(t(vsBot ? 'team.sub.p1.bot' : 'team.sub.p1.pvp'));
     } else {
-      this.titleTxt.setText(vsBot ? 'ELEGÍ EL RIVAL' : 'JUGADOR 2: ELEGÍ');
-      this.subTxt.setText(`Jugador 1 juega con ${TEAMS[this.picks[0]].short}  ·  Esc: cambiar`);
+      this.titleTxt.setText(t(vsBot ? 'team.title.rival' : 'team.title.p2'));
+      this.subTxt.setText(t('team.sub.p2', { team: TEAMS[this.picks[0]].short }));
     }
   }
 
@@ -152,7 +153,7 @@ export default class TeamSelectScene extends Phaser.Scene {
   }
 
   show() {
-    const t = this.team;
+    const team = this.team;
     this.thumbs.forEach(({ thumb, frame }, i) => {
       const on = i === this.index;
       frame.clear();
@@ -168,14 +169,14 @@ export default class TeamSelectScene extends Phaser.Scene {
     });
     this.counter.setText(`${this.index + 1} / ${TEAMS.length}`);
 
-    this.homeKit.setTexture(kitTexture(this, t.home, '10'));
-    this.awayKit.setTexture(kitTexture(this, t.away, '10'));
-    const name = t.name.toUpperCase();
+    this.homeKit.setTexture(kitTexture(this, team.home, '10'));
+    this.awayKit.setTexture(kitTexture(this, team.away, '10'));
+    const name = team.name.toUpperCase();
     this.nameText.setText(name).setFontSize(name.length > 12 ? 42 : 50);
-    this.starsText.setText(starsOf(t.strength));
-    this.tagText.setText(tagline(t.strength));
-    this.badge.setLevel(levelOf(t.strength));
-    this.chooseBtn.container.list[1].setText(`ELEGIR ${t.short}`);
+    this.starsText.setText(starsOf(team.strength));
+    this.tagText.setText(tagline(team.strength));
+    this.badge.setLevel(levelOf(team.strength));
+    this.chooseBtn.container.list[1].setText(t('common.choose', { team: team.short }));
 
     // Little pop when the club changes.
     // (Only the pop tween is stopped: the home kit keeps its bobbing one.)
@@ -212,7 +213,7 @@ export default class TeamSelectScene extends Phaser.Scene {
     g.fillRoundedRect(-22, -12, 44, 24, 8);
     g.fillStyle(COLORS.p1, 1);
     g.fillRoundedRect(-19, -9, 38, 18, 6);
-    const label = uiText(this, 0, 0, 'J1', 14);
+    const label = uiText(this, 0, 0, t('team.p1Tag'), 14);
     this.tag = this.add.container(thumb.x + 20, thumb.y - 26, [g, label]).setDepth(5).setAngle(8);
   }
 
@@ -226,7 +227,7 @@ export default class TeamSelectScene extends Phaser.Scene {
       const team = TEAMS[index];
       this.openSetup({
         icons: [{ texture: kitTexture(this, team.home, '10'), scale: 0.55 }],
-        subtitle: `Liga con ${team.short}  ·  los grandes siempre son más difíciles`,
+        subtitle: t('team.leagueSetup', { team: team.short }),
         difficulty: 'medium',
         onStart: ({ difficulty, hazards }) => {
           saveLeague(newLeague(team.id, difficulty, hazards));
@@ -249,22 +250,22 @@ export default class TeamSelectScene extends Phaser.Scene {
     const vsBot = this.friendly.mode === 'bot';
     // 1 vs 1: they pick which end player 1 defends (player 2 gets the other); it stays
     // the same for the whole match and is remembered for the next one.
-    const sides = [{ id: 'bottom', label: 'ABAJO' }, { id: 'top', label: 'ARRIBA' }];
+    const sides = [{ id: 'bottom', label: t('setup.bottom') }, { id: 'top', label: t('setup.top') }];
     const sideRow = vsBot ? [] : [{
-      key: 'p1Side', label: 'JUGADOR 1', values: sides, index: this.registry.get('p1Side') === 'top' ? 1 : 0,
+      key: 'p1Side', label: t('setup.side'), values: sides, index: this.registry.get('p1Side') === 'top' ? 1 : 0,
     }];
     // How long the match is: first to N goals, or a number of minutes (remembered too).
     const lengths = FRIENDLY_LENGTHS.map((l) => ({
-      id: l, label: l.goals ? `A ${l.goals} GOLES` : `${l.minutes} ${l.minutes === 1 ? 'MINUTO' : 'MINUTOS'}`,
+      id: l, label: l.goals ? t('setup.goals', { n: l.goals }) : t(l.minutes === 1 ? 'setup.minute' : 'setup.minutes', { n: l.minutes }),
     }));
     // Pitch: normal, rain (players slip) or in bad shape (holes and puddles), or random.
     const pitchRow = {
-      key: 'pitch', label: 'CANCHA', values: PITCHES,
+      key: 'pitch', label: t('setup.pitch'), values: PITCHES.map((p) => ({ id: p.id, label: t(`pitch.${p.id}`) })),
       index: Math.max(0, PITCHES.findIndex((p) => p.id === this.registry.get('pitch'))),
     };
     const savedLength = this.registry.get('friendlyLength');
     const lengthRow = {
-      key: 'length', label: 'PARTIDO', values: lengths,
+      key: 'length', label: t('setup.length'), values: lengths,
       index: Math.max(0, FRIENDLY_LENGTHS.findIndex((l) => l === savedLength || (!savedLength && l.goals === WIN_GOALS))),
     };
     this.openSetup({

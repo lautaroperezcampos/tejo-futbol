@@ -4,6 +4,8 @@
 // Kits use the same patterns as the clubs (see src/league/teams.js); `checks` is
 // Croatia's checkerboard. The away kit is the home one with the colours swapped unless
 // it's given. strength (0..1) drives the bots and the simulated matches.
+// The names here are the Spanish ones; other languages override them in src/lang/.
+import { t, nationName } from '../i18n.js';
 
 const RAW = [
   // South America
@@ -62,25 +64,27 @@ const RAW = [
   ['nzelanda', 'Nueva Zelanda', 'N. ZELANDA', 0.34, 'trim', '#ffffff', '#1d1d1d'],
 ];
 
-// Confederations, in the order the selector shows them.
+// Confederations, in the order the selector shows them (labels: conf.<id> in src/lang/).
 export const CONFEDERATIONS = [
-  { id: 'conmebol', label: 'SUDAMÉRICA', ids: ['argentina', 'brasil', 'uruguay', 'colombia', 'ecuador', 'paraguay', 'chile', 'peru'] },
+  { id: 'conmebol', ids: ['argentina', 'brasil', 'uruguay', 'colombia', 'ecuador', 'paraguay', 'chile', 'peru'] },
   {
-    id: 'uefa', label: 'EUROPA',
+    id: 'uefa',
     ids: ['francia', 'espana', 'alemania', 'inglaterra', 'italia', 'portugal', 'paisesbajos', 'croacia',
       'belgica', 'suiza', 'dinamarca', 'suecia', 'austria', 'polonia', 'turquia', 'serbia'],
   },
-  { id: 'concacaf', label: 'NORTE Y CENTRO', ids: ['mexico', 'eeuu', 'canada', 'costarica', 'panama', 'jamaica'] },
-  { id: 'caf', label: 'ÁFRICA', ids: ['marruecos', 'senegal', 'costamarfil', 'nigeria', 'camerun', 'egipto', 'ghana', 'argelia', 'tunez'] },
-  { id: 'afc', label: 'ASIA', ids: ['japon', 'corea', 'iran', 'australia', 'arabia', 'qatar', 'irak', 'uzbekistan'] },
-  { id: 'ofc', label: 'OCEANÍA', ids: ['nzelanda'] },
-];
+  { id: 'concacaf', ids: ['mexico', 'eeuu', 'canada', 'costarica', 'panama', 'jamaica'] },
+  { id: 'caf', ids: ['marruecos', 'senegal', 'costamarfil', 'nigeria', 'camerun', 'egipto', 'ghana', 'argelia', 'tunez'] },
+  { id: 'afc', ids: ['japon', 'corea', 'iran', 'australia', 'arabia', 'qatar', 'irak', 'uzbekistan'] },
+  { id: 'ofc', ids: ['nzelanda'] },
+].map((conf) => ({ ...conf, get label() { return t(`conf.${conf.id}`); } }));
 
 // World Cups won (shown as stars in the selector).
 const WORLD_CUPS = { brasil: 5, alemania: 4, italia: 4, argentina: 3, francia: 2, uruguay: 2, inglaterra: 1, espana: 1 };
 
 export const NATIONS = RAW.map(([id, name, short, strength, pattern, c1, c2, away]) => ({
-  id, name, short, strength,
+  id, strength,
+  get name() { return nationName(id)?.[0] ?? name; },
+  get short() { return nationName(id)?.[1] ?? short; },
   home: { pattern, colors: [c1, c2] },
   away: away ?? { pattern: 'trim', colors: [c2, c1] },
   titles: WORLD_CUPS[id] ?? 0,

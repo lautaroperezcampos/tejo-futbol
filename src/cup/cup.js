@@ -4,6 +4,7 @@
 // simulated ones to penalties. Saved in localStorage like the league.
 import { NATIONS, NATION_BY_ID } from './nations.js';
 import { simulateMatch } from '../league/league.js';
+import { t } from '../i18n.js';
 
 const STORAGE_KEY = 'tejo-futbol-copa-v1';
 
@@ -106,15 +107,14 @@ export function isFinished(cup) {
 }
 
 export function roundName(teamsLeft) {
-  return { 2: 'FINAL', 4: 'SEMIFINAL', 8: 'CUARTOS DE FINAL', 16: 'OCTAVOS DE FINAL', 32: 'DIECISEISAVOS' }[teamsLeft]
-    ?? `RONDA DE ${teamsLeft}`;
+  return [2, 4, 8, 16, 32].includes(teamsLeft) ? t(`round.${teamsLeft}`) : t('round.n', { n: teamsLeft });
 }
 
 // Name of what's being played now, e.g. "FASE DE GRUPOS · FECHA 2" or "CUARTOS DE FINAL".
 export function stageLabel(cup) {
-  if (cup.stage === 'groups') return `FASE DE GRUPOS · FECHA ${cup.groupRound + 1} DE 3`;
+  if (cup.stage === 'groups') return t('cup.stageGroups', { n: cup.groupRound + 1 });
   if (cup.stage === 'knockout') return roundName(currentRound(cup).length * 2);
-  return 'TORNEO TERMINADO';
+  return t('common.finished');
 }
 
 export function currentRound(cup) {

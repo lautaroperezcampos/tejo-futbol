@@ -11,12 +11,13 @@ import {
   currentRound, roundName, stageLabel, isFinished,
 } from '../cup/cup.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
-const HINT = '← → / cruz: elegir botón  ·  Enter / A: aceptar  ·  Tab / Y: cambiar vista  ·  Esc / B: menú';
 const BODY_TOP = 158;
 const BODY_BOTTOM = 858;
-const VIEW_LABEL = { groups: 'GRUPOS', bracket: 'LLAVES', results: 'RESULTADOS', final: 'CAMPEÓN' };
+// Text of the button that switches to each view.
+const VIEW_LABEL = { groups: 'cup.view.groups', bracket: 'cup.view.bracket', results: 'common.results', final: 'common.championBtn' };
 
 // Cup hub: group tables, the knockout bracket, last results, next match and the final.
 export default class CupScene extends Phaser.Scene {
@@ -90,9 +91,9 @@ export default class CupScene extends Phaser.Scene {
 
   drawHeader() {
     const c = this.cup;
-    ribbon(this, CX, 56, 'COPA DE NACIONES', 400, 52).setAngle(-2);
-    const extras = `${levelLabel(c.difficulty)}${c.hazards ? '  ·  POWER-UPS' : ''}`;
-    const status = c.eliminated && !isFinished(c) ? 'QUEDASTE AFUERA' : stageLabel(c);
+    ribbon(this, CX, 56, t('cup.title'), 400, 52).setAngle(-2);
+    const extras = `${levelLabel(c.difficulty)}${c.hazards ? `  ·  ${t('common.powerups')}` : ''}`;
+    const status = c.eliminated && !isFinished(c) ? t('cup.out') : stageLabel(c);
     uiText(this, CX, 116, `${status}  ·  ${this.user.short}  ·  ${extras}`, 19, PALETTE.yellow);
   }
 
@@ -105,15 +106,15 @@ export default class CupScene extends Phaser.Scene {
       const home = NATION_BY_ID[m.home];
       const away = NATION_BY_ID[m.away];
       const rowY = 940;
-      const label = m.knockout ? `PRÓXIMO PARTIDO · ${roundName(currentRound(c).length * 2)} · SI EMPATAN, GOL DE ORO` : 'PRÓXIMO PARTIDO';
+      const label = m.knockout ? t('cup.nextKnockout', { round: roundName(currentRound(c).length * 2) }) : t('common.nextMatch');
       uiText(this, CX, 898, label, 17, PALETTE.yellow);
       this.add.image(CX - 268, rowY, flagTexture(this, home.id)).setScale(0.24);
       uiText(this, CX - 222, rowY, home.short, 22).setOrigin(0, 0.5);
-      uiText(this, CX, rowY, 'VS', 22, PALETTE.yellow);
+      uiText(this, CX, rowY, t('common.vs'), 22, PALETTE.yellow);
       uiText(this, CX + 222, rowY, away.short, 22).setOrigin(1, 0.5);
       this.add.image(CX + 268, rowY, flagTexture(this, away.id)).setScale(0.24);
     } else if (c.eliminated && !isFinished(c)) {
-      uiText(this, CX, 920, 'La copa sigue sin vos: simulá el resto para ver quién sale campeón', 17, PALETTE.yellow);
+      uiText(this, CX, 920, t('cup.goesOn'), 17, PALETTE.yellow);
     }
 
     // Footer buttons, left to right; arrows / joystick move the highlight.
@@ -121,12 +122,12 @@ export default class CupScene extends Phaser.Scene {
     this.viewBtn = button(this, 130, btnY, 200, 66, '', () => this.cycleView(), 19);
     items.push([this.viewBtn, () => this.cycleView()]);
     if (isFinished(c)) {
-      const again = button(this, 500, btnY, 420, 66, 'NUEVA COPA', () => this.openResetModal(), 24);
+      const again = button(this, 500, btnY, 420, 66, t('cup.new'), () => this.openResetModal(), 24);
       items.push([again, () => this.openResetModal()]);
     } else {
-      const quit = button(this, 342, btnY, 200, 66, 'ABANDONAR', () => this.openResetModal(), 19);
+      const quit = button(this, 342, btnY, 200, 66, t('common.quit'), () => this.openResetModal(), 19);
       items.push([quit, () => this.openResetModal()]);
-      const label = m ? 'JUGAR' : 'SIMULAR';
+      const label = t(m ? 'cup.play' : 'cup.simulate');
       const main = button(this, 610, btnY, 320, 66, label, () => this.mainAction(), 26);
       items.push([main, () => this.mainAction()]);
     }
@@ -134,7 +135,7 @@ export default class CupScene extends Phaser.Scene {
     this.footer.forEach((item, i) => item.btn.zone.on('pointerover', () => this.focusFooter(i)));
     this.focusFooter(this.footer.length - 1, true);
     this.updateViewButton();
-    this.hint = uiText(this, CX, GAME_H - 28, HINT, 15);
+    this.hint = uiText(this, CX, GAME_H - 28, t('cup.hint'), 15);
   }
 
   focusFooter(index, silent = false) {
@@ -149,7 +150,7 @@ export default class CupScene extends Phaser.Scene {
   // The view button shows where it takes you next.
   updateViewButton() {
     const next = this.views[(this.views.indexOf(this.view) + 1) % this.views.length];
-    this.viewBtn.container.list[1].setText(this.views.length > 1 ? VIEW_LABEL[next] : VIEW_LABEL[this.view]);
+    this.viewBtn.container.list[1].setText(t(this.views.length > 1 ? VIEW_LABEL[next] : VIEW_LABEL[this.view]));
   }
 
   cycleView() {
@@ -230,10 +231,10 @@ export default class CupScene extends Phaser.Scene {
       bg.lineStyle(mine ? 4 : 2, mine ? COLORS.yellow : COLORS.purple, 1);
       bg.strokeRoundedRect(x, y, w, h, 14);
       const headH = Math.min(30, h * 0.2);
-      this.add2(this.add.text(x + 12, y + headH / 2 + 2, `GRUPO ${g.name}`, {
+      this.add2(this.add.text(x + 12, y + headH / 2 + 2, t('cup.group', { name: g.name }), {
         fontFamily: FONTS.title, fontSize: `${Math.round(fontSize * 0.95)}px`, color: mine ? PALETTE.yellow : PALETTE.white,
       }).setOrigin(0, 0.5));
-      this.add2(this.add.text(x + w - 12, y + headH / 2 + 2, 'PTS', {
+      this.add2(this.add.text(x + w - 12, y + headH / 2 + 2, t('cup.pts'), {
         fontFamily: FONTS.ui, fontStyle: '900', fontSize: `${Math.round(fontSize * 0.8)}px`, color: PALETTE.white,
       }).setOrigin(1, 0.5));
 
@@ -261,7 +262,7 @@ export default class CupScene extends Phaser.Scene {
         }).setOrigin(1, 0.5));
       });
     });
-    const note = thirdsGo ? 'Pasan los 2 primeros de cada grupo y los 8 mejores terceros' : 'Pasan los 2 primeros de cada grupo';
+    const note = t(thirdsGo ? 'cup.noteThirds' : 'cup.note');
     this.add2(uiText(this, CX, BODY_BOTTOM + 8, note, 15, '#bfb3ff'));
   }
 
@@ -281,11 +282,11 @@ export default class CupScene extends Phaser.Scene {
     let list;
     if (played.length && c.stage !== 'groups') {
       const r = played[played.length - 1];
-      title = `RESULTADOS · ${roundName(r.length * 2)}`;
+      title = t('cup.resultsRound', { round: roundName(r.length * 2) });
       list = r.map((m) => ({ a: m.a, b: m.b, ag: m.ag, bg: m.bg, pens: m.pens, winner: m.winner }));
     } else {
       const md = c.groupResults[c.groupResults.length - 1];
-      title = `RESULTADOS · FECHA ${c.groupResults.length} DE GRUPOS`;
+      title = t('cup.resultsGroups', { n: c.groupResults.length });
       list = md.map((r) => ({ a: r.home, b: r.away, ag: r.hg, bg: r.ag, group: r.group }));
     }
     this.add2(uiText(this, CX, BODY_TOP + 8, title, 22));
@@ -322,14 +323,14 @@ export default class CupScene extends Phaser.Scene {
       const flagX = cols === 2 ? 24 : 34;
       this.add2(this.add.image(x + flagX, cy, flagTexture(this, na.id)).setScale(flagScale));
       this.add2(this.add.text(mid - (cols === 2 ? 34 : 56), cy, na.short, style(m.winner === m.a)).setOrigin(1, 0.5));
-      const score = m.ag === null || m.ag === undefined ? 'vs' : `${m.ag} - ${m.bg}${m.pens ? '*' : ''}`;
+      const score = m.ag === null || m.ag === undefined ? t('cup.vs') : `${m.ag} - ${m.bg}${m.pens ? '*' : ''}`;
       this.add2(this.add.text(mid, cy, score, {
         fontFamily: FONTS.title, fontSize: `${fontSize + 2}px`, color,
       }).setOrigin(0.5));
       this.add2(this.add.text(mid + (cols === 2 ? 34 : 56), cy, nb.short, style(m.winner === m.b)).setOrigin(0, 0.5));
       this.add2(this.add.image(x + colW - flagX, cy, flagTexture(this, nb.id)).setScale(flagScale));
     });
-    if (list.some((m) => m.pens)) this.add2(uiText(this, CX, BODY_BOTTOM + 8, '* ganó por penales', 15, '#bfb3ff'));
+    if (list.some((m) => m.pens)) this.add2(uiText(this, CX, BODY_BOTTOM + 8, t('cup.pens'), 15, '#bfb3ff'));
   }
 
   renderFinal() {
@@ -342,15 +343,15 @@ export default class CupScene extends Phaser.Scene {
     this.add2(this.add.image(CX + 120, 455, flagTexture(this, champion.id)).setScale(0.42).setAngle(8));
 
     if (won) {
-      this.add2(titleText(this, CX, 630, '¡CAMPEÓN!', 100).setAngle(-5));
+      this.add2(titleText(this, CX, 630, t('common.champion'), 100).setAngle(-5));
       this.add2(ribbon(this, CX, 725, this.user.short, 380, 56).setAngle(-5));
-      this.add2(uiText(this, CX, 805, '¡Ganaste la copa de naciones!', 26, PALETTE.yellow));
+      this.add2(uiText(this, CX, 805, t('cup.won'), 26, PALETTE.yellow));
       sfx.win();
       this.time.addEvent({ delay: 700, repeat: 4, callback: () => this.confetti() });
     } else {
-      this.add2(titleText(this, CX, 630, `CAMPEÓN: ${champion.short}`, champion.short.length > 9 ? 52 : 64).setAngle(-4));
+      this.add2(titleText(this, CX, 630, t('common.championOf', { team: champion.short }), champion.short.length > 9 ? 52 : 64).setAngle(-4));
       this.add2(ribbon(this, CX, 725, `${this.user.short}: ${this.userFinish()}`, 520, 56).setAngle(-4));
-      this.add2(uiText(this, CX, 805, '¡La próxima es tuya!', 24, PALETTE.yellow));
+      this.add2(uiText(this, CX, 805, t('common.nextTime'), 24, PALETTE.yellow));
     }
   }
 
@@ -359,8 +360,8 @@ export default class CupScene extends Phaser.Scene {
     const c = this.cup;
     let last = null;
     for (const r of c.rounds) if (r.some((m) => m.a === c.userId || m.b === c.userId)) last = r;
-    if (!last) return 'FASE DE GRUPOS';
-    if (last.length === 1) return 'SUBCAMPEÓN';
+    if (!last) return t('cup.groupStage');
+    if (last.length === 1) return t('cup.runnerUp');
     return roundName(last.length * 2);
   }
 
@@ -384,10 +385,8 @@ export default class CupScene extends Phaser.Scene {
     if (this.modal || this.leaving) return;
     sfx.select();
     const finished = isFinished(this.cup);
-    const title = finished ? '¿EMPEZAR OTRA COPA?' : '¿ABANDONAR LA COPA?';
-    const detail = finished
-      ? 'Elegís una selección nueva y las opciones del torneo.'
-      : `Se pierde la copa de ${this.user.short}\ny empezás de nuevo eligiendo selección.`;
+    const title = t(finished ? 'cup.newTitle' : 'cup.quitTitle');
+    const detail = finished ? t('cup.newDetail') : t('cup.quitDetail', { team: this.user.short });
     const dim = this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.75).setOrigin(0).setInteractive();
     const panel = this.add.graphics();
     panel.fillStyle(COLORS.ink, 1);
@@ -398,8 +397,8 @@ export default class CupScene extends Phaser.Scene {
     panel.strokeRoundedRect(CX - 310, 394, 620, 330, 24);
     const heading = titleText(this, CX, 470, title, 40);
     const text = uiText(this, CX, 555, detail, 19).setLineSpacing(6);
-    const no = button(this, CX - 150, 655, 260, 64, 'NO', () => this.closeModal(), 22);
-    const yes = button(this, CX + 150, 655, 260, 64, finished ? 'SÍ, NUEVA' : 'SÍ, ABANDONAR', () => this.confirmReset(), 22);
+    const no = button(this, CX - 150, 655, 260, 64, t('common.no'), () => this.closeModal(), 22);
+    const yes = button(this, CX + 150, 655, 260, 64, t(finished ? 'common.yesNew' : 'common.yesQuit'), () => this.confirmReset(), 22);
     this.modal = { sel: 0, buttons: [no, yes], parts: [dim, panel, heading, text, no.container, no.zone, yes.container, yes.zone] };
     for (const part of this.modal.parts) part.setDepth(100);
     this.selectModal(0);

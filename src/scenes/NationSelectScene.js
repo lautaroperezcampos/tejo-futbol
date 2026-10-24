@@ -10,16 +10,14 @@ import { flagTexture } from '../cup/flags.js';
 import { newCup, saveCup, CUP_SIZES } from '../cup/cup.js';
 import SetupPanel from '../setupPanel.js';
 import { padMenu } from '../gamepads.js';
+import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 50, y: 200, w: GAME_W - 100, h: 500 };
 const TAB = { y: 150, w: 124, h: 44, gap: 8 };
 const STRIP = { top: 790, thumbScale: 0.3, gap: 10, rowGap: 82 };
 const CHOOSE_Y = 1000;
-const CUP_FORMATS = [
-  { id: 'groups', label: 'FASE DE GRUPOS' },
-  { id: 'knockout', label: 'ELIMINACIÓN DIRECTA' },
-];
+const CUP_FORMATS = ['groups', 'knockout']; // labels: cup.format.<id> in src/lang/
 
 // FIFA-style nation picker for the cup: confederation tabs on top, a big card with the
 // selected nation (flag, kit, level, stars, World Cups) and a strip with the flags of
@@ -42,7 +40,7 @@ export default class NationSelectScene extends Phaser.Scene {
     playMenuMusic(this);
     this.add.image(0, 0, 'menuBg').setOrigin(0);
     this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.6).setOrigin(0);
-    titleText(this, CX, 72, 'ELEGÍ TU SELECCIÓN', 50).setAngle(-3);
+    titleText(this, CX, 72, t('nation.title'), 50).setAngle(-3);
     optionsButton(this, GAME_W - 48, 48);
 
     this.makeTabs();
@@ -50,7 +48,7 @@ export default class NationSelectScene extends Phaser.Scene {
     this.stripLayer = this.add.container(0, 0);
     this.chooseBtn = button(this, CX, CHOOSE_Y, 460, 70, '', () => this.confirm(), 26);
     this.chooseBtn.setActive(true);
-    uiText(this, CX, GAME_H - 44, '← → selección  ·  ↑ ↓ confederación  ·  Enter / A: elegir  ·  Esc / B: volver', 16);
+    uiText(this, CX, GAME_H - 44, t('nation.hint'), 16);
 
     this.show(true);
 
@@ -210,19 +208,19 @@ export default class NationSelectScene extends Phaser.Scene {
     this.kit.setTexture(kitTexture(this, n.home, '10'));
     const name = n.name.toUpperCase();
     this.nameText.setText(name).setFontSize(name.length > 12 ? 44 : 54);
-    this.chooseBtn.container.list[1].setText(`ELEGIR ${n.short}`);
+    this.chooseBtn.container.list[1].setText(t('common.choose', { team: n.short }));
     this.starsText.setText(starsOf(n.strength));
     this.badge.setLevel(levelOf(n.strength));
 
     this.cupsLayer.removeAll(true);
     if (n.titles) {
-      const label = uiText(this, CX - 30 * n.titles, 640, 'COPAS DEL MUNDO', 18);
+      const label = uiText(this, CX - 30 * n.titles, 640, t('nation.worldCups'), 18);
       this.cupsLayer.add(label);
       for (let i = 0; i < n.titles; i++) {
         this.cupsLayer.add(this.add.image(label.x + label.width / 2 + 34 + i * 40, 638, 'trophy').setScale(0.14));
       }
     } else {
-      this.cupsLayer.add(uiText(this, CX, 640, '¡A BUSCAR SU PRIMERA COPA DEL MUNDO!', 18, '#bfb3ff'));
+      this.cupsLayer.add(uiText(this, CX, 640, t('nation.noCups'), 18, '#bfb3ff'));
     }
 
     // Little pop when the nation changes.
@@ -240,24 +238,25 @@ export default class NationSelectScene extends Phaser.Scene {
     const nation = this.nation;
     const sizeValues = (format) => CUP_SIZES[format].map((n) => ({
       id: n,
-      label: format === 'groups' ? `${n} (${n / 4} GRUPOS)` : `${n} EQUIPOS`,
+      label: format === 'groups' ? t('cup.size.groups', { n, groups: n / 4 }) : t('cup.size.knockout', { n }),
     }));
-    const formatRow = { key: 'format', label: 'FORMATO', values: CUP_FORMATS, index: 0 };
-    const sizeRow = { key: 'size', label: 'EQUIPOS', values: sizeValues('groups'), index: 0 };
+    const formats = CUP_FORMATS.map((id) => ({ id, label: t(`cup.format.${id}`) }));
+    const formatRow = { key: 'format', label: t('cup.format'), values: formats, index: 0 };
+    const sizeRow = { key: 'size', label: t('cup.teams'), values: sizeValues('groups'), index: 0 };
     this.setup = new SetupPanel(this, {
       icons: [
         { texture: flagTexture(this, nation.id), scale: 0.42 },
         { texture: kitTexture(this, nation.home, '10'), scale: 0.55 },
       ],
       vs: false,
-      subtitle: `Copa con ${nation.short}  ·  si achicás la copa juegan los mejores`,
+      subtitle: t('cup.setupSub', { team: nation.short }),
       extraRows: [formatRow, sizeRow],
       difficulty: 'medium',
       // Changing the format swaps the size options, keeping the closest size.
       onChange: (row) => {
         if (row !== formatRow) return;
         const current = sizeRow.values[sizeRow.index].id;
-        sizeRow.values = sizeValues(CUP_FORMATS[formatRow.index].id);
+        sizeRow.values = sizeValues(CUP_FORMATS[formatRow.index]);
         const sizes = sizeRow.values.map((v) => v.id);
         const closest = sizes.reduce((best, s) => (Math.abs(s - current) < Math.abs(best - current) ? s : best), sizes[0]);
         sizeRow.index = sizes.indexOf(closest);

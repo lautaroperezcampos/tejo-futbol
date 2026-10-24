@@ -4,8 +4,10 @@
 import { GAME_W, GAME_H, COLORS, PALETTE } from './config.js';
 import { titleText, uiText, button, levelLabel } from './ui.js';
 import { sfx } from './sound.js';
+import { t } from './i18n.js';
 
-export const LEVELS = ['veryEasy', 'easy', 'medium', 'hard'].map((id) => ({ id, label: levelLabel(id) }));
+// Built when a panel opens, so the labels follow the current language.
+const levels = () => ['veryEasy', 'easy', 'medium', 'hard'].map((id) => ({ id, label: levelLabel(id) }));
 
 export default class SetupPanel {
   //   icons: [{ texture, scale }] shown at the top (kits, a flag...)
@@ -26,10 +28,11 @@ export default class SetupPanel {
     const cx = GAME_W / 2;
     const rows = [...extraRows];
     if (difficulty) {
-      rows.push({ key: 'difficulty', label: 'DIFICULTAD', values: LEVELS, index: LEVELS.findIndex((l) => l.id === difficulty) });
+      const values = levels();
+      rows.push({ key: 'difficulty', label: t('setup.difficulty'), values, index: values.findIndex((l) => l.id === difficulty) });
     }
     // Remembers the last choice for the next match.
-    rows.push({ key: 'hazards', label: 'POWER-UPS', values: [{ id: false, label: 'NO' }, { id: true, label: 'SÍ' }], index: scene.registry.get('hazards') ? 1 : 0 });
+    rows.push({ key: 'hazards', label: t('common.powerups'), values: [{ id: false, label: t('common.no') }, { id: true, label: t('common.yes') }], index: scene.registry.get('hazards') ? 1 : 0 });
     this.rows = rows;
 
     const top = rows.length > 2 ? 230 : 290;
@@ -48,8 +51,8 @@ export default class SetupPanel {
       const x = cx + (i - (icons.length - 1) / 2) * 150;
       parts.push(scene.add.image(x, top + 62, texture).setScale(scale));
     });
-    if (vs && icons.length === 2) parts.push(titleText(scene, cx, top + 62, 'VS', 34, PALETTE.yellow));
-    parts.push(titleText(scene, cx, top + 140, 'ANTES DE JUGAR', 40));
+    if (vs && icons.length === 2) parts.push(titleText(scene, cx, top + 62, t('common.vs'), 34, PALETTE.yellow));
+    parts.push(titleText(scene, cx, top + 140, t('setup.title'), 40));
     parts.push(uiText(scene, cx, top + 186, subtitle, 17, PALETTE.yellow));
 
     rows.forEach((row, i) => {
@@ -61,12 +64,12 @@ export default class SetupPanel {
       parts.push(row.btn.container, row.btn.zone);
     });
     const hazardsY = top + 250 + (rows.length - 1) * 90;
-    parts.push(uiText(scene, cx, hazardsY + 48, 'Pegales con la pelota: hielo, jabón o arco gigante', 15, PALETTE.cyan));
+    parts.push(uiText(scene, cx, hazardsY + 48, t('setup.hazardsHint'), 15, PALETTE.cyan));
 
-    this.play = button(scene, cx, top + height - 60, 340, 70, '¡A JUGAR!', () => this.start(), 30);
+    this.play = button(scene, cx, top + height - 60, 340, 70, t('setup.play'), () => this.start(), 30);
     this.play.zone.on('pointerover', () => this.focus(rows.length));
     parts.push(this.play.container, this.play.zone);
-    parts.push(uiText(scene, cx, top + height + 34, '↑ ↓ elegir  ·  ← → cambiar  ·  Enter / A: aceptar  ·  Esc / B: volver', 15));
+    parts.push(uiText(scene, cx, top + height + 34, t('setup.hint'), 15));
 
     this.parts = parts;
     for (const part of parts) part.setDepth(100);

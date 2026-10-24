@@ -6,6 +6,7 @@
 // detection works.
 import { GAME_W, PALETTE } from './config.js';
 import { uiText } from './ui.js';
+import { t } from './i18n.js';
 
 export const BTN = {
   A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, SELECT: 8, START: 9,
@@ -137,9 +138,9 @@ export function padMenu(scene, onKey) {
 
 // "JOYSTICK 1 CONECTADO" notice at the top of the screen.
 export function padToast(scene, n) {
-  const make = () => uiText(scene, GAME_W / 2, 185, `🎮 JOYSTICK ${n} CONECTADO`, 24, PALETTE.yellow)
+  const make = () => uiText(scene, GAME_W / 2, 185, `🎮 ${t('pad.connected', { n })}`, 24, PALETTE.yellow)
     .setDepth(50).setAlpha(0);
-  const t = scene.asUI ? scene.asUI(make) : make();
-  scene.tweens.add({ targets: t, alpha: 1, y: 165, duration: 200 });
-  scene.tweens.add({ targets: t, alpha: 0, delay: 1800, duration: 400, onComplete: () => t.destroy() });
+  const toast = scene.asUI ? scene.asUI(make) : make();
+  scene.tweens.add({ targets: toast, alpha: 1, y: 165, duration: 200 });
+  scene.tweens.add({ targets: toast, alpha: 0, delay: 1800, duration: 400, onComplete: () => toast.destroy() });
 }

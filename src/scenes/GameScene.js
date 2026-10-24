@@ -2,8 +2,9 @@ import * as Phaser from 'phaser';
 import {
   GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R, GOAL_DEPTH,
   PLAYER_R, PLAYER_SPEED, KICKOFF_OFFSET, BALL_R, BALL, KICK, WIN_GOALS, GOAL_PAUSE,
-  KICKOFF_DELAY, COLORS, PALETTE, FONTS, BOT_LEVELS, DASH, HAZARDS, SCORE_BOX, STALL, PITCH,
+  KICKOFF_DELAY, COLORS, PALETTE, FONTS, DASH, HAZARDS, SCORE_BOX, STALL, PITCH,
 } from '../config.js';
+import { t, botLevelName } from '../i18n.js';
 import { makeTextures, kitTexture, SPRITE_SCALE } from '../art.js';
 import {
   titleText, uiText, ribbon, goTo, wipeIn, optionsButton, openOptions, iconButton,
@@ -82,14 +83,14 @@ export default class GameScene extends Phaser.Scene {
       const t1 = TEAM_BY_ID[this.teams.p1];
       const t2 = TEAM_BY_ID[this.teams.p2];
       const kits = pickKits(t1, t2);
-      const botTag = this.mode === 'bot' ? ` (${BOT_LEVELS[this.level].label})` : '';
+      const botTag = this.mode === 'bot' ? ` (${botLevelName(this.level)})` : '';
       return { p1Kit: kits.home, p2Kit: kits.away, p1Name: t1.short, p2Name: `${t2.short}${botTag}` };
     }
     return {
       p1Kit: { pattern: 'solid', colors: [PALETTE.p1] },
       p2Kit: { pattern: 'solid', colors: [PALETTE.p2] },
-      p1Name: 'Jugador 1',
-      p2Name: this.mode === 'bot' ? `Bot ${BOT_LEVELS[this.level].label}` : 'Jugador 2',
+      p1Name: t('game.player1'),
+      p2Name: this.mode === 'bot' ? t('game.bot', { level: botLevelName(this.level) }) : t('game.player2'),
     };
   }
 
@@ -299,7 +300,7 @@ export default class GameScene extends Phaser.Scene {
     g.fillRoundedRect(tagX - 58, cy - 26, 116, 52, 16);
     g.fillStyle(COLORS.yellow, 1);
     g.fillRoundedRect(tagX - 53, cy - 21, 106, 42, 12);
-    this.add.text(tagX, cy - 9, 'VELOCIDAD', { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '11px', color: PALETTE.ink })
+    this.add.text(tagX, cy - 9, t('game.speed'), { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '11px', color: PALETTE.ink })
       .setOrigin(0.5).setDepth(9);
     this.speedText = this.add.text(tagX, cy + 8, 'x1.0', { fontFamily: FONTS.title, fontSize: '20px', color: PALETTE.ink })
       .setOrigin(0.5).setDepth(9);
@@ -326,7 +327,7 @@ export default class GameScene extends Phaser.Scene {
         len: 14 + Math.random() * 14, speed: 900 + Math.random() * 500,
       }));
     }
-    const notice = { rain: '¡ESTÁ LLOVIENDO!', rough: '¡CANCHA EN MAL ESTADO!' }[this.pitch];
+    const notice = { rain: t('game.rain'), rough: t('game.rough') }[this.pitch];
     if (notice) this.time.delayedCall(300, () => this.shoutUI(notice, PALETTE.cyan));
   }
 
@@ -480,7 +481,7 @@ export default class GameScene extends Phaser.Scene {
   enlargeGoal(side) {
     this.bigGoal[side].until = this.playTime + HAZARDS.bigGoalTime;
     const y = side === 'top' ? FIELD.top + 40 : FIELD.bottom - 40;
-    floatText(this, CENTER_X, y, '¡ARCO GIGANTE!', PALETTE.yellow, 30);
+    floatText(this, CENTER_X, y, t('game.bigGoal'), PALETTE.yellow, 30);
     this.cameras.main.shake(120, 0.005);
   }
 
@@ -632,7 +633,7 @@ export default class GameScene extends Phaser.Scene {
     const goAt = countdown ? numbers.length * COUNTDOWN_STEP : KICKOFF_DELAY;
     this.time.delayedCall(goAt, () => {
       if (this.state !== 'kickoff') return;
-      this.countText('¡YA!', PALETTE.yellow);
+      this.countText(t('game.go'), PALETTE.yellow);
       sfx.go();
       const angle = Phaser.Math.DegToRad(Phaser.Math.Between(-35, 35));
       const dirY = receiver.side === 'bottom' ? 1 : -1;
@@ -689,7 +690,7 @@ export default class GameScene extends Phaser.Scene {
   stallFoul(holder) {
     this.stallText?.setVisible(false);
     sfx.whistle();
-    this.shoutUI('¡DEMORA!', PALETTE.p2);
+    this.shoutUI(t('game.stall'), PALETTE.p2);
     holder.mood = 'dizzy';
     holder.moodUntil = this.time.now + 1500;
     this.kickoff(holder, false, this.rivalOf(holder));
@@ -751,7 +752,7 @@ export default class GameScene extends Phaser.Scene {
       changeMatchTrack();
       this.updateChant();
     }
-    this.showBanner(golden ? '¡GOL DE ORO!' : '¡GOLAZO!', name.toUpperCase(), true);
+    this.showBanner(t(golden ? 'game.goldenGoal' : 'game.golazo'), name.toUpperCase(), true);
 
     this.time.delayedCall(GOAL_PAUSE, () => this.startReplay(() => {
       if (won) this.showWin(scorer);
@@ -765,14 +766,14 @@ export default class GameScene extends Phaser.Scene {
   startGoldenGoal() {
     this.goldenGoal = true;
     this.timeLeft = 0;
-    this.clockText.setText('ORO').setColor(PALETTE.yellow);
+    this.clockText.setText(t('game.gold')).setColor(PALETTE.yellow);
     sfx.whistle();
     this.asUI(() => {
-      const t = titleText(this, CENTER_X, MID_Y - 150, '¡GOL DE ORO!', 72, PALETTE.yellow).setDepth(12).setScale(0.3);
-      const sub = uiText(this, CENTER_X, MID_Y - 85, 'El próximo gol gana', 24).setDepth(12).setAlpha(0);
-      this.tweens.add({ targets: t, scale: 1, duration: 300, ease: 'Back.Out' });
+      const title = titleText(this, CENTER_X, MID_Y - 150, t('game.goldenGoal'), 72, PALETTE.yellow).setDepth(12).setScale(0.3);
+      const sub = uiText(this, CENTER_X, MID_Y - 85, t('game.nextGoalWins'), 24).setDepth(12).setAlpha(0);
+      this.tweens.add({ targets: title, scale: 1, duration: 300, ease: 'Back.Out' });
       this.tweens.add({ targets: sub, alpha: 1, duration: 300 });
-      this.tweens.add({ targets: [t, sub], alpha: 0, delay: 1800, duration: 400, onComplete: () => { t.destroy(); sub.destroy(); } });
+      this.tweens.add({ targets: [title, sub], alpha: 0, delay: 1800, duration: 400, onComplete: () => { title.destroy(); sub.destroy(); } });
     });
   }
 
@@ -787,17 +788,17 @@ export default class GameScene extends Phaser.Scene {
     sfx.win();
     const name = scorer === this.p1 ? this.p1Name : this.p2Name;
     this.showEndCard({
-      title: '¡GANÓ!',
+      title: t('game.won'),
       winner: scorer,
-      verdict: [`¡${name.toUpperCase()} GANA EL PARTIDO!`, PALETTE.yellow],
+      verdict: [t('game.winsMatch', { name: name.toUpperCase() }), PALETTE.yellow],
       buttons: this.friendlyButtons(),
     });
   }
 
   friendlyButtons() {
     return [
-      { title: 'JUGAR DE NUEVO', sub: 'R', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
-      { title: 'MENÚ', sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
+      { title: t('game.playAgain'), sub: 'R', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.rematch() },
+      { title: t('game.menu'), sub: 'Esc / B', color: COLORS.p2, drawIcon: drawExitIcon, action: () => goTo(this, 'Menu') },
     ];
   }
 
@@ -866,12 +867,12 @@ export default class GameScene extends Phaser.Scene {
       return total ? Math.round((st[key].attack / total) * 100) : 50;
     };
     const rows = [
-      ['TIROS AL ARCO', (k) => st[k].shots],
-      ['ATAJADAS', (k) => st[k].saves],
-      ['PATADAS', (k) => st[k].kicks],
-      ['DASH USADOS', (k) => st[k].dashes],
-      ...(this.hazardsOn ? [['POWER-UPS GANADOS', (k) => st[k].powerups]] : []),
-      ['DOMINIO', (k) => pct(k), '%'],
+      [t('game.statShots'), (k) => st[k].shots],
+      [t('game.statSaves'), (k) => st[k].saves],
+      [t('game.statKicks'), (k) => st[k].kicks],
+      [t('game.statDashes'), (k) => st[k].dashes],
+      ...(this.hazardsOn ? [[t('game.statPowerups'), (k) => st[k].powerups]] : []),
+      [t('game.statControl'), (k) => pct(k), '%'],
     ];
     const rowsTop = top + 300;
     const rowGap = 42;
@@ -913,7 +914,7 @@ export default class GameScene extends Phaser.Scene {
       if (verdict) parts.push(uiText(this, cx, top + 222, verdict[0], 22, verdict[1]));
 
       // Stats.
-      parts.push(uiText(this, cx, top + 272, 'ESTADÍSTICAS', 16, '#bfb3ff'));
+      parts.push(uiText(this, cx, top + 272, t('game.stats'), 16, '#bfb3ff'));
       rows.forEach(([label, value, unit = ''], i) => {
         const y = rowsTop + i * rowGap;
         const a = value('p1');
@@ -931,8 +932,8 @@ export default class GameScene extends Phaser.Scene {
       const secs = Math.round(this.playTime / 1000);
       const duration = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
       parts.push(
-        uiText(this, cx, extrasY + 10, `PELOTA MÁS RÁPIDA: x${st.topSpeed.toFixed(1)}   ·   MAYOR RACHA: ${st.longestRally} REBOTES`, 15, PALETTE.cyan),
-        uiText(this, cx, extrasY + 38, `TIEMPO JUGADO: ${duration}`, 15, PALETTE.cyan),
+        uiText(this, cx, extrasY + 10, t('game.extras', { speed: st.topSpeed.toFixed(1), rally: st.longestRally }), 15, PALETTE.cyan),
+        uiText(this, cx, extrasY + 38, t('game.played', { time: duration }), 15, PALETTE.cyan),
       );
 
       // Buttons: up/down (keys, cross or stick) or the mouse pick one, Enter / A presses it.
@@ -981,16 +982,16 @@ export default class GameScene extends Phaser.Scene {
     this.speedText.setText('x1.0');
     sfx.whistle();
     this.match.record(this.score.p1, this.score.p2);
-    this.showResult('¡FINAL!');
+    this.showResult(t('game.fullTime'));
   }
 
   showResult(title) {
     const { p1, p2 } = this.score;
-    let verdict = ['EMPATE  ·  +1 PUNTO', PALETTE.white];
+    let verdict = [t('game.draw'), PALETTE.white];
     if (this.match.knockout) {
-      verdict = p1 > p2 ? ['¡GANASTE!  ·  PASÁS DE RONDA', PALETTE.yellow] : ['PERDISTE  ·  QUEDÁS AFUERA', '#ff9aa3'];
-    } else if (p1 > p2) verdict = ['¡GANASTE!  ·  +3 PUNTOS', PALETTE.yellow];
-    else if (p1 < p2) verdict = ['PERDISTE  ·  0 PUNTOS', '#ff9aa3'];
+      verdict = p1 > p2 ? [t('game.winThrough'), PALETTE.yellow] : [t('game.loseOut'), '#ff9aa3'];
+    } else if (p1 > p2) verdict = [t('game.win3'), PALETTE.yellow];
+    else if (p1 < p2) verdict = [t('game.lose0'), '#ff9aa3'];
     if (p1 > p2) sfx.win();
     let winner = null;
     if (p1 !== p2) winner = p1 > p2 ? this.p1 : this.p2;
@@ -999,7 +1000,7 @@ export default class GameScene extends Phaser.Scene {
       winner,
       verdict,
       buttons: [
-        { title: 'CONTINUAR', sub: 'Enter / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.leaveMatch() },
+        { title: t('game.continue'), sub: 'Enter / A', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.leaveMatch() },
       ],
     });
   }
@@ -1043,7 +1044,7 @@ export default class GameScene extends Phaser.Scene {
     card.lineStyle(6, COLORS.ink, 1);
     card.strokeRoundedRect(cx - w / 2, top, w, height, 28);
     card.lineBetween(cx - w / 2, top + 190, cx + w / 2, top + 190);
-    parts.push(card, titleText(this, cx, top - 6, 'PAUSA', 84).setAngle(-4));
+    parts.push(card, titleText(this, cx, top - 6, t('game.pause'), 84).setAngle(-4));
 
     // Scoreboard: both kits, the names and the score (plus the clock in a league match).
     const hasClock = this.timeLeft !== null;
@@ -1060,11 +1061,11 @@ export default class GameScene extends Phaser.Scene {
       parts.push(uiText(this, cx, scoreY + 50, `⏱ ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`, 20));
     }
 
-    const quitLabel = this.match ? 'ABANDONAR' : 'SALIR AL MENÚ';
-    const quitSub = this.match ? 'Perdés el partido 0-3' : 'Se termina este partido';
+    const quitLabel = t(this.match ? 'common.quit' : 'game.quitToMenu');
+    const quitSub = t(this.match ? 'game.quitMatchSub' : 'game.quitFriendlySub');
     const items = [
-      { title: 'SEGUIR JUGANDO', sub: 'Esc / Start', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.togglePause() },
-      { title: 'OPCIONES', sub: 'Controles y sonido  ·  O / Y', drawIcon: drawGearIcon, action: () => openOptions(this) },
+      { title: t('game.resume'), sub: 'Esc / Start', color: 0x2fb36c, drawIcon: drawPlayIcon, action: () => this.togglePause() },
+      { title: t('options.title'), sub: t('game.optionsSub'), drawIcon: drawGearIcon, action: () => openOptions(this) },
       { title: quitLabel, sub: quitSub, color: COLORS.p2, drawIcon: drawExitIcon, action: () => this.quitFromPause() },
     ];
     this.pauseButtons = items.map((item, i) => {
@@ -1074,7 +1075,7 @@ export default class GameScene extends Phaser.Scene {
       parts.push(btn.container, btn.zone);
       return btn;
     });
-    parts.push(uiText(this, cx, top + height - 30, '↑ ↓ elegir  ·  Enter / A: aceptar', 15, '#bfb3ff'));
+    parts.push(uiText(this, cx, top + height - 30, t('game.pauseHint'), 15, '#bfb3ff'));
 
     this.pauseIndex = 0;
     this.pauseFocus(0, true);
@@ -1121,7 +1122,7 @@ export default class GameScene extends Phaser.Scene {
     this.score = { p1: 0, p2: 3 };
     this.updateHud();
     this.match.record(0, 3);
-    this.showResult('ABANDONASTE');
+    this.showResult(t('game.abandoned'));
   }
 
   showBanner(title, subtitle, autoHide) {
@@ -1186,7 +1187,7 @@ export default class GameScene extends Phaser.Scene {
   touch() {
     this.rally++;
     this.stats.longestRally = Math.max(this.stats.longestRally, this.rally);
-    if (this.rally % 10 === 0) this.shout('rally', `¡${this.rally} REBOTES!`, PALETTE.cyan, 0, 28);
+    if (this.rally % 10 === 0) this.shout('rally', t('game.rally', { n: this.rally }), PALETTE.cyan, 0, 28);
   }
 
   // ---------- replay ----------
@@ -1211,8 +1212,8 @@ export default class GameScene extends Phaser.Scene {
       const top = this.add.rectangle(0, -100, GAME_W, 100, COLORS.ink, 0.92).setOrigin(0);
       const bottom = this.add.rectangle(0, GAME_H, GAME_W, 80, COLORS.ink, 0.92).setOrigin(0);
       const dot = this.add.circle(46, -50, 11, 0xff3040).setStrokeStyle(3, 0xffffff);
-      const label = titleText(this, 210, -50, 'REPETICIÓN', 36);
-      const skip = uiText(this, GAME_W - 30, GAME_H + 40, 'ESPACIO / A: SALTAR', 18, PALETTE.yellow).setOrigin(1, 0.5);
+      const label = titleText(this, 210, -50, t('game.replay'), 36);
+      const skip = uiText(this, GAME_W - 90, GAME_H + 40, t('game.skip'), 18, PALETTE.yellow).setOrigin(1, 0.5);
       this.tweens.add({ targets: [top, dot, label], y: '+=100', duration: 250, ease: 'Cubic.Out' });
       this.tweens.add({ targets: [bottom, skip], y: '-=80', duration: 250, ease: 'Cubic.Out' });
       this.tweens.add({ targets: dot, alpha: 0.2, duration: 400, yoyo: true, repeat: -1 });
@@ -1313,7 +1314,7 @@ export default class GameScene extends Phaser.Scene {
       } else if (before > 60 && after <= 60) {
         sfx.oneMinute();
         this.tweens.add({ targets: this.clockText, scale: 1.35, duration: 120, yoyo: true, repeat: 1 });
-        this.shoutUI('¡QUEDA 1 MINUTO!', PALETTE.yellow);
+        this.shoutUI(t('game.oneMinute'), PALETTE.yellow);
       }
       this.updateClock();
       if (this.timeLeft <= 0) {
@@ -1417,7 +1418,7 @@ export default class GameScene extends Phaser.Scene {
         p.dash = Math.min(1, p.dash + (dt * 1000) / DASH.charge);
         if (p.dash === 1) {
           sfx.dashReady();
-          floatText(this, p.x, p.y - 50, '¡DASH LISTO!', PALETTE.cyan, 22);
+          floatText(this, p.x, p.y - 50, t('game.dashReady'), PALETTE.cyan, 22);
         }
       }
 
@@ -1555,11 +1556,11 @@ export default class GameScene extends Phaser.Scene {
     this.cameras.main.shake(60, 0.002 + 0.006 * ratio);
     if (ratio > 0.45 || dashing) {
       this.hitstop = 45 + 70 * Math.max(ratio, 0.6);
-      this.shout('zap', dashing ? '¡SUPER ZAPATAZO!' : '¡ZAPATAZO!', PALETTE.yellow);
+      this.shout('zap', t(dashing ? 'game.superShot' : 'game.shot'), PALETTE.yellow);
     }
     if (wasShot) {
       this.statFor(p).saves++;
-      this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
+      this.shout('save', t('game.save'), PALETTE.cyan, 1200);
     }
     this.touch();
   }
@@ -1640,7 +1641,7 @@ export default class GameScene extends Phaser.Scene {
       b.vx -= 2 * dot * nx;
       b.vy -= 2 * dot * ny;
       this.wallBounce();
-      if (this.shout('post', '¡PALO!', PALETTE.white, 700)) {
+      if (this.shout('post', t('game.post'), PALETTE.white, 700)) {
         sfx.post();
         playSound('ooh');
         this.slowmo(350);
@@ -1683,7 +1684,7 @@ export default class GameScene extends Phaser.Scene {
       if (preRatio > 0.5) this.hitstop = Math.max(this.hitstop, 40);
       if (this.heading(b, preVx, preVy, p.side) && !this.heading(b, b.vx, b.vy, p.side)) {
         this.statFor(p).saves++;
-        this.shout('save', '¡ATAJADA!', PALETTE.cyan, 1200);
+        this.shout('save', t('game.save'), PALETTE.cyan, 1200);
       }
       this.touch();
     }
@@ -1718,7 +1719,7 @@ export default class GameScene extends Phaser.Scene {
     if (endLine && ratio > 0.15) {
       const { l, r } = this.mouth(b.y < MID_Y ? 'top' : 'bottom');
       const nearPost = Math.min(Math.abs(b.x - l), Math.abs(b.x - r)) < 55;
-      if (nearPost && this.shout('uuh', '¡UUUH!', PALETTE.white, 1200)) {
+      if (nearPost && this.shout('uuh', t('game.ooh'), PALETTE.white, 1200)) {
         playSound('ooh');
         this.slowmo(300);
       }
@@ -1858,7 +1859,7 @@ export default class GameScene extends Phaser.Scene {
     if (live && ratio > FIRE_ON && !this.onFire) {
       this.onFire = true;
       if (this.state === 'playing') {
-        this.shout('fire', '¡A FUEGO!', '#ff8a3d', 3000, 40);
+        this.shout('fire', t('game.fire'), '#ff8a3d', 3000, 40);
         sfx.fire();
       }
     } else if (ratio < FIRE_OFF) {

@@ -19,6 +19,11 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
 - `index.html` — página que carga el juego.
 - `src/main.js` — configuración de Phaser y lista de escenas.
 - `src/config.js` — todas las constantes del juego (tamaños, velocidades, goles para ganar).
+- `src/i18n.js` — idiomas: español (por defecto), inglés y portugués de Brasil. Todo texto
+  que ve el jugador sale de `t('clave', { datos })`; los textos están en `src/lang/es.js`,
+  `en.js` y `pt.js` (mismas claves; si falta una se usa la de español). Los nombres de las
+  selecciones en otros idiomas están en `NATIONS` de esos archivos. El idioma se guarda en
+  localStorage (`tejo-futbol-idioma`) y se cambia en Opciones.
 - `src/sound.js` — efectos de sonido generados con Web Audio (no hay archivos de audio).
   Pasan por un refuerzo y un limitador; los volúmenes base de todo el audio están en
   `AUDIO` de `src/config.js`. También guarda los tres volúmenes que elige el jugador
@@ -37,8 +42,9 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   `openSoundPanel(scene)` el sonido y `controlsPanel` el panel de controles. También
   `iconButton` (botón ancho con ícono) y los íconos `draw*Icon` que usa la pausa
   (`GameScene.makePauseMenu`).
-- `src/scenes/OptionsScene.js` — "OPCIONES": botones CONTROLES (abre `controlsPanel`) y
-  SONIDO (abre `SoundScene`). Se abre encima de cualquier pantalla (también desde la
+- `src/scenes/OptionsScene.js` — "OPCIONES": botones CONTROLES (abre `controlsPanel`),
+  SONIDO (abre `SoundScene`) e IDIOMA (← → cambia el idioma y redibuja la pantalla de atrás,
+  salvo un partido en curso). Se abre encima de cualquier pantalla (también desde la
   pausa) y la deja en pausa hasta cerrarse.
 - `src/scenes/SoundScene.js` — menú de sonido (un deslizador por canal + silenciar todo),
   abierto desde las opciones. `music.js` aplica a cada audio grabado el volumen de su
@@ -82,7 +88,8 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   `wipeIn(this)` al principio de cada `create()`.
 
 ## Convenciones
-- Código y nombres en inglés; textos que ve el jugador y documentación en español.
+- Código y nombres en inglés; documentación en español. Los textos que ve el jugador van
+  en `src/lang/` (los tres idiomas) y se usan con `t()`, nunca sueltos en el código.
 - Los números del juego van en `src/config.js`, no sueltos en el código.
 - La física de la pelota es propia (no usa Arcade Physics) y se calcula en sub-pasos
   para que la pelota nunca atraviese paredes ni jugadores. Mantener eso al cambiarla.

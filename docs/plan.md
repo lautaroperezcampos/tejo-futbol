@@ -80,6 +80,8 @@
 - [x] 29. Canchas y clima en "Antes de jugar" de los amistosos: normal, lluvia (se patina
   un poco), en mal estado (pozos que desvían y charcos que frenan, en espejo) o al azar
   (`PITCHES`, `PITCH`, `setupPitch`, `terrainBall`).
+- [x] 30. Idiomas: español (por defecto), inglés y portugués de Brasil, en OPCIONES →
+  IDIOMA. Textos en `src/lang/`, `t()` de `src/i18n.js`; se guarda en `tejo-futbol-idioma`.
 
 ## Ideas para después
 - Controles táctiles para celular.
