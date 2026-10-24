@@ -25,7 +25,9 @@ const CHANNEL = {
   start: 'crowd', losing2: 'crowd', losing4: 'crowd', goal: 'crowd', ooh: 'crowd',
 };
 const MENU_VOLUME = AUDIO.menuMusic;
-const MATCH_TRACKS = ['drums', 'bg1', 'bg2', 'bg3', 'bg4'];
+const MATCH_TRACKS = ['drums', 'bg1', 'bg2', 'bg3'];
+// Saved for goals scored while a power-up is working (see changeMatchTrack).
+const POWER_UP_TRACK = 'bg4';
 const BG_VOLUME = AUDIO.matchMusic;
 const DUCKED_BG = AUDIO.matchMusicDucked; // background volume while a chant is playing
 const CHANT_VOLUME = AUDIO.chant;
@@ -107,13 +109,13 @@ export function stopLoop(name, fadeMs = FADE_MS) {
 // ---------- match background music (rotation) ----------
 
 // One track at a time, picked at random from MATCH_TRACKS (never the same one twice in
-// a row). When it ends, or on every goal, it crossfades into another.
+// a row). When it ends, or on every goal, it crossfades into another. Goals scored under
+// a power-up switch to POWER_UP_TRACK instead.
 let bg = null;
 let bgName = null;
 let bgActive = false;
 
-function nextTrack(fadeMs) {
-  const name = pick(MATCH_TRACKS.filter((n) => n !== bgName));
+function nextTrack(fadeMs, name = pick(MATCH_TRACKS.filter((n) => n !== bgName))) {
   const old = bg;
   if (old) fadeOutAndStop(old, fadeMs);
   const audio = newAudio(name, 0);
@@ -133,9 +135,13 @@ export function startMatchMusic() {
 }
 
 // Called on every goal: switch to another track (or start the music if the opening
-// chant is still on).
-export function changeMatchTrack() {
-  if (bgActive) nextTrack(800);
+// chant is still on). powerUp: a power-up was working when the goal went in, so the
+// power-up song plays (it keeps going if it already was).
+export function changeMatchTrack(powerUp = false) {
+  if (powerUp) {
+    bgActive = true;
+    if (bgName !== POWER_UP_TRACK) nextTrack(800, POWER_UP_TRACK);
+  } else if (bgActive) nextTrack(800);
   else startMatchMusic();
 }
 

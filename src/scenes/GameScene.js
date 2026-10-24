@@ -483,6 +483,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // The goal on `side` grows for HAZARDS.bigGoalTime of play.
+  // Whether any power-up is working right now: a frozen, slippery, big or small player,
+  // or a big goal.
+  powerUpActive() {
+    if (!this.hazardsOn) return false;
+    const now = this.playTime;
+    return [this.p1, this.p2].some((p) => now < p.frozenUntil || now < p.slipUntil || now < p.sizeUntil)
+      || Object.values(this.bigGoal).some((g) => now < g.until);
+  }
+
   enlargeGoal(side) {
     this.bigGoal[side].until = this.playTime + HAZARDS.bigGoalTime;
     const y = side === 'top' ? FIELD.top + 40 : FIELD.bottom - 40;
@@ -756,7 +765,7 @@ export default class GameScene extends Phaser.Scene {
       this.musicOver = true;
       stopChant();
     } else {
-      changeMatchTrack();
+      changeMatchTrack(this.powerUpActive());
       this.updateChant();
     }
     this.showBanner(t(golden ? 'game.goldenGoal' : 'game.golazo'), name.toUpperCase(), true);

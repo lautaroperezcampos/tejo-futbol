@@ -176,8 +176,10 @@ primera vez pueda ganar (cada nivel es lo que antes era el de abajo):
 - Música en loop en el menú, la elección de equipo y la tabla de la liga.
 - Canción de campeón: cuando ganás una liga o una copa, su pantalla pasa a sonar la
   canción de campeón (en loop) en vez de la música del menú.
-- Música de fondo del partido: después del canto de inicio suena una de 5 (el repique y
-  4 canciones), al azar. Cada vez que hay un gol o que termina, cambia por otra distinta.
+- Música de fondo del partido: después del canto de inicio suena una de 4 (el repique y
+  3 canciones), al azar. La cuarta canción ("alternar 4") queda para los goles hechos
+  mientras algún power-up está activo (alguien congelado, enjabonado, grande o chico, o
+  un arco gigante): ese gol la pone, o la deja sonando si ya estaba. Cada vez que hay un gol o que termina, cambia por otra distinta.
   Baja el volumen cuando suena un canto.
 - Grito de gol grabado en cada gol y "uuuh" grabado en los palos y las que pasan cerca.
 - Cantos de hinchada (grabaciones reales, volumen bajo, suenan una vez cada uno):
