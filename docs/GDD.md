@@ -174,8 +174,10 @@ primera vez pueda ganar (cada nivel es lo que antes era el de abajo):
 - Fuentes: Bungee (títulos) y Rubik (textos).
 - Sonidos simples generados por el navegador: rebote, patada, gol y victoria.
 - Música en loop en el menú, la elección de equipo y la tabla de la liga.
-- Música de fondo del partido: después del canto de inicio suena una de 4 (el repique y
-  3 canciones), al azar. Cada vez que hay un gol o que termina, cambia por otra distinta.
+- Canción de campeón: cuando ganás una liga o una copa, su pantalla pasa a sonar la
+  canción de campeón (en loop) en vez de la música del menú.
+- Música de fondo del partido: después del canto de inicio suena una de 5 (el repique y
+  4 canciones), al azar. Cada vez que hay un gol o que termina, cambia por otra distinta.
   Baja el volumen cuando suena un canto.
 - Grito de gol grabado en cada gol y "uuuh" grabado en los palos y las que pasan cerca.
 - Cantos de hinchada (grabaciones reales, volumen bajo, suenan una vez cada uno):

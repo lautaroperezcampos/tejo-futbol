@@ -32,8 +32,9 @@ export default class CupScene extends Phaser.Scene {
   create() {
     makeTextures(this);
     wipeIn(this);
-    playMenuMusic(this);
     this.cup = loadCup();
+    // The champion song plays while the cup you won is on screen.
+    playMenuMusic(this, { champion: !!this.cup && isFinished(this.cup) && this.cup.champion === this.cup.userId });
     if (!this.cup) {
       this.scene.start('NationSelect');
       return;

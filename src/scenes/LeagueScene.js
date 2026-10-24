@@ -30,8 +30,8 @@ export default class LeagueScene extends Phaser.Scene {
   create() {
     makeTextures(this);
     wipeIn(this);
-    playMenuMusic(this);
     this.league = loadLeague();
+    playMenuMusic(this, { champion: !!this.league && userWonLeague(this.league) });
     if (!this.league) {
       this.scene.start('TeamSelect');
       return;
@@ -377,4 +377,9 @@ export default class LeagueScene extends Phaser.Scene {
       });
     }
   }
+}
+
+// The league is over and the user's team finished first.
+function userWonLeague(league) {
+  return isFinished(league) && standings(league)[0].id === league.userId;
 }

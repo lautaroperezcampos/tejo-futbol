@@ -2,16 +2,20 @@
 // the striped wipe used between screens.
 import { COLORS, PALETTE, FONTS, GAME_W, GAME_H, BOT_LEVELS } from './config.js';
 import { t, botLevelName } from './i18n.js';
-import { startLoop } from './music.js';
+import { startLoop, stopLoop } from './music.js';
 import { unlockAudio, sfx, isMuted, toggleMute, onVolumeChange } from './sound.js';
 
-// Menu screens share one music loop that keeps going between them. Browsers only allow
-// audio after a key press or click, so it's retried on the first one.
-export function playMenuMusic(scene) {
-  startLoop('menu');
+// Menu screens share one music loop that keeps going between them. After winning a league
+// or a cup, its screen plays the champion song instead (champion: true); any other menu
+// screen goes back to the menu music. Browsers only allow audio after a key press or
+// click, so it's retried on the first one.
+export function playMenuMusic(scene, { champion = false } = {}) {
+  const name = champion ? 'champion' : 'menu';
+  stopLoop(champion ? 'menu' : 'champion');
+  startLoop(name);
   const retry = () => {
     unlockAudio();
-    startLoop('menu');
+    startLoop(name);
   };
   scene.input.on('pointerdown', retry);
   scene.input.keyboard.on('keydown', retry);

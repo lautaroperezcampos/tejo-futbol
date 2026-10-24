@@ -31,8 +31,9 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   todo" (`toggleMute`, tecla M), en localStorage (`tejo-futbol-audio`). Los sonidos de
   menú son `sfx.select` (moverse), `sfx.confirm` (aceptar) y `sfx.back` (volver/salir).
 - `src/music.js` — audio grabado (en `public/audio/`, copiado de `musica futbol tejo/`):
-  música del menú (loop), música de fondo del partido (rotación de 4 temas que cambia en
-  cada gol), cantos de hinchada (bajan la música mientras suenan), grito de gol y "uuuh". Los cantos se disparan desde
+  música del menú (loop), canción de campeón (loop en la liga o copa ganada, con
+  `playMenuMusic(scene, { champion: true })`), música de fondo del partido (rotación de
+  5 temas que cambia en cada gol), cantos de hinchada (bajan la música mientras suenan), grito de gol y "uuuh". Los cantos se disparan desde
   `GameScene.updateChant()`; la música del menú, con `playMenuMusic()` de `src/ui.js`.
 - `src/art.js` — todos los gráficos (cancha, tribuna, jugadores, pelota, explosión),
   dibujados con Canvas 2D al iniciar; no hay archivos de imagen.

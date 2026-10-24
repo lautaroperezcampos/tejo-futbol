@@ -187,6 +187,7 @@ export default class GameScene extends Phaser.Scene {
     // music rotation starts (and changes track on every goal). More chants when someone
     // falls 2 or 4+ goals behind.
     stopLoop('menu');
+    stopLoop('champion');
     this.chant = { side: null, rank: 0 };
     this.musicOver = false;
     playChant('start', () => {

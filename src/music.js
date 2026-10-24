@@ -11,6 +11,8 @@ const FILES = {
   bg1: `${BASE}audio/fondo-1.mp3`,
   bg2: `${BASE}audio/fondo-2.mp3`,
   bg3: `${BASE}audio/fondo-3.mp3`,
+  bg4: `${BASE}audio/fondo-4.mp3`,
+  champion: `${BASE}audio/campeon.mp3`,
   start: `${BASE}audio/canto-inicio.wav`,
   losing2: `${BASE}audio/canto-perdiendo-2.mp3`,
   losing4: `${BASE}audio/canto-perdiendo-4.mp3`,
@@ -19,11 +21,11 @@ const FILES = {
 };
 // Which volume channel (sound.js) each file belongs to: music or the stadium crowd.
 const CHANNEL = {
-  menu: 'music', drums: 'music', bg1: 'music', bg2: 'music', bg3: 'music',
+  menu: 'music', champion: 'music', drums: 'music', bg1: 'music', bg2: 'music', bg3: 'music', bg4: 'music',
   start: 'crowd', losing2: 'crowd', losing4: 'crowd', goal: 'crowd', ooh: 'crowd',
 };
 const MENU_VOLUME = AUDIO.menuMusic;
-const MATCH_TRACKS = ['drums', 'bg1', 'bg2', 'bg3'];
+const MATCH_TRACKS = ['drums', 'bg1', 'bg2', 'bg3', 'bg4'];
 const BG_VOLUME = AUDIO.matchMusic;
 const DUCKED_BG = AUDIO.matchMusicDucked; // background volume while a chant is playing
 const CHANT_VOLUME = AUDIO.chant;
@@ -78,7 +80,7 @@ function fadeOutAndStop(audio, ms) {
   });
 }
 
-// ---------- menu music (loop) ----------
+// ---------- menu music and champion music (loops) ----------
 
 const loops = {};
 
