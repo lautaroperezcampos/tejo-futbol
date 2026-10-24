@@ -45,9 +45,9 @@ export const DASH = {
   kickBoost: 1.35, // kicking during a dash: dash + kick = power shot
 };
 
-// Optional power-ups ("hielo y jabón"): every so often an ice block or a bar of soap
-// appears in one of the two halves. Whoever grabs it throws it at the rival, who gets
-// frozen (very slow) or slippery (moves with a lot of inertia) for a while.
+// Optional power-ups: every so often an item appears in one of the two halves (ice, soap,
+// big goal, mushroom or shrink potion; see src/game/Hazards.js). Whoever hits it with the
+// ball wins it: most go to the rival, the mushroom makes its owner bigger.
 export const HAZARDS = {
   spawnMin: 6000, // ms between spawns (random in this range)
   spawnMax: 12000,
@@ -62,6 +62,10 @@ export const HAZARDS = {
   bigGoalTime: 6000, // ms the rival's goal stays big ("arco gigante")
   bigGoalExtra: 60, // px added on each side of that goal (200 -> 320 wide)
   bigGoalGrow: 350, // ms the posts take to slide out or back
+  sizeTime: 6000, // ms a player stays big (mushroom) or small (shrink potion)
+  growScale: 1.5, // mushroom: whoever hit it with the ball gets 50% bigger
+  shrinkScale: 0.5, // shrink potion: the rival gets 50% smaller
+  resizeSpeed: 6, // how fast the size changes (higher = snappier)
 };
 
 // Volumes (0..1, before the sound button's level). The hits are synthesized and quiet on
@@ -154,19 +158,23 @@ export const FONTS = {
 export const BOT_LEVELS = {
   // dash: 'none' never; 'defense' only to save a shot it can't reach walking;
   // 'smart' also to hit a power shot when it's lined up with the opponent's goal.
-  // The four levels go up in even steps. Very easy is meant for kids: slow, late,
-  // doesn't read the ball and barely kicks; its kicks are weak (kickPower) and its body
-  // soaks up the ball (bodyDamp), so its shots can be stopped, and it only goes after
-  // the ball some of the time (aggression). Easy keeps a little of that; levels without
-  // these use the normal values.
+  // The four levels go up in even steps, gentle enough for someone playing for the first
+  // time (each one is what the level below it used to be). Very easy barely plays: it
+  // walks, reacts very late, almost never kicks and its kicks and body are soft. Its
+  // kicks are weak (kickPower), its body soaks up the ball (bodyDamp), so its shots can
+  // be stopped, and it only goes after the ball some of the time (aggression). Easy
+  // keeps a little of that; levels without these use the normal values.
   veryEasy: {
+    speed: 0.2, reaction: 850, predict: 'none', kickChance: 0.05, error: 140, dash: 'none',
+    kickPower: 0.4, bodyDamp: 0.45, aggression: 0.15,
+  },
+  easy: {
     speed: 0.32, reaction: 520, predict: 'none', kickChance: 0.15, error: 90, dash: 'none',
     kickPower: 0.6, bodyDamp: 0.6, aggression: 0.3,
   },
-  easy: {
+  medium: {
     speed: 0.55, reaction: 260, predict: 'straight', kickChance: 0.5, error: 40, dash: 'none',
     kickPower: 0.85, aggression: 0.75,
   },
-  medium: { speed: 0.72, reaction: 160, predict: 'straight', kickChance: 0.75, error: 24, dash: 'defense' },
-  hard: { speed: 1.0, reaction: 45, predict: 'bounces', kickChance: 1, error: 4, dash: 'smart' },
+  hard: { speed: 0.72, reaction: 160, predict: 'straight', kickChance: 0.75, error: 24, dash: 'defense' },
 };

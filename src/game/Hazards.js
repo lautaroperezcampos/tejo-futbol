@@ -1,7 +1,9 @@
-// Optional power-ups: ice blocks, soap bars and "arco gigante" badges that pop up in
-// either half of the pitch. They're won with the ball: when it hits one, the player who
-// touched it last (kick, body or a bounce off the walls after that) throws it at the
-// rival. Ice freezes them, soap makes them slippery, the big goal widens their goal. Players walking over an item do nothing.
+// Optional power-ups: ice blocks, soap bars, "arco gigante" badges, mushrooms and shrink
+// potions that pop up in either half of the pitch. They're won with the ball: when it
+// hits one, the player who touched it last (kick, body or a bounce off the walls after
+// that) gets it. Ice freezes the rival, soap makes them slippery, the big goal widens
+// their goal and the potion shrinks them; the mushroom makes its owner bigger. Players
+// walking over an item do nothing.
 // Times are in "play time" ms (only advances while the ball is in play), so pauses,
 // goals and replays don't eat into them.
 import * as Phaser from 'phaser';
@@ -13,8 +15,9 @@ import { sfx } from '../sound.js';
 import { t } from '../i18n.js';
 
 const MARGIN = 60; // keep items away from the walls and the halfway line
-// ice: freezes the rival; soap: makes them slip; bigGoal: makes their goal bigger.
-const TYPES = ['ice', 'soap', 'bigGoal'];
+// ice: freezes the rival; soap: makes them slip; bigGoal: makes their goal bigger;
+// grow: makes its owner 50% bigger; shrink: makes the rival 50% smaller.
+const TYPES = ['ice', 'soap', 'bigGoal', 'grow', 'shrink'];
 
 export default class Hazards {
   constructor(scene) {
@@ -106,8 +109,8 @@ export default class Hazards {
   }
 
   // The ball hit the item: it shatters (ice) or bursts (soap), then flies from there at
-  // the rival of whoever touched the ball last, spinning across the pitch. The effect
-  // lands when it arrives.
+  // the rival of whoever touched the ball last (the mushroom flies back to its owner),
+  // spinning across the pitch. The effect lands when it arrives.
   grab(item, owner, rival) {
     this.remove(item, true);
     const s = this.scene;
@@ -128,6 +131,7 @@ export default class Hazards {
       }
     }
 
+    const target = item.type === 'grow' ? owner : rival;
     const shot = s.add.image(item.x, item.y, item.type).setDepth(6).setScale(SPRITE_SCALE * 1.1);
     const flight = { t: 0 };
     s.tweens.add({
@@ -137,14 +141,14 @@ export default class Hazards {
       onUpdate: () => {
         const to = item.type === 'bigGoal'
           ? { x: CENTER_X, y: rival.side === 'top' ? FIELD.top : FIELD.bottom }
-          : rival;
+          : target;
         shot.x = item.x + (to.x - item.x) * flight.t;
         shot.y = item.y + (to.y - item.y) * flight.t;
         shot.angle = 720 * flight.t;
       },
       onComplete: () => {
         shot.destroy();
-        if (s.state === 'playing') this.apply(item.type, rival);
+        if (s.state === 'playing') this.apply(item.type, target);
       },
     });
   }
@@ -161,6 +165,14 @@ export default class Hazards {
       s.grass.emit(x, y, {
         count: 24, speed: [180, 440], life: [400, 750], size: [4, 10],
         colors: [0xd4f4ff, 0x7fd6ff, 0xffffff], shape: 'rect', drag: 3,
+      });
+    } else if (item.type === 'grow' || item.type === 'shrink') {
+      const grow = item.type === 'grow';
+      (grow ? sfx.grow : sfx.shrink)();
+      floatText(s, x, y - 40, t(grow ? 'hazard.boing' : 'hazard.zap'), grow ? '#3ddc84' : '#b98cff', 30);
+      s.dust.emit(x, y, {
+        count: 20, speed: [100, 300], life: [400, 750], size: [4, 9], grow: 0.4,
+        colors: grow ? [0x3ddc84, 0xffffff, COLORS.yellow] : [0x9b5cff, 0xe6dcff, 0xffffff], drag: 3,
       });
     } else if (item.type === 'bigGoal') {
       sfx.spawn();
@@ -188,6 +200,19 @@ export default class Hazards {
       return;
     }
     p.squash = 1;
+    if (type === 'grow' || type === 'shrink') {
+      // A new size replaces the old one (a mushroom cancels a shrink and vice versa).
+      const grow = type === 'grow';
+      p.sizeTarget = grow ? HAZARDS.growScale : HAZARDS.shrinkScale;
+      p.sizeUntil = now + HAZARDS.sizeTime;
+      (grow ? sfx.grow : sfx.shrink)();
+      floatText(s, p.x, p.y - 60, t(grow ? 'hazard.giant' : 'hazard.mini'), grow ? '#3ddc84' : '#b98cff', 28);
+      s.dust.emit(p.x, p.y, {
+        count: 14, speed: [60, 200], life: [350, 650], size: [3, 7],
+        colors: grow ? [0x3ddc84, 0xffffff] : [0x9b5cff, 0xffffff], drag: 3,
+      });
+      return;
+    }
     if (type === 'ice') {
       p.frozenUntil = now + HAZARDS.freezeTime;
       p.slipUntil = 0; // ice beats soap

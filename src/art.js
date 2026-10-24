@@ -30,6 +30,8 @@ export function makeTextures(scene) {
   canvasTexture(tex, 'bigGoal', 64 * S, 64 * S, (ctx) => drawBigGoal(ctx, 64 * S));
   canvasTexture(tex, 'hole', 180, 160, drawHole);
   canvasTexture(tex, 'dirt', 200, 200, drawDirt);
+  canvasTexture(tex, 'grow', 64 * S, 64 * S, (ctx) => drawMushroom(ctx, 64 * S));
+  canvasTexture(tex, 'shrink', 64 * S, 64 * S, (ctx) => drawShrinkPotion(ctx, 64 * S));
   canvasTexture(tex, 'target', 100 * S, 100 * S, (ctx) => drawTarget(ctx, 100 * S));
 
   const bSize = (BALL_R + 3) * 2 * S;
@@ -632,6 +634,106 @@ function drawSoap(ctx, size) {
     ctx.fillStyle = '#ffffff';
     ctx.fill();
   }
+}
+
+// Green mushroom with white spots and an up arrow: "you get bigger".
+function drawMushroom(ctx, size) {
+  const s = size / 64;
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 3.5 * s;
+  ctx.strokeStyle = C.ink;
+  // Stem with a little face.
+  roundRect(ctx, 22 * s, 32 * s, 20 * s, 24 * s, 7 * s);
+  ctx.fillStyle = '#fff1d6';
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = C.ink;
+  for (const x of [28, 36]) {
+    roundRect(ctx, (x - 1.5) * s, 39 * s, 3 * s, 7 * s, 1.5 * s);
+    ctx.fill();
+  }
+  // Cap.
+  ctx.beginPath();
+  ctx.moveTo(6 * s, 36 * s);
+  ctx.quadraticCurveTo(6 * s, 6 * s, 32 * s, 6 * s);
+  ctx.quadraticCurveTo(58 * s, 6 * s, 58 * s, 36 * s);
+  ctx.closePath();
+  ctx.fillStyle = '#3ddc84';
+  ctx.fill();
+  ctx.stroke();
+  // Spots.
+  ctx.fillStyle = '#ffffff';
+  for (const [x, y, r] of [[32, 17, 6], [16, 28, 4.5], [48, 28, 4.5]]) {
+    circle(ctx, x * s, y * s, r * s);
+    ctx.fill();
+    ctx.lineWidth = 2 * s;
+    ctx.stroke();
+  }
+  // Up arrow badge.
+  circle(ctx, 52 * s, 50 * s, 10 * s);
+  ctx.fillStyle = C.yellow;
+  ctx.fill();
+  ctx.lineWidth = 2.5 * s;
+  ctx.stroke();
+  arrow(ctx, 52 * s, 50 * s, 6 * s, -1);
+}
+
+// Purple potion bottle with a down arrow: "your rival gets smaller".
+function drawShrinkPotion(ctx, size) {
+  const s = size / 64;
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 3.5 * s;
+  ctx.strokeStyle = C.ink;
+  // Neck and cork.
+  roundRect(ctx, 25 * s, 4 * s, 14 * s, 9 * s, 3 * s);
+  ctx.fillStyle = '#c98a4b';
+  ctx.fill();
+  ctx.stroke();
+  roundRect(ctx, 26 * s, 12 * s, 12 * s, 12 * s, 2 * s);
+  ctx.fillStyle = '#e6dcff';
+  ctx.fill();
+  ctx.stroke();
+  // Round flask.
+  circle(ctx, 32 * s, 40 * s, 19 * s);
+  ctx.fillStyle = '#e6dcff';
+  ctx.fill();
+  ctx.stroke();
+  // Liquid.
+  ctx.save();
+  circle(ctx, 32 * s, 40 * s, 17 * s);
+  ctx.clip();
+  ctx.fillStyle = '#9b5cff';
+  ctx.fillRect(10 * s, 36 * s, 44 * s, 26 * s);
+  ctx.restore();
+  // Shine.
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.lineWidth = 3 * s;
+  ctx.beginPath();
+  ctx.arc(32 * s, 40 * s, 12 * s, Math.PI * 1.1, Math.PI * 1.45);
+  ctx.stroke();
+  // Down arrow badge.
+  ctx.strokeStyle = C.ink;
+  circle(ctx, 52 * s, 50 * s, 10 * s);
+  ctx.fillStyle = C.yellow;
+  ctx.fill();
+  ctx.lineWidth = 2.5 * s;
+  ctx.stroke();
+  arrow(ctx, 52 * s, 50 * s, 6 * s, 1);
+}
+
+// Small filled arrow centred on (x, y): dir -1 points up, 1 points down.
+function arrow(ctx, x, y, r, dir) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + dir * r);
+  ctx.lineTo(x - r, y - dir * r * 0.1);
+  ctx.lineTo(x - r * 0.4, y - dir * r * 0.1);
+  ctx.lineTo(x - r * 0.4, y - dir * r);
+  ctx.lineTo(x + r * 0.4, y - dir * r);
+  ctx.lineTo(x + r * 0.4, y - dir * r * 0.1);
+  ctx.lineTo(x + r, y - dir * r * 0.1);
+  ctx.closePath();
+  ctx.fillStyle = C.ink;
+  ctx.fill();
 }
 
 // Red and white bullseye painted on the grass under each power-up: "hit this with the ball".

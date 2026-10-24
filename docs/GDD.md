@@ -88,12 +88,12 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Si te eliminan, podés simular el resto para ver quién sale campeón.
 - Se guarda sola y se puede abandonar para empezar otra.
 
-## Power-ups: hielo, jabón y arco gigante (opcional)
+## Power-ups: hielo, jabón, arco gigante, hongo y poción (opcional)
 - Se activa en la pantalla "ANTES DE JUGAR" (después de elegir los equipos en 1 vs 1 o
   contra el bot, y al crear la liga, junto con la dificultad).
-- Cada 6 a 12 segundos de juego aparece en una mitad al azar un **cubo de hielo** o un
-  **jabón** (máximo 2 a la vez). Dura 9 segundos y titila antes de desaparecer.
-- Son **power-ups contra el rival** y se ganan **con la pelota**: cuando la pelota choca
+- Cada 6 a 12 segundos de juego aparece en una mitad al azar un **cubo de hielo**, un
+  **jabón**, un **arco gigante**, un **hongo** o una **poción** (máximo 2 a la vez). Dura 9 segundos y titila antes de desaparecer.
+- Casi todos son **power-ups contra el rival** (el hongo es para vos) y se ganan **con la pelota**: cuando la pelota choca
   con uno, se lo lleva el último que tocó la pelota (con una patada o con el cuerpo,
   aunque después haya rebotado en las paredes) y sale volando girando hacia el otro
   jugador. Pasar caminando por encima no hace nada. Justo después de un saque, antes de
@@ -109,6 +109,11 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - **Arco gigante:** el arco del rival se agranda 6 s (de 200 a 320 px de ancho): los palos
   se abren con una animación, el marco se pone amarillo y titila antes de volver. Si hay
   gol mientras está grande, en el saque los dos arcos vuelven a la normalidad.
+- **Hongo** (verde, con flecha para arriba): el que le pegó se hace un 50% más grande
+  durante 6 s ("¡GIGANTE!"): tapa más arco y le pega a la pelota desde más lejos.
+- **Poción** (violeta, con flecha para abajo): el rival se hace un 50% más chico durante
+  6 s ("¡MINI!"). Un tamaño nuevo reemplaza al anterior (el hongo cancela la poción y al
+  revés). El cambio de tamaño es suave y en cada saque todos vuelven al tamaño normal.
 - Se borran en cada saque.
 
 ## Controles
@@ -148,15 +153,16 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   los torneos el reloj va a la derecha del recuadro.
 
 ## Bot
-Cuatro niveles que suben de a escalones parejos:
-- Muy fácil (pensado para chicos): muy lento, reacciona tarde, no anticipa la pelota,
+Cuatro niveles que suben de a escalones parejos, pensados para que alguien que juega por
+primera vez pueda ganar (cada nivel es lo que antes era el de abajo):
+- Muy fácil: casi no juega. Camina despacio, reacciona tardísimo, casi nunca patea y
+  cuando patea es flojito; su cuerpo frena la pelota. No usa el dash.
+- Fácil (pensado para chicos): muy lento, reacciona tarde, no anticipa la pelota,
   ataca poco, sus patadas son flojas y su cuerpo frena la pelota. No usa el dash.
-- Fácil: juega de verdad pero lento y se equivoca bastante; patea la mitad de las veces,
+- Medio: juega de verdad pero lento y se equivoca bastante; patea la mitad de las veces,
   con patadas un poco más flojas, y a veces no va a buscar la pelota. No usa el dash.
-- Medio: partido parejo. Defiende y patea casi siempre. Usa el dash solo para salvar un
+- Difícil: partido parejo. Defiende y patea casi siempre. Usa el dash solo para salvar un
   gol que caminando no llega a tapar.
-- Difícil: rápido, anticipa la trayectoria y apunta al arco. Usa el dash para salvar
-  goles y para meter un super zapatazo cuando tiene la pelota de frente apuntando al arco.
 
 ## Aspecto y sonido
 - Estilo cartoon inspirado en *Golazo!*: colores saturados, contornos oscuros gruesos,

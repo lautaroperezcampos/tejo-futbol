@@ -79,8 +79,10 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   flotantes y detección de tiros al arco.
 - `src/game/Particles.js` — partículas livianas (polvo, pasto, fuego) dibujadas en un Graphics.
 - `src/game/Replay.js` — graba los últimos segundos para la repetición del gol.
-- `src/game/Hazards.js` — power-ups opcionales (hielo y jabón): aparición, choque con la
-  pelota (se los lleva `ball.lastTouch`, el último que la tocó), tiro al rival y efectos.
+- `src/game/Hazards.js` — power-ups opcionales (hielo, jabón, arco gigante, hongo y poción):
+  aparición, choque con la pelota (se los lleva `ball.lastTouch`, el último que la tocó),
+  tiro al rival (el hongo vuelve al dueño) y efectos. El tamaño de cada jugador vive en
+  `p.size` / `p.r` (radio actual): usar `p.r` y no `PLAYER_R` en choques del jugador.
 - `src/gamepads.js` — joystick (Gamepad API); `padMenu()` lo conecta a los menús.
 - `GameScene` usa dos cámaras: la principal (zoom/seguimiento) y una de UI fija. Todo
   objeto nuevo va al mundo salvo que se cree dentro de `this.asUI(() => ...)`.

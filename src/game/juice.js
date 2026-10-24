@@ -31,6 +31,8 @@ export function drawEyes(g, p, ball, now, mood) {
   const len = Math.hypot(dx, dy) || 1;
   dx /= len;
   dy /= len;
+  // Eyes grow and shrink with the player (size power-ups).
+  const k = p.size ?? 1;
   const px = -dy;
   const py = dx;
 
@@ -39,44 +41,44 @@ export function drawEyes(g, p, ball, now, mood) {
   const blinking = now > p.nextBlink && mood === 'normal';
 
   for (const side of [-1, 1]) {
-    const ex = p.x + dx * 10 + px * side * 9;
-    const ey = p.y + dy * 10 + py * side * 9;
+    const ex = p.x + dx * 10 * k + px * side * 9 * k;
+    const ey = p.y + dy * 10 * k + py * side * 9 * k;
 
     if (mood === 'dizzy') {
-      g.lineStyle(3.5, INK, 1);
-      g.lineBetween(ex - 4, ey - 4, ex + 4, ey + 4);
-      g.lineBetween(ex - 4, ey + 4, ex + 4, ey - 4);
+      g.lineStyle(3.5 * k, INK, 1);
+      g.lineBetween(ex - 4 * k, ey - 4 * k, ex + 4 * k, ey + 4 * k);
+      g.lineBetween(ex - 4 * k, ey + 4 * k, ex + 4 * k, ey - 4 * k);
       continue;
     }
     if (mood === 'happy') {
       // "^" shaped closed eyes.
-      g.lineStyle(3.5, INK, 1);
+      g.lineStyle(3.5 * k, INK, 1);
       g.beginPath();
-      g.moveTo(ex - px * 5 + dx * 1, ey - py * 5 + dy * 1);
-      g.lineTo(ex + dx * 4, ey + dy * 4);
-      g.lineTo(ex + px * 5 + dx * 1, ey + py * 5 + dy * 1);
+      g.moveTo(ex - px * 5 * k + dx * 1, ey - py * 5 * k + dy * 1);
+      g.lineTo(ex + dx * 4 * k, ey + dy * 4 * k);
+      g.lineTo(ex + px * 5 * k + dx * 1, ey + py * 5 * k + dy * 1);
       g.strokePath();
       continue;
     }
     if (blinking) {
-      g.lineStyle(3, INK, 1);
-      g.lineBetween(ex - px * 6, ey - py * 6, ex + px * 6, ey + py * 6);
+      g.lineStyle(3 * k, INK, 1);
+      g.lineBetween(ex - px * 6 * k, ey - py * 6 * k, ex + px * 6 * k, ey + py * 6 * k);
       continue;
     }
 
     g.fillStyle(0xffffff, 1);
-    g.fillCircle(ex, ey, 6.5);
-    g.lineStyle(2.5, INK, 1);
-    g.strokeCircle(ex, ey, 6.5);
+    g.fillCircle(ex, ey, 6.5 * k);
+    g.lineStyle(2.5 * k, INK, 1);
+    g.strokeCircle(ex, ey, 6.5 * k);
     g.fillStyle(INK, 1);
-    g.fillCircle(ex + dx * 2.8, ey + dy * 2.8, 3.2);
+    g.fillCircle(ex + dx * 2.8 * k, ey + dy * 2.8 * k, 3.2 * k);
 
     if (mood === 'angry') {
       // Brows slanting down toward the middle.
-      const bx = ex + dx * 7.5;
-      const by = ey + dy * 7.5;
-      g.lineStyle(3.5, INK, 1);
-      g.lineBetween(bx + px * side * 6 + dx * 2, by + py * side * 6 + dy * 2, bx - px * side * 3, by - py * side * 3);
+      const bx = ex + dx * 7.5 * k;
+      const by = ey + dy * 7.5 * k;
+      g.lineStyle(3.5 * k, INK, 1);
+      g.lineBetween(bx + px * side * 6 * k + dx * 2 * k, by + py * side * 6 * k + dy * 2 * k, bx - px * side * 3 * k, by - py * side * 3 * k);
     }
   }
 }

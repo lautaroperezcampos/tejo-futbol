@@ -82,7 +82,7 @@ export const STRINGS = {
   // Before the match
   'setup.title': 'ANTES DE JOGAR',
   'setup.difficulty': 'DIFICULDADE',
-  'setup.hazardsHint': 'Acerte com a bola: gelo, sabão ou gol gigante',
+  'setup.hazardsHint': 'Acerte com a bola: gelo, sabão, gol gigante, cogumelo ou poção',
   'setup.play': 'BORA JOGAR!',
   'setup.hint': '↑ ↓ escolher  ·  ← → mudar  ·  Enter / A: aceitar  ·  Esc / B: voltar',
   'setup.length': 'PARTIDA',
@@ -250,6 +250,9 @@ export const STRINGS = {
   'hazard.plop': 'PLOFT!',
   'hazard.frozen': 'CONGELADO!',
   'hazard.slip': 'ESCORREGOU!',
+  'hazard.boing': 'BOING!',
+  'hazard.giant': 'GIGANTE!',
+  'hazard.mini': 'MINI!',
 };
 
 // National teams: [name, short name].

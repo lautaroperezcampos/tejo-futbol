@@ -243,6 +243,10 @@ export default class GameScene extends Phaser.Scene {
       frozenUntil: 0, // play time until which the player is frozen (ice)
       slipUntil: 0, // play time until which the player is slippery (soap)
       mvx: 0, mvy: 0, // actual velocity while slipping
+      size: 1, // current size (1 normal; grows / shrinks smoothly with the size power-ups)
+      r: PLAYER_R, // current radius, PLAYER_R * size: used for every collision
+      sizeTarget: 1,
+      sizeUntil: 0, // play time until which sizeTarget lasts
     };
     p.sprite = this.add.image(p.x, p.y, texture).setScale(SPRITE_SCALE).setDepth(4);
     return p;
@@ -605,8 +609,10 @@ export default class GameScene extends Phaser.Scene {
       p.moodUntil = 0;
       p.dashLeft = 0;
       p.dash = 1;
-      p.frozenUntil = p.slipUntil = 0;
+      p.frozenUntil = p.slipUntil = p.sizeUntil = 0;
       p.mvx = p.mvy = 0;
+      p.size = p.sizeTarget = 1;
+      p.r = PLAYER_R;
     }
     if (!from) {
       this.hazards?.reset(this.playTime);
@@ -1227,8 +1233,8 @@ export default class GameScene extends Phaser.Scene {
     while (this.replayIdx < clip.length - 1 && clip[this.replayIdx + 1].t <= this.replayT) this.replayIdx++;
     const f = clip[this.replayIdx];
     Object.assign(this.ball, { x: f.bx, y: f.by, vx: f.bvx, vy: f.bvy });
-    Object.assign(this.p1, { x: f.p1x, y: f.p1y, vx: 0, vy: 0, kickHeld: f.p1k });
-    Object.assign(this.p2, { x: f.p2x, y: f.p2y, vx: 0, vy: 0, kickHeld: f.p2k });
+    Object.assign(this.p1, { x: f.p1x, y: f.p1y, vx: 0, vy: 0, kickHeld: f.p1k, size: f.p1s, r: PLAYER_R * f.p1s });
+    Object.assign(this.p2, { x: f.p2x, y: f.p2y, vx: 0, vy: 0, kickHeld: f.p2k, size: f.p2s, r: PLAYER_R * f.p2s });
     this.renderFrame((delta / 1000) * REPLAY_SPEED, delta / 1000);
     if (this.replayT > clip[clip.length - 1].t + 350) this.endReplay();
   }
@@ -1433,7 +1439,7 @@ export default class GameScene extends Phaser.Scene {
         sfx.dash();
         this.statFor(p).dashes++;
         this.cameras.main.shake(80, 0.003);
-        this.dust.emit(p.x - p.dashDir.x * PLAYER_R, p.y - p.dashDir.y * PLAYER_R, {
+        this.dust.emit(p.x - p.dashDir.x * p.r, p.y - p.dashDir.y * p.r, {
           count: 8, speed: [60, 160], angle: Phaser.Math.RadToDeg(Math.atan2(-p.dashDir.y, -p.dashDir.x)), spread: 70,
           life: [300, 500], size: [5, 8], grow: 1, colors: [0xffffff, 0xe8ffd0], alpha: 0.7, drag: 3,
         });
@@ -1444,7 +1450,7 @@ export default class GameScene extends Phaser.Scene {
         p.vx = p.dashDir.x * DASH.speed;
         p.vy = p.dashDir.y * DASH.speed;
         // Fading after-images of the player.
-        this.dust.emit(p.x, p.y, { count: 1, speed: 0, life: 200, size: PLAYER_R * 0.95, grow: -0.3, colors: [p.color], alpha: 0.4 });
+        this.dust.emit(p.x, p.y, { count: 1, speed: 0, life: 200, size: p.r * 0.95, grow: -0.3, colors: [p.color], alpha: 0.4 });
       }
     }
     this.dashQueued.clear();
@@ -1453,6 +1459,12 @@ export default class GameScene extends Phaser.Scene {
   // Ice: the player moves at HAZARDS.freezeSpeed (0: stuck in place). Soap: the velocity only slowly
   // catches up with the input, so the player slides and overshoots. A dash ignores both.
   applyStatus(p, dt) {
+    // Mushroom / shrink ray: ease toward the target size, back to normal when it runs out.
+    if (this.playTime >= p.sizeUntil) p.sizeTarget = 1;
+    p.size += (p.sizeTarget - p.size) * (1 - Math.exp(-HAZARDS.resizeSpeed * dt));
+    if (Math.abs(p.sizeTarget - p.size) < 0.002) p.size = p.sizeTarget;
+    p.r = PLAYER_R * p.size;
+
     if (p.dashLeft > 0) {
       p.mvx = p.vx;
       p.mvy = p.vy;
@@ -1495,16 +1507,16 @@ export default class GameScene extends Phaser.Scene {
 
   // Each player stays fully inside their own half and inside the rounded corners.
   clampPlayer(p) {
-    p.x = Phaser.Math.Clamp(p.x, FIELD.left + PLAYER_R, FIELD.right - PLAYER_R);
-    if (p.side === 'bottom') p.y = Phaser.Math.Clamp(p.y, MID_Y + PLAYER_R, FIELD.bottom - PLAYER_R);
-    else p.y = Phaser.Math.Clamp(p.y, FIELD.top + PLAYER_R, MID_Y - PLAYER_R);
+    p.x = Phaser.Math.Clamp(p.x, FIELD.left + p.r, FIELD.right - p.r);
+    if (p.side === 'bottom') p.y = Phaser.Math.Clamp(p.y, MID_Y + p.r, FIELD.bottom - p.r);
+    else p.y = Phaser.Math.Clamp(p.y, FIELD.top + p.r, MID_Y - p.r);
 
     const corner = cornerCenter(p.x, p.y);
     if (corner) {
       const dx = p.x - corner.x;
       const dy = p.y - corner.y;
       const dist = Math.hypot(dx, dy);
-      const max = CORNER_R - PLAYER_R;
+      const max = CORNER_R - p.r;
       if (dist > max) {
         p.x = corner.x + (dx / dist) * max;
         p.y = corner.y + (dy / dist) * max;
@@ -1523,7 +1535,7 @@ export default class GameScene extends Phaser.Scene {
     const dx = b.x - p.x;
     const dy = b.y - p.y;
     const dist = Math.hypot(dx, dy);
-    if (dist > PLAYER_R + BALL_R + KICK.reach || dist === 0) return;
+    if (dist > p.r + BALL_R + KICK.reach || dist === 0) return;
     const wasShot = this.heading(b, b.vx, b.vy, p.side);
 
     // Haxball-style: the ball flies along the line from the player's centre to the ball.
@@ -1535,9 +1547,9 @@ export default class GameScene extends Phaser.Scene {
     const speed = Math.min(BALL.maxSpeed, Math.max(this.ballSpeed() * BALL.kickBoost, BALL.kickMin) * power);
     b.vx = nx * speed;
     b.vy = ny * speed;
-    if (dist < PLAYER_R + BALL_R) {
-      b.x = p.x + nx * (PLAYER_R + BALL_R + 0.5);
-      b.y = p.y + ny * (PLAYER_R + BALL_R + 0.5);
+    if (dist < p.r + BALL_R) {
+      b.x = p.x + nx * (p.r + BALL_R + 0.5);
+      b.y = p.y + ny * (p.r + BALL_R + 0.5);
     }
     p.lastKick = time;
     this.statFor(p).kicks++;
@@ -1655,7 +1667,7 @@ export default class GameScene extends Phaser.Scene {
     let dx = b.x - p.x;
     let dy = b.y - p.y;
     let dist = Math.hypot(dx, dy);
-    const minDist = PLAYER_R + BALL_R;
+    const minDist = p.r + BALL_R;
     if (dist >= minDist) return;
     if (dist === 0) { dx = 0; dy = p.side === 'bottom' ? -1 : 1; dist = 1; }
     const nx = dx / dist;
@@ -1766,7 +1778,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.shadows.clear();
     this.shadows.fillStyle(COLORS.ink, 0.3);
-    for (const p of [this.p1, this.p2]) this.shadows.fillCircle(p.x + 5, p.y + 7, PLAYER_R);
+    for (const p of [this.p1, this.p2]) this.shadows.fillCircle(p.x + 5, p.y + 7, p.r);
     this.shadows.fillCircle(b.x + 4, b.y + 6, BALL_R);
 
     // Status effects: a soapy puddle with bubbles under slippery players, an ice cube
@@ -1775,18 +1787,18 @@ export default class GameScene extends Phaser.Scene {
     for (const p of [this.p1, this.p2]) {
       if (this.playTime < p.slipUntil) {
         this.shadows.fillStyle(0xffc2e2, 0.45);
-        this.shadows.fillEllipse(p.x, p.y + 10, PLAYER_R * 3, PLAYER_R * 1.6);
+        this.shadows.fillEllipse(p.x, p.y + 10, p.r * 3, p.r * 1.6);
         p.bubbleTimer = (p.bubbleTimer ?? 0) + realDt;
         if (p.bubbleTimer > 0.12) {
           p.bubbleTimer = 0;
-          this.dust.emit(p.x + (Math.random() - 0.5) * PLAYER_R * 2, p.y + (Math.random() - 0.5) * PLAYER_R, {
+          this.dust.emit(p.x + (Math.random() - 0.5) * p.r * 2, p.y + (Math.random() - 0.5) * p.r, {
             count: 1, speed: [10, 30], life: [500, 800], size: [3, 6], grow: 0.5,
             colors: [0xffffff, 0xffc2e2, 0xd8f4ff], alpha: 0.85,
           });
         }
       }
       if (this.playTime < p.frozenUntil) {
-        const half = PLAYER_R + 6;
+        const half = p.r + 6;
         const g = this.statusGfx;
         g.fillStyle(0xbff0ff, 0.55);
         g.fillRoundedRect(p.x - half, p.y - half, half * 2, half * 2, 10);
@@ -1804,7 +1816,7 @@ export default class GameScene extends Phaser.Scene {
     this.drawDashBars(now);
     // Dash charge ring around each player: a growing arc, a pulsing yellow circle when full.
     for (const p of [this.p1, this.p2]) {
-      const r = PLAYER_R + 11;
+      const r = p.r + 11;
       if (p.dash >= 1) {
         this.rings.lineStyle(4, COLORS.yellow, 0.6 + 0.4 * Math.sin(now / 120));
         this.rings.strokeCircle(p.x, p.y, r);
@@ -1818,16 +1830,16 @@ export default class GameScene extends Phaser.Scene {
     for (const p of [this.p1, this.p2]) {
       p.squash = Math.max(0, p.squash - realDt * 5);
       p.sprite.setPosition(p.x, p.y);
-      p.sprite.setScale(SPRITE_SCALE * (1 + 0.2 * p.squash), SPRITE_SCALE * (1 - 0.2 * p.squash));
+      p.sprite.setScale(SPRITE_SCALE * p.size * (1 + 0.2 * p.squash), SPRITE_SCALE * p.size * (1 - 0.2 * p.squash));
       if (p.kickHeld) {
         this.rings.lineStyle(5, 0xffffff, 0.9);
-        this.rings.strokeCircle(p.x, p.y, PLAYER_R + 6);
+        this.rings.strokeCircle(p.x, p.y, p.r + 6);
       }
       const speed = Math.hypot(p.vx, p.vy);
       p.dustTimer += dt;
       if (speed > 50 && p.dustTimer > 0.08) {
         p.dustTimer = 0;
-        this.dust.emit(p.x - (p.vx / speed) * PLAYER_R * 0.7, p.y - (p.vy / speed) * PLAYER_R * 0.7, {
+        this.dust.emit(p.x - (p.vx / speed) * p.r * 0.7, p.y - (p.vy / speed) * p.r * 0.7, {
           count: 1, speed: [10, 30], angle: Phaser.Math.RadToDeg(Math.atan2(-p.vy, -p.vx)), spread: 90,
           life: [350, 500], size: [4, 6], grow: 1.2, colors: [0xf3ffe0, 0xd9f5b0], alpha: 0.55,
         });

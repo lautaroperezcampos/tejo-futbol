@@ -44,13 +44,15 @@ export default class Bot {
     const bx = ball.x - player.x;
     const by = ball.y - player.y;
     const ballDist = Math.hypot(bx, by);
-    if (by < 0 && ballDist < REACH + 20 && move.y < 0) {
+    // Uses its current radius, which the size power-ups change.
+    const reach = (player.r ?? PLAYER_R) + BALL_R;
+    if (by < 0 && ballDist < reach + 20 && move.y < 0) {
       move.y = 0;
       move.x = (bx > 0 ? -1 : 1) * this.cfg.speed;
     }
 
     // Only kick when the shot goes downward, toward the opponent's goal.
-    const inReach = ballDist <= REACH + KICK.reach;
+    const inReach = ballDist <= reach + KICK.reach;
     const kick = this.wantsKick && inReach && by / (ballDist || 1) > 0.15;
     if (kick) this.wantsKick = false;
 

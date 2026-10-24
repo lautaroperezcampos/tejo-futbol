@@ -160,6 +160,9 @@ export const sfx = {
   freeze: () => [2400, 1900, 1500, 1100].forEach((f, i) => tone(f, 0.12, { type: 'square', volume: 0.05, delay: i * 0.04 })),
   // Bubbles: quick rising blips.
   soap: () => [300, 420, 360, 520, 460].forEach((f, i) => tone(f, 0.07, { type: 'sine', volume: 0.12, slideTo: f * 1.8, delay: i * 0.05 })),
+  // Mushroom: a springy rising "boing". Shrink potion: a falling whistle.
+  grow: () => [330, 440, 660].forEach((f, i) => tone(f, 0.12, { type: 'square', volume: 0.07, slideTo: f * 1.5, delay: i * 0.07 })),
+  shrink: () => [1400, 1000, 700].forEach((f, i) => tone(f, 0.12, { type: 'triangle', volume: 0.12, slideTo: f * 0.6, delay: i * 0.07 })),
   dash: () => tone(900, 0.2, { type: 'sawtooth', volume: 0.08, slideTo: 180 }),
   dashReady: () => [880, 1320].forEach((f, i) => tone(f, 0.1, { type: 'triangle', volume: 0.08, delay: i * 0.08 })),
   // The ball breaks a power-up: glassy cracks for the ice, quick pops for the soap.

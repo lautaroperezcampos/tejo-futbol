@@ -13,8 +13,8 @@ export default class Replay {
     this.frames.push({
       t,
       bx: ball.x, by: ball.y, bvx: ball.vx, bvy: ball.vy,
-      p1x: p1.x, p1y: p1.y, p1k: p1.kickHeld,
-      p2x: p2.x, p2y: p2.y, p2k: p2.kickHeld,
+      p1x: p1.x, p1y: p1.y, p1k: p1.kickHeld, p1s: p1.size,
+      p2x: p2.x, p2y: p2.y, p2k: p2.kickHeld, p2s: p2.size,
     });
     while (this.frames.length && this.frames[0].t < t - this.keepMs) this.frames.shift();
   }

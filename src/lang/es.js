@@ -83,7 +83,7 @@ export const STRINGS = {
   // "Antes de jugar"
   'setup.title': 'ANTES DE JUGAR',
   'setup.difficulty': 'DIFICULTAD',
-  'setup.hazardsHint': 'Pegales con la pelota: hielo, jabón o arco gigante',
+  'setup.hazardsHint': 'Pegales con la pelota: hielo, jabón, arco gigante, hongo o poción',
   'setup.play': '¡A JUGAR!',
   'setup.hint': '↑ ↓ elegir  ·  ← → cambiar  ·  Enter / A: aceptar  ·  Esc / B: volver',
   'setup.length': 'PARTIDO',
@@ -251,4 +251,7 @@ export const STRINGS = {
   'hazard.plop': '¡PLOP!',
   'hazard.frozen': '¡CONGELADO!',
   'hazard.slip': '¡A PATINAR!',
+  'hazard.boing': '¡BOING!',
+  'hazard.giant': '¡GIGANTE!',
+  'hazard.mini': '¡MINI!',
 };

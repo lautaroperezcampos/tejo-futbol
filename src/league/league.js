@@ -162,24 +162,24 @@ function positionsById(league) {
 // medium bot, on hard even the small ones do. Strong teams are always tougher than weak ones.
 const DIFFICULTY_SHIFT = { veryEasy: -0.5, easy: -0.35, medium: 0, hard: 0.35 };
 
-// Weakest bot of a medium or hard league (the very easy and easy levels are only the
-// floor of their own leagues, so small teams don't become pushovers on medium).
-const LEAGUE_FLOOR = { speed: 0.6, reaction: 200, kickChance: 0.5, error: 30 };
+// Weakest bot of each league: the level itself, except on hard, where small teams play
+// like a medium bot (so the big ones are a real step up).
+const LEAGUE_FLOOR = { veryEasy: 'veryEasy', easy: 'easy', medium: 'medium', hard: 'medium' };
 
 // Turns a team's strength (and the league difficulty) into bot settings, blending the
 // weakest and hard levels.
 export function botConfigFor(strength, difficulty = 'medium') {
   const t = clamp((strength - 0.35) / 0.6 + (DIFFICULTY_SHIFT[difficulty] ?? 0), 0, 1);
   const { hard } = BOT_LEVELS;
-  const low = difficulty === 'veryEasy' || difficulty === 'easy' ? BOT_LEVELS[difficulty] : LEAGUE_FLOOR;
+  const low = BOT_LEVELS[LEAGUE_FLOOR[difficulty] ?? 'medium'];
   return {
     speed: lerp(low.speed, hard.speed, t),
     reaction: lerp(low.reaction, hard.reaction, t),
     kickChance: lerp(low.kickChance, hard.kickChance, t),
     error: lerp(low.error, hard.error, t),
-    predict: t > 0.6 ? 'bounces' : 'straight',
-    dash: t > 0.6 ? 'smart' : t > 0.25 ? 'defense' : 'none',
-    // Soft kicks and body only at the weak end of an easy league.
+    predict: t > 0.6 ? hard.predict : 'straight',
+    dash: t > 0.5 ? hard.dash : 'none',
+    // Soft kicks and body only at the weak end of a league.
     kickPower: lerp(low.kickPower ?? 1, 1, t),
     bodyDamp: lerp(low.bodyDamp ?? BALL.bodyDamp, BALL.bodyDamp, t),
     aggression: lerp(low.aggression ?? 1, 1, t),
