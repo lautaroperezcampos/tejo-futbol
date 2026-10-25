@@ -64,6 +64,11 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   la copa) para una liga nueva o un amistoso. La tarjeta (`sportsCard`) y el círculo de
   nivel (`levelBadge`, `levelOf`, `starsOf`) que comparten los dos están en `src/ui.js`.
 - `src/scenes/NationSelectScene.js` — selector de selección estilo FIFA para una copa nueva.
+  Q / E (L1 / R1 en el joystick, que `padMenu` manda como KeyQ / KeyE) cambian de continente
+  (dibujados con `keycap` y `padButton` de `src/ui.js`); ↑ ↓ cambian de fila de banderas.
+- `src/scenes/CupDrawScene.js` — "ARMÁ LOS GRUPOS": si en el sorteo se elige "lo armo yo",
+  el jugador cambia selecciones de lugar en los grupos (o en los cruces de la primera ronda)
+  antes de guardar la copa (`drawSlots`, `setSlots`, `randomSlots` de `src/cup/cup.js`).
 - `src/scenes/LeagueScene.js` — tabla, resultados de la fecha, próximo partido y campeón.
 - `src/scenes/CupScene.js` — copa: grupos, llaves, resultados, próximo partido y campeón.
 - `src/cup/nations.js` — las 48 selecciones (colores, fuerza, confederación, Mundiales).

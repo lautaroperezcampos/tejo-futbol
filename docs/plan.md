@@ -82,6 +82,9 @@
   (`PITCHES`, `PITCH`, `setupPitch`, `terrainBall`).
 - [x] 30. Idiomas: español (por defecto), inglés y portugués de Brasil, en OPCIONES →
   IDIOMA. Textos en `src/lang/`, `t()` de `src/i18n.js`; se guarda en `tejo-futbol-idioma`.
+- [x] 31. Copa: Q / E y L1 / R1 (dibujados al lado de las pestañas) cambian de continente
+  en el selector y ↑ ↓ cambian de fila; sorteo "lo armo
+  yo" para armar los grupos o las llaves a mano (`CupDrawScene`, `drawSlots`/`setSlots`).
 
 ## Ideas para después
 - Controles táctiles para celular.

@@ -72,6 +72,26 @@ function drawGroups(teams) {
   }));
 }
 
+// ---------- manual draw ----------
+
+// The draw as plain lists of team ids: the groups (4 each), or the first knockout round's
+// pairs. The "armá los grupos" screen (CupDrawScene) edits these and puts them back.
+export function drawSlots(cup) {
+  return cup.format === 'groups' ? cup.groups.map((g) => [...g.teams]) : cup.rounds[0].map((m) => [m.a, m.b]);
+}
+
+export function setSlots(cup, slots) {
+  if (cup.format === 'groups') cup.groups = slots.map((teams, g) => ({ name: GROUP_NAMES[g], teams: [...teams] }));
+  else cup.rounds = [slots.map(([a, b]) => ({ a, b, ag: null, bg: null, winner: null, pens: false }))];
+}
+
+// A fresh random draw: by pots for groups, fully random pairs for a knockout.
+export function randomSlots(cup) {
+  if (cup.format === 'groups') return drawGroups(cup.teams).map((g) => g.teams);
+  const ids = shuffle([...cup.teams]);
+  return Array.from({ length: ids.length / 2 }, (_, i) => [ids[i * 2], ids[i * 2 + 1]]);
+}
+
 // Each group plays three matchdays: everyone meets everyone once.
 const GROUP_SCHEDULE = [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]];
 

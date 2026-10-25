@@ -118,7 +118,7 @@ export const STRINGS = {
 
   // Nation picker and cup options
   'nation.title': 'PICK YOUR NATION',
-  'nation.hint': '← → nation  ·  ↑ ↓ confederation  ·  Enter / A: pick  ·  Esc / B: back',
+  'nation.hint': '← → nation  ·  ↑ ↓ row  ·  Q / E: continent  ·  Enter / A: pick  ·  Esc / B: back',
   'nation.worldCups': 'WORLD CUPS',
   'nation.noCups': 'CHASING ITS FIRST WORLD CUP!',
   'conf.conmebol': 'S. AMERICA',
@@ -134,6 +134,19 @@ export const STRINGS = {
   'cup.size.groups': '{n} ({groups} GROUPS)',
   'cup.size.knockout': '{n} TEAMS',
   'cup.setupSub': 'Cup with {team}  ·  a smaller cup keeps the best teams',
+  'cup.draw': 'DRAW',
+  'cup.draw.random': 'RANDOM',
+  'cup.draw.manual': 'I’LL SET IT UP',
+
+  // Manual draw (CupDrawScene)
+  'draw.titleGroups': 'SET UP THE GROUPS',
+  'draw.titleBracket': 'SET UP THE BRACKET',
+  'draw.sub': 'Pick a nation, then another one to swap their places',
+  'draw.picked': '{team} picked: now choose who to swap it with',
+  'draw.match': 'MATCH {n}',
+  'draw.shuffle': 'SHUFFLE',
+  'draw.done': 'LET’S PLAY!',
+  'draw.hint': 'Arrows: move  ·  Enter / A: pick and swap  ·  Tab / Y: shuffle  ·  Esc / B: back',
 
   // League
   'league.title': 'ARGENTINE LEAGUE',

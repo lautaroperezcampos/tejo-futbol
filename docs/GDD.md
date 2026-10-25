@@ -74,11 +74,17 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   bandera (dibujada en el juego).
 - Selector estilo FIFA: pestañas por confederación, una tarjeta grande con la bandera,
   la camiseta, el nivel, las estrellas y las Copas del Mundo ganadas, y abajo la tira de
-  banderas de esa confederación. ← → recorre las 48, ↑ ↓ cambia de confederación.
+  banderas de esa confederación. ← → recorre las 48 y ↑ ↓ pasa de una fila de banderas a
+  la otra. **Q / E** (teclado) o **L1 / R1** (joystick) cambian de confederación; las
+  teclas y los botones están dibujados a los costados de las pestañas.
 - Después de elegir la selección, en "antes de jugar":
   - **Formato:** fase de grupos o eliminación directa.
   - **Equipos:** con grupos 48 (12 grupos), 32, 16 u 8 (2 grupos); en eliminación
     directa 32, 16, 8 o 4. Si se achica, juegan los mejores (y siempre tu selección).
+  - **Sorteo:** al azar, o **lo armo yo**: se abre "ARMÁ LOS GRUPOS" (o "ARMÁ LAS
+    LLAVES" en eliminación directa) con el sorteo hecho; elegís una selección y después
+    otra y se cambian de lugar. MEZCLAR vuelve a sortear y ¡A JUGAR! empieza la copa con
+    esos grupos.
   - **Dificultad** y **power-ups**, como en la liga.
 - Grupos de 4 sorteados por bombos (como en el Mundial), 3 fechas, 3 puntos por ganar y
   1 por empatar. Pasan los 2 primeros; con 12 grupos también los 8 mejores terceros.

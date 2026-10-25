@@ -119,7 +119,7 @@ export const STRINGS = {
 
   // Nation picker and cup options
   'nation.title': 'ELEGÍ TU SELECCIÓN',
-  'nation.hint': '← → selección  ·  ↑ ↓ confederación  ·  Enter / A: elegir  ·  Esc / B: volver',
+  'nation.hint': '← → selección  ·  ↑ ↓ fila  ·  Q / E: continente  ·  Enter / A: elegir  ·  Esc / B: volver',
   'nation.worldCups': 'COPAS DEL MUNDO',
   'nation.noCups': '¡A BUSCAR SU PRIMERA COPA DEL MUNDO!',
   'conf.conmebol': 'SUDAMÉRICA',
@@ -135,6 +135,19 @@ export const STRINGS = {
   'cup.size.groups': '{n} ({groups} GRUPOS)',
   'cup.size.knockout': '{n} EQUIPOS',
   'cup.setupSub': 'Copa con {team}  ·  si achicás la copa juegan los mejores',
+  'cup.draw': 'SORTEO',
+  'cup.draw.random': 'AL AZAR',
+  'cup.draw.manual': 'LO ARMO YO',
+
+  // Manual draw (CupDrawScene)
+  'draw.titleGroups': 'ARMÁ LOS GRUPOS',
+  'draw.titleBracket': 'ARMÁ LAS LLAVES',
+  'draw.sub': 'Elegí una selección y después otra para cambiarlas de lugar',
+  'draw.picked': '{team} elegida: ahora elegí con quién cambiarla',
+  'draw.match': 'PARTIDO {n}',
+  'draw.shuffle': 'MEZCLAR',
+  'draw.done': '¡A JUGAR!',
+  'draw.hint': 'Flechas: moverse  ·  Enter / A: elegir y cambiar  ·  Tab / Y: mezclar  ·  Esc / B: volver',
 
   // League
   'league.title': 'LIGA ARGENTINA',

@@ -8,6 +8,7 @@ import OptionsScene from './scenes/OptionsScene.js';
 import SoundScene from './scenes/SoundScene.js';
 import CupScene from './scenes/CupScene.js';
 import NationSelectScene from './scenes/NationSelectScene.js';
+import CupDrawScene from './scenes/CupDrawScene.js';
 
 // Phaser draws text and textures onto canvases, so the web fonts must be ready first.
 // If they can't load (offline), start anyway with the fallback fonts.
@@ -36,7 +37,7 @@ function startGame() {
     },
     // The options and sound panels go last so they're drawn over whichever screen opened
     // them (the sound panel can open from the options one).
-    scene: [MenuScene, GameScene, TeamSelectScene, LeagueScene, CupScene, NationSelectScene, OptionsScene, SoundScene],
+    scene: [MenuScene, GameScene, TeamSelectScene, LeagueScene, CupScene, NationSelectScene, CupDrawScene, OptionsScene, SoundScene],
   });
 
   // Handy for poking at the game from the browser console while developing.

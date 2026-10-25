@@ -417,7 +417,7 @@ export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions
 }
 
 // A keyboard key drawn as a little white keycap. Returns the parts to add to a container.
-function keycap(scene, x, y, label, w = 48) {
+export function keycap(scene, x, y, label, w = 48) {
   const h = 46;
   const g = scene.add.graphics();
   g.fillStyle(COLORS.ink, 1);
@@ -445,7 +445,7 @@ function keyCluster(scene, x, y, [up, left, down, right]) {
 }
 
 // Round or pill-shaped gamepad button.
-function padButton(scene, x, y, label, color, w = 46) {
+export function padButton(scene, x, y, label, color, w = 46) {
   const h = 46;
   const g = scene.add.graphics();
   g.fillStyle(COLORS.ink, 1);

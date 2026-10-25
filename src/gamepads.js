@@ -110,6 +110,9 @@ function menuCodes() {
     if (p.pressed(BTN.B)) codes.push('Escape');
     if (p.pressed(BTN.Y)) codes.push('Tab');
     if (p.pressed(BTN.SELECT)) codes.push('KeyN');
+    // Shoulder buttons jump between sections (like Q / E on the keyboard).
+    if (p.pressed(BTN.LB)) codes.push('KeyQ');
+    if (p.pressed(BTN.RB)) codes.push('KeyE');
   }
   return codes;
 }

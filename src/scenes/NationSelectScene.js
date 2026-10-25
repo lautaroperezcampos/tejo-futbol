@@ -3,6 +3,7 @@ import { GAME_W, GAME_H, COLORS, PALETTE, FONTS } from '../config.js';
 import { makeTextures, kitTexture } from '../art.js';
 import {
   titleText, uiText, button, goTo, wipeIn, playMenuMusic, optionsButton, sportsCard, levelBadge, levelOf, starsOf,
+  keycap, padButton,
 } from '../ui.js';
 import { sfx, unlockAudio } from '../sound.js';
 import { NATION_BY_ID, CONFEDERATIONS } from '../cup/nations.js';
@@ -14,15 +15,15 @@ import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 50, y: 200, w: GAME_W - 100, h: 500 };
-const TAB = { y: 150, w: 124, h: 44, gap: 8 };
+const TAB = { y: 150, w: 108, h: 44, gap: 6 };
 const STRIP = { top: 790, thumbScale: 0.3, gap: 10, rowGap: 82 };
 const CHOOSE_Y = 1000;
 const CUP_FORMATS = ['groups', 'knockout']; // labels: cup.format.<id> in src/lang/
 
 // FIFA-style nation picker for the cup: confederation tabs on top, a big card with the
 // selected nation (flag, kit, level, stars, World Cups) and a strip with the flags of
-// that confederation. Left/right browse all 48 nations, up/down jump between
-// confederations.
+// that confederation. Left/right browse all 48 nations, up/down move between the two rows
+// of flags, and Q / E (L1 / R1 on the joystick, drawn beside the tabs) change confederation.
 export default class NationSelectScene extends Phaser.Scene {
   constructor() {
     super('NationSelect');
@@ -61,8 +62,10 @@ export default class NationSelectScene extends Phaser.Scene {
       const c = event.code;
       if (c === 'ArrowRight' || c === 'KeyD') this.step(1);
       else if (c === 'ArrowLeft' || c === 'KeyA') this.step(-1);
-      else if (c === 'ArrowDown' || c === 'KeyS') this.jumpConf(1);
-      else if (c === 'ArrowUp' || c === 'KeyW') this.jumpConf(-1);
+      else if (c === 'ArrowDown' || c === 'KeyS') this.changeRow(1);
+      else if (c === 'ArrowUp' || c === 'KeyW') this.changeRow(-1);
+      else if (c === 'KeyE') this.jumpConf(1);
+      else if (c === 'KeyQ') this.jumpConf(-1);
       else if (c === 'Enter' || c === 'Space') this.confirm();
       else if (c === 'Escape') goTo(this, 'Menu');
     };
@@ -82,13 +85,26 @@ export default class NationSelectScene extends Phaser.Scene {
       const x = CX - total / 2 + TAB.w / 2 + i * (TAB.w + TAB.gap);
       const bg = this.add.graphics();
       const label = this.add.text(0, 0, conf.label, {
-        fontFamily: FONTS.title, fontSize: conf.label.length > 10 ? '11px' : '13px', color: PALETTE.white, align: 'center',
+        fontFamily: FONTS.title, fontSize: '13px', color: PALETTE.white, align: 'center',
       }).setOrigin(0.5);
+      if (label.width > TAB.w - 12) label.setScale((TAB.w - 12) / label.width);
       const container = this.add.container(x, TAB.y, [bg, label]);
       const zone = this.add.zone(x, TAB.y, TAB.w, TAB.h).setInteractive({ useHandCursor: true });
       zone.on('pointerdown', () => this.setConf(i, 0));
       return { container, bg, label };
     });
+
+    // The keys that change confederation, on both sides of the tabs: Q and L1 on the
+    // left (previous), E and R1 on the right (next). They can be clicked too.
+    const side = (CX - total / 2) / 2;
+    for (const [dir, key, shoulder] of [[-1, 'Q', 'L1'], [1, 'E', 'R1']]) {
+      const x = dir < 0 ? side : GAME_W - side;
+      const keyIcon = this.add.container(x, TAB.y - 14, keycap(this, 0, 0, key)).setScale(0.95);
+      const padIcon = this.add.container(x, TAB.y + 30, padButton(this, 0, 0, shoulder, COLORS.p1, 60)).setScale(0.75);
+      const zone = this.add.zone(x, TAB.y + 8, side * 2 - 6, 90).setInteractive({ useHandCursor: true });
+      zone.on('pointerdown', () => this.jumpConf(dir));
+      this.tweens.add({ targets: [keyIcon, padIcon], x: x + dir * 3, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    }
   }
 
   makeCard() {
@@ -121,6 +137,7 @@ export default class NationSelectScene extends Phaser.Scene {
     this.stripLayer.removeAll(true);
     const ids = CONFEDERATIONS[this.conf].ids;
     const perRow = ids.length > 8 ? Math.ceil(ids.length / 2) : ids.length;
+    this.perRow = perRow;
     const thumbW = 150 * STRIP.thumbScale;
     this.thumbs = ids.map((id, i) => {
       const row = Math.floor(i / perRow);
@@ -155,6 +172,17 @@ export default class NationSelectScene extends Phaser.Scene {
       index = CONFEDERATIONS[conf].ids.length - 1;
     }
     this.setConf(conf, index);
+  }
+
+  // Up/down: to the same spot in the other row of flags (or the last one of a shorter
+  // row); nothing with a single row.
+  changeRow(dir) {
+    const n = CONFEDERATIONS[this.conf].ids.length;
+    const row = Math.floor(this.index / this.perRow);
+    const rows = Math.ceil(n / this.perRow);
+    const target = row + dir;
+    if (target < 0 || target >= rows) return;
+    this.setConf(this.conf, Math.min(n - 1, target * this.perRow + (this.index % this.perRow)));
   }
 
   jumpConf(dir) {
@@ -243,6 +271,11 @@ export default class NationSelectScene extends Phaser.Scene {
     const formats = CUP_FORMATS.map((id) => ({ id, label: t(`cup.format.${id}`) }));
     const formatRow = { key: 'format', label: t('cup.format'), values: formats, index: 0 };
     const sizeRow = { key: 'size', label: t('cup.teams'), values: sizeValues('groups'), index: 0 };
+    // Random draw, or the player arranges the groups (or the first knockout round).
+    const drawRow = {
+      key: 'draw', label: t('cup.draw'), index: 0,
+      values: [{ id: 'random', label: t('cup.draw.random') }, { id: 'manual', label: t('cup.draw.manual') }],
+    };
     this.setup = new SetupPanel(this, {
       icons: [
         { texture: flagTexture(this, nation.id), scale: 0.42 },
@@ -250,7 +283,7 @@ export default class NationSelectScene extends Phaser.Scene {
       ],
       vs: false,
       subtitle: t('cup.setupSub', { team: nation.short }),
-      extraRows: [formatRow, sizeRow],
+      extraRows: [formatRow, sizeRow, drawRow],
       difficulty: 'medium',
       // Changing the format swaps the size options, keeping the closest size.
       onChange: (row) => {
@@ -261,8 +294,13 @@ export default class NationSelectScene extends Phaser.Scene {
         const closest = sizes.reduce((best, s) => (Math.abs(s - current) < Math.abs(best - current) ? s : best), sizes[0]);
         sizeRow.index = sizes.indexOf(closest);
       },
-      onStart: ({ format, size, difficulty, hazards }) => {
-        saveCup(newCup(nation.id, { format, size, difficulty, hazards }));
+      onStart: ({ format, size, difficulty, hazards, draw }) => {
+        const cup = newCup(nation.id, { format, size, difficulty, hazards });
+        if (draw === 'manual') {
+          goTo(this, 'CupDraw', { cup });
+          return;
+        }
+        saveCup(cup);
         goTo(this, 'Cup', {});
       },
       onClosed: () => { this.setup = null; },
