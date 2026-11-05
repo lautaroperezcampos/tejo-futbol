@@ -1,4 +1,4 @@
-// The 20 league teams with their real colours (home kit) and an alternative kit for
+// The 30 league teams with their real colours (home kit) and an alternative kit for
 // colour clashes. No crests: only names and colours.
 //
 // Kit patterns (seen from above, on the round player):
@@ -44,6 +44,9 @@ export const TEAMS = [
   { id: 'argentinos', name: 'Argentinos Juniors', short: 'ARGENTINOS', strength: 0.62,
     home: { pattern: 'trim', colors: ['#e30613', '#ffffff'] },
     away: { pattern: 'trim', colors: ['#ffffff', '#e30613'] } },
+  { id: 'lanus', name: 'Lanús', short: 'LANÚS', strength: 0.62,
+    home: { pattern: 'trim', colors: ['#7a1230', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#ffffff', '#7a1230'] } },
   { id: 'newells', name: "Newell's Old Boys", short: "NEWELL'S", strength: 0.6,
     home: { pattern: 'halves', colors: ['#d6001c', '#111111'] },
     away: { pattern: 'trim', colors: ['#ffffff', '#d6001c'] } },
@@ -62,6 +65,9 @@ export const TEAMS = [
   { id: 'belgrano', name: 'Belgrano', short: 'BELGRANO', strength: 0.48,
     home: { pattern: 'trim', colors: ['#5bc2e7', '#0b2a63'] },
     away: { pattern: 'trim', colors: ['#0b2a63', '#5bc2e7'] } },
+  { id: 'instituto', name: 'Instituto', short: 'INSTITUTO', strength: 0.44,
+    home: { pattern: 'stripes', colors: ['#e30613', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#1d1d1d', '#e30613'] } },
   { id: 'union', name: 'Unión', short: 'UNIÓN', strength: 0.42,
     home: { pattern: 'stripes', colors: ['#e30613', '#ffffff'] },
     away: { pattern: 'trim', colors: ['#1d1d1d', '#e30613'] } },
@@ -71,9 +77,42 @@ export const TEAMS = [
   { id: 'banfield', name: 'Banfield', short: 'BANFIELD', strength: 0.4,
     home: { pattern: 'stripes', colors: ['#0a7a3b', '#ffffff'] },
     away: { pattern: 'trim', colors: ['#ffffff', '#0a7a3b'] } },
+  { id: 'indrivadavia', name: 'Independiente Rivadavia', short: 'IND. RIVADAVIA', strength: 0.4,
+    home: { pattern: 'trim', colors: ['#0b2a7a', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#ffffff', '#0b2a7a'] } },
+  { id: 'barracas', name: 'Barracas Central', short: 'BARRACAS', strength: 0.4,
+    home: { pattern: 'stripes', colors: ['#c8102e', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#ffffff', '#c8102e'] } },
   { id: 'tucuman', name: 'Atlético Tucumán', short: 'TUCUMÁN', strength: 0.38,
     home: { pattern: 'stripes', colors: ['#6cc4ee', '#ffffff'] },
     away: { pattern: 'trim', colors: ['#0b2a63', '#6cc4ee'] } },
+  { id: 'centralcordoba', name: 'Central Córdoba', short: 'C. CÓRDOBA', strength: 0.37,
+    home: { pattern: 'stripes', colors: ['#ffffff', '#111111'] },
+    away: { pattern: 'trim', colors: ['#c8102e', '#ffffff'] } },
+  { id: 'sarmiento', name: 'Sarmiento', short: 'SARMIENTO', strength: 0.36,
+    home: { pattern: 'trim', colors: ['#0a7a3b', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#ffffff', '#0a7a3b'] } },
+  { id: 'aldosivi', name: 'Aldosivi', short: 'ALDOSIVI', strength: 0.36,
+    home: { pattern: 'stripes', colors: ['#0a7a3b', '#f7c600'] },
+    away: { pattern: 'trim', colors: ['#f7c600', '#0a7a3b'] } },
+  { id: 'riestra', name: 'Deportivo Riestra', short: 'RIESTRA', strength: 0.35,
+    home: { pattern: 'band', colors: ['#111111', '#ffffff'] },
+    away: { pattern: 'band', colors: ['#ffffff', '#111111'] } },
+  { id: 'gimnasiamza', name: 'Gimnasia de Mendoza', short: 'GIMNASIA MZA', strength: 0.34,
+    home: { pattern: 'stripes', colors: ['#111111', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#ffffff', '#111111'] } },
+  { id: 'estudiantesrc', name: 'Estudiantes de Río Cuarto', short: 'ESTUDIANTES RC', strength: 0.32,
+    home: { pattern: 'stripes', colors: ['#6cc4ee', '#ffffff'] },
+    away: { pattern: 'trim', colors: ['#1b2a5c', '#6cc4ee'] } },
+];
+
+// Each classic goes in opposite zones and is played in the "fecha de clásicos". The
+// teams that aren't here get a random zone and a random rival for that round.
+export const CLASSICS = [
+  ['river', 'boca'], ['racing', 'independiente'], ['sanlorenzo', 'huracan'],
+  ['estudiantes', 'gimnasia'], ['central', 'newells'], ['talleres', 'belgrano'],
+  ['velez', 'argentinos'], ['lanus', 'banfield'], ['platense', 'tigre'],
+  ['indrivadavia', 'gimnasiamza'], ['tucuman', 'centralcordoba'],
 ];
 
 export const TEAM_BY_ID = Object.fromEntries(TEAMS.map((t) => [t.id, t]));

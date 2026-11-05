@@ -13,7 +13,7 @@ import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 50, y: 170, w: GAME_W - 100, h: 520 };
-const STRIP = { top: 772, perRow: 10, step: 68, rowGap: 78, thumbScale: 0.42 };
+const STRIP = { top: 750, perRow: 10, step: 68, rowGap: 66, thumbScale: 0.36 };
 const CHOOSE_Y = 990;
 
 // One line under the stars, by how strong the club is.
@@ -111,7 +111,7 @@ export default class TeamSelectScene extends Phaser.Scene {
     cardZone.on('pointerdown', () => this.confirm());
   }
 
-  // The 20 home kits in two rows; click one to see it, click it again to pick it.
+  // The home kits in rows of 10; click one to see it, click it again to pick it.
   makeStrip() {
     const left = CX - ((STRIP.perRow - 1) * STRIP.step) / 2;
     this.thumbs = TEAMS.map((team, i) => {
@@ -124,7 +124,8 @@ export default class TeamSelectScene extends Phaser.Scene {
       zone.on('pointerdown', () => (i === this.index ? this.confirm() : this.select(i)));
       return { thumb, frame };
     });
-    this.counter = uiText(this, CX, STRIP.top + STRIP.rowGap + 56, '', 16, '#bfb3ff');
+    const rows = Math.ceil(TEAMS.length / STRIP.perRow);
+    this.counter = uiText(this, CX, STRIP.top + (rows - 1) * STRIP.rowGap + 48, '', 16, '#bfb3ff');
   }
 
   updateTitles() {

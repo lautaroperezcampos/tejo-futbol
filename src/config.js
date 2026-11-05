@@ -155,6 +155,12 @@ export const FONTS = {
   ui: '"Rubik", "Arial", sans-serif',
 };
 
+// League: two zones (see src/league/league.js). The top of each zone goes to the playoffs.
+export const LEAGUE = {
+  qualifiers: 8, // teams per zone that reach the round of 16
+  classicRound: 8, // the matchday of the classics (1-based)
+};
+
 export const BOT_LEVELS = {
   // dash: 'none' never; 'defense' only to save a shot it can't reach walking;
   // 'smart' also to hit a power shot when it's lined up with the opponent's goal.

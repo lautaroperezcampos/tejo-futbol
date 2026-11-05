@@ -1,30 +1,37 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H, COLORS, PALETTE, FONTS } from '../config.js';
+import { GAME_W, GAME_H, COLORS, PALETTE, FONTS, LEAGUE } from '../config.js';
 import { makeTextures, kitTexture } from '../art.js';
 import { titleText, uiText, ribbon, button, goTo, wipeIn, playMenuMusic, optionsButton, levelLabel } from '../ui.js';
 import { sfx, unlockAudio } from '../sound.js';
 import { TEAM_BY_ID, pickKits } from '../league/teams.js';
 import {
-  loadLeague, clearLeague, standings, nextUserMatch, isFinished, totalRounds, recordUserMatch,
+  loadLeague, clearLeague, standings, nextUserMatch, isFinished, totalRounds, recordUserMatch, simulateToEnd,
+  currentPlayoffRound, isClassicRound, userZone,
 } from '../league/league.js';
+import { roundName } from '../cup/cup.js';
 import { padMenu } from '../gamepads.js';
 import { t } from '../i18n.js';
 
 const CX = GAME_W / 2;
-const ROW_H = 33;
-const TABLE_TOP = 175;
+const ROW_H = 40;
+const TABLE_TOP = 190;
+const BODY_BOTTOM = 880;
 // Column centres for the numeric stats (played, won, drawn, lost, goals for, against,
 // difference, points); their headers are league.cols in src/lang/.
 const COLS = [420, 465, 510, 555, 605, 655, 705, 765];
+const VIEW_LABEL = {
+  zoneA: 'league.zoneA', zoneB: 'league.zoneB', bracket: 'cup.view.bracket', results: 'common.results', final: 'common.championBtn',
+};
 
-// League hub: standings, last round's results, next match and the final screen.
+// League hub: the two zone tables, last round's results, the playoffs, next match and
+// the final screen.
 export default class LeagueScene extends Phaser.Scene {
   constructor() {
     super('League');
   }
 
   init(data) {
-    this.view = data.view ?? null; // null: table, or the final screen if the league is over
+    this.view = data.view ?? null; // null: the most useful one right now
   }
 
   create() {
@@ -43,10 +50,9 @@ export default class LeagueScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.62).setOrigin(0);
     this.content = this.add.container(0, 0);
 
-    const finished = isFinished(this.league);
-    if (!this.view) this.view = finished ? 'final' : 'table';
-    if (this.view === 'results' && !this.league.results.length) this.view = 'table';
-    if (finished && this.view === 'results') this.view = 'final';
+    this.views = this.availableViews();
+    if (isFinished(this.league) && this.view === 'results') this.view = 'final';
+    if (!this.views.includes(this.view)) this.view = this.views[0];
 
     this.drawHeader();
     optionsButton(this, GAME_W - 48, 48);
@@ -76,6 +82,16 @@ export default class LeagueScene extends Phaser.Scene {
     padMenu(this, onKey);
   }
 
+  // Which screens make sense right now, the most useful first.
+  availableViews() {
+    const l = this.league;
+    const mine = `zone${userZone(l)}`;
+    const other = mine === 'zoneA' ? 'zoneB' : 'zoneA';
+    if (l.stage === 'zones') return l.results.length ? [mine, other, 'results'] : [mine, other];
+    const views = ['bracket', 'results', mine, other];
+    return l.stage === 'done' ? ['final', ...views] : views;
+  }
+
   // ---------- layout ----------
 
   drawHeader() {
@@ -83,34 +99,41 @@ export default class LeagueScene extends Phaser.Scene {
     ribbon(this, CX, 58, t('league.title'), 380, 54).setAngle(-2);
     const level = levelLabel(this.league.difficulty ?? 'medium')
       + (this.league.hazards ? `  ·  ${t('common.powerups')}` : '');
-    const subtitle = isFinished(this.league)
-      ? t('league.over', { level })
-      : t('league.round', { round, total: totalRounds(this.league), team: this.user.short, level });
+    let subtitle;
+    if (isFinished(this.league)) subtitle = t('league.over', { level });
+    else if (this.league.stage === 'playoffs') {
+      subtitle = t('league.stage', { stage: roundName(currentPlayoffRound(this.league).length * 2), team: this.user.short, level });
+    } else subtitle = t('league.round', { round, total: totalRounds(this.league), team: this.user.short, level });
     uiText(this, CX, 120, subtitle, 20, PALETTE.yellow);
   }
 
   drawFooter() {
-    const finished = isFinished(this.league);
+    const l = this.league;
     const btnY = 1018;
+    const m = nextUserMatch(l);
 
-    if (!finished) {
-      const m = nextUserMatch(this.league);
+    if (m) {
       const home = TEAM_BY_ID[m.home];
       const away = TEAM_BY_ID[m.away];
       const kits = pickKits(home, away);
       const rowY = 940;
-      uiText(this, CX, 898, t('common.nextMatch'), 18, PALETTE.yellow);
+      let label = t('common.nextMatch');
+      if (m.knockout) label = t('league.nextKnockout', { round: roundName(currentPlayoffRound(l).length * 2) });
+      else if (isClassicRound(l)) label = t('league.nextClassic');
+      uiText(this, CX, 898, label, 18, PALETTE.yellow);
       this.add.image(CX - 250, rowY, kitTexture(this, kits.home, '10')).setScale(0.38);
       uiText(this, CX - 220, rowY, home.short, 22).setOrigin(0, 0.5);
       uiText(this, CX, rowY, t('common.vs'), 22, PALETTE.yellow);
       uiText(this, CX + 220, rowY, away.short, 22).setOrigin(1, 0.5);
       this.add.image(CX + 250, rowY, kitTexture(this, kits.away, '9')).setScale(0.38);
+    } else if (!isFinished(l)) {
+      uiText(this, CX, 920, t('league.goesOn'), 17, PALETTE.yellow);
     }
 
     // Footer buttons, left to right. Arrows / joystick move the yellow highlight and
     // Enter / A presses it; the main button starts highlighted.
     const footer = [];
-    if (finished) {
+    if (isFinished(l)) {
       this.viewBtn = button(this, CX - 220, btnY, 230, 66, '', () => this.toggleView(), 20);
       footer.push([this.viewBtn, () => this.toggleView()]);
       this.mainBtn = button(this, CX + 110, btnY, 360, 66, t('league.new'), () => this.mainAction(), 26);
@@ -120,7 +143,9 @@ export default class LeagueScene extends Phaser.Scene {
       footer.push([this.viewBtn, () => this.toggleView()]);
       const quit = button(this, 342, btnY, 200, 66, t('common.quit'), () => this.openResetModal(), 19);
       footer.push([quit, () => this.openResetModal()]);
-      this.mainBtn = button(this, 610, btnY, 320, 66, t('league.play', { n: this.league.round + 1 }), () => this.mainAction(), 24);
+      let label = t('cup.simulate');
+      if (m) label = m.knockout ? t('cup.play') : t('league.play', { n: l.round + 1 });
+      this.mainBtn = button(this, 610, btnY, 320, 66, label, () => this.mainAction(), 24);
       footer.push([this.mainBtn, () => this.mainAction()]);
     }
     this.footer = footer.map(([btn, action]) => ({ btn, action }));
@@ -140,27 +165,24 @@ export default class LeagueScene extends Phaser.Scene {
     });
   }
 
+  // The view button shows where it takes you next.
   updateViewButton() {
-    const label = t(this.view === 'table' ? (isFinished(this.league) ? 'common.championBtn' : 'common.results') : 'league.table');
-    this.viewBtn.container.list[1].setText(label);
+    const next = this.views[(this.views.indexOf(this.view) + 1) % this.views.length];
+    this.viewBtn.container.list[1].setText(t(VIEW_LABEL[next]));
   }
 
   render() {
     this.content.removeAll(true);
-    if (this.view === 'table') this.renderTable();
+    if (this.view === 'zoneA') this.renderTable('A');
+    else if (this.view === 'zoneB') this.renderTable('B');
+    else if (this.view === 'bracket') this.renderBracket();
     else if (this.view === 'results') this.renderResults();
     else this.renderFinal();
   }
 
   toggleView() {
     sfx.select();
-    if (this.view === 'table') {
-      if (isFinished(this.league)) this.view = 'final';
-      else if (this.league.results.length) this.view = 'results';
-      else return;
-    } else {
-      this.view = 'table';
-    }
+    this.view = this.views[(this.views.indexOf(this.view) + 1) % this.views.length];
     this.updateViewButton();
     this.render();
   }
@@ -170,12 +192,19 @@ export default class LeagueScene extends Phaser.Scene {
       this.openResetModal();
       return;
     }
+    if (this.leaving) return;
     const m = nextUserMatch(this.league);
+    if (!m) {
+      // Out of the tournament: play out the rest of it.
+      simulateToEnd(this.league);
+      sfx.confirm();
+      goTo(this, 'League', { view: 'final' });
+      return;
+    }
     const home = TEAM_BY_ID[m.home];
     const away = TEAM_BY_ID[m.away];
     const kits = pickKits(home, away);
     const rival = m.userIsHome ? away : home;
-    if (this.leaving) return;
     sfx.confirm();
     goTo(this, 'Game', {
       mode: 'league',
@@ -186,7 +215,7 @@ export default class LeagueScene extends Phaser.Scene {
         rivalKit: m.userIsHome ? kits.away : kits.home,
         difficulty: this.league.difficulty,
         hazards: this.league.hazards,
-        knockout: false,
+        knockout: m.knockout,
         record: (userGoals, rivalGoals) => recordUserMatch(this.league, userGoals, rivalGoals),
         back: { scene: 'League', data: { view: 'results' } },
       },
@@ -204,7 +233,7 @@ export default class LeagueScene extends Phaser.Scene {
     const title = t(finished ? 'league.newTitle' : 'league.quitTitle');
     const detail = finished
       ? t('league.newDetail')
-      : t('league.quitDetail', { team: this.user.short, round: this.league.round + 1, total: totalRounds(this.league) });
+      : t('league.quitDetail', { team: this.user.short, round: Math.min(this.league.round + 1, totalRounds(this.league)), total: totalRounds(this.league) });
 
     // The dim layer swallows clicks so nothing behind the dialog reacts.
     const dim = this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.75).setOrigin(0).setInteractive();
@@ -261,17 +290,19 @@ export default class LeagueScene extends Phaser.Scene {
 
   // ---------- views ----------
 
-  renderTable() {
+  // One zone's table. A green mark and a line show who's in the playoffs.
+  renderTable(zone) {
     const add = (obj) => this.content.add(obj);
+    add(uiText(this, CX, 156, t(`league.zone${zone}`), 24));
     const g = this.add.graphics();
     add(g);
     const x0 = 30;
     const w = GAME_W - 60;
-    const rows = standings(this.league);
+    const rows = standings(this.league, zone);
     const prev = this.league.prevPositions;
 
     g.fillStyle(COLORS.ink, 0.92);
-    g.fillRoundedRect(x0 - 6, TABLE_TOP - 6, w + 12, ROW_H * 21 + 16, 18);
+    g.fillRoundedRect(x0 - 6, TABLE_TOP - 6, w + 12, ROW_H * (rows.length + 1) + 16, 18);
     g.fillStyle(COLORS.purple, 1);
     g.fillRoundedRect(x0, TABLE_TOP, w, ROW_H, { tl: 12, tr: 12, bl: 0, br: 0 });
 
@@ -289,10 +320,13 @@ export default class LeagueScene extends Phaser.Scene {
       if (isUser) g.fillStyle(COLORS.yellow, 1);
       else g.fillStyle(i % 2 ? 0x2a1a5c : 0x24164f, 1);
       g.fillRect(x0, y, w, ROW_H);
-      if (i === 0) {
-        // Leader marker.
-        g.fillStyle(COLORS.yellow, 1);
+      if (i < LEAGUE.qualifiers) {
+        g.fillStyle(0x3dd68c, 1);
         g.fillRect(x0, y, 6, ROW_H);
+      }
+      if (i === LEAGUE.qualifiers) {
+        g.fillStyle(0xffffff, 0.6);
+        g.fillRect(x0, y - 1, w, 2);
       }
 
       const color = isUser ? PALETTE.ink : PALETTE.white;
@@ -303,7 +337,7 @@ export default class LeagueScene extends Phaser.Scene {
         const up = r.pos < prev[r.id];
         add(this.add.text(x0 + 50, cy, up ? '▲' : '▼', { ...cell, fontSize: '12px', color: up ? '#3dd68c' : '#ff4757' }).setOrigin(0.5));
       }
-      add(this.add.image(x0 + 78, cy, kitTexture(this, team.home, '')).setScale(0.2));
+      add(this.add.image(x0 + 78, cy, kitTexture(this, team.home, '')).setScale(0.24));
       add(this.add.text(x0 + 95, cy, team.short, cell).setOrigin(0, 0.5));
       const stats = [r.pj, r.pg, r.pe, r.pp, r.gf, r.gc, r.dg > 0 ? `+${r.dg}` : r.dg, r.pts];
       COLS.forEach((cx, k) => {
@@ -311,37 +345,66 @@ export default class LeagueScene extends Phaser.Scene {
         add(this.add.text(cx, cy, String(stats[k]), style).setOrigin(0.5));
       });
     });
+    add(uiText(this, CX, TABLE_TOP + ROW_H * (rows.length + 1) + 26, t('league.legend'), 15, '#bfb3ff'));
+  }
+
+  // The current playoff round (or the final, once it's over).
+  renderBracket() {
+    const round = currentPlayoffRound(this.league);
+    this.content.add(uiText(this, CX, TABLE_TOP - 15, roundName(round.length * 2), 24));
+    this.matchList(round, TABLE_TOP + 30);
   }
 
   renderResults() {
-    const add = (obj) => this.content.add(obj);
-    const round = this.league.results[this.league.results.length - 1];
-    add(uiText(this, CX, TABLE_TOP + 10, t('league.roundResults', { n: this.league.results.length }), 24));
+    const l = this.league;
+    const played = l.rounds.filter((r) => r.every((m) => m.winner));
+    let title;
+    let list;
+    if (played.length) {
+      list = played[played.length - 1];
+      title = t('cup.resultsRound', { round: roundName(list.length * 2) });
+    } else {
+      list = l.results[l.results.length - 1].map((r) => ({ a: r.home, b: r.away, ag: r.hg, bg: r.ag }));
+      title = t('league.roundResults', { n: l.results.length });
+    }
+    this.content.add(uiText(this, CX, TABLE_TOP - 15, title, 24));
+    this.matchList(list, TABLE_TOP + 30);
+  }
 
+  // One row per match: { a, b, ag, bg, pens, winner }, with kits and the score (or VS).
+  matchList(list, top) {
+    const add = (obj) => this.content.add(obj);
+    const rowH = Math.min(62, (BODY_BOTTOM - top) / list.length);
     const g = this.add.graphics();
     add(g);
-    round.forEach((res, i) => {
-      const y = TABLE_TOP + 60 + i * 62;
-      const home = TEAM_BY_ID[res.home];
-      const away = TEAM_BY_ID[res.away];
-      g.fillStyle(res.user ? COLORS.yellow : COLORS.ink, res.user ? 1 : 0.88);
-      g.fillRoundedRect(40, y - 26, GAME_W - 80, 52, 14);
-      const color = res.user ? PALETTE.ink : PALETTE.white;
-      const style = { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '20px', color };
-      add(this.add.image(70, y, kitTexture(this, home.home, '')).setScale(0.26));
-      add(this.add.text(CX - 70, y, home.short, style).setOrigin(1, 0.5));
-      add(this.add.text(CX, y, `${res.hg} - ${res.ag}`, { ...style, fontFamily: FONTS.title, fontSize: '24px' }).setOrigin(0.5));
-      add(this.add.text(CX + 70, y, away.short, style).setOrigin(0, 0.5));
-      add(this.add.image(GAME_W - 70, y, kitTexture(this, away.home, '')).setScale(0.26));
+    list.forEach((m, i) => {
+      const y = top + i * rowH;
+      const cy = y + rowH / 2;
+      const home = TEAM_BY_ID[m.a];
+      const away = TEAM_BY_ID[m.b];
+      const isUser = m.a === this.league.userId || m.b === this.league.userId;
+      g.fillStyle(isUser ? COLORS.yellow : COLORS.ink, isUser ? 1 : 0.88);
+      g.fillRoundedRect(40, y + 2, GAME_W - 80, rowH - 4, 12);
+      const color = isUser ? PALETTE.ink : PALETTE.white;
+      const style = (won) => ({
+        fontFamily: FONTS.ui, fontStyle: '900', fontSize: '19px',
+        color: m.winner && !won ? (isUser ? '#6b5a00' : '#8f86b8') : color,
+      });
+      add(this.add.image(70, cy, kitTexture(this, home.home, '')).setScale(0.24));
+      add(this.add.text(CX - 70, cy, home.short, style(m.winner === m.a)).setOrigin(1, 0.5));
+      const score = m.ag === null ? t('common.vs') : `${m.ag} - ${m.bg}${m.pens ? '*' : ''}`;
+      add(this.add.text(CX, cy, score, { fontFamily: FONTS.title, fontSize: '22px', color }).setOrigin(0.5));
+      add(this.add.text(CX + 70, cy, away.short, style(m.winner === m.b)).setOrigin(0, 0.5));
+      add(this.add.image(GAME_W - 70, cy, kitTexture(this, away.home, '')).setScale(0.24));
     });
+    if (list.some((m) => m.pens)) add(uiText(this, CX, BODY_BOTTOM + 6, t('cup.pens'), 15, '#bfb3ff'));
   }
 
   renderFinal() {
     const add = (obj) => this.content.add(obj);
-    const rows = standings(this.league);
-    const champion = TEAM_BY_ID[rows[0].id];
-    const mine = rows.find((r) => r.id === this.league.userId);
-    const won = mine.pos === 1;
+    const l = this.league;
+    const champion = TEAM_BY_ID[l.champion];
+    const won = l.champion === l.userId;
 
     const burst = this.add.image(CX, 400, 'burst').setScale(3.2).setAlpha(won ? 1 : 0.35);
     add(burst);
@@ -350,16 +413,30 @@ export default class LeagueScene extends Phaser.Scene {
     add(this.add.image(CX + 105, 450, kitTexture(this, champion.home, '10')).setScale(0.75));
 
     if (won) {
+      const mine = standings(l, userZone(l)).find((r) => r.id === l.userId);
       add(titleText(this, CX, 640, t('common.champion'), 100).setAngle(-5));
       add(ribbon(this, CX, 735, this.user.short, 380, 56).setAngle(-5));
       add(uiText(this, CX, 820, t('league.wonStats', { pts: mine.pts, wins: mine.pg, gd: `${mine.dg > 0 ? '+' : ''}${mine.dg}` }), 24, PALETTE.yellow));
       sfx.win();
       this.time.addEvent({ delay: 700, repeat: 4, callback: () => this.confetti() });
     } else {
-      add(titleText(this, CX, 640, t('league.finishedPos', { pos: mine.pos }), 72).setAngle(-4));
-      add(ribbon(this, CX, 735, t('common.championOf', { team: champion.short }), 440, 56).setAngle(-4));
-      add(uiText(this, CX, 820, t('league.lostStats', { team: this.user.short, pts: mine.pts }), 22, PALETTE.yellow));
+      add(titleText(this, CX, 640, t('common.championOf', { team: champion.short }), champion.short.length > 9 ? 52 : 64).setAngle(-4));
+      add(ribbon(this, CX, 735, this.userFinish(), 560, 56).setAngle(-4));
+      add(uiText(this, CX, 820, t('common.nextTime'), 24, PALETTE.yellow));
     }
+  }
+
+  // How far the user got: "SUBCAMPEÓN", "CAÍSTE EN OCTAVOS", "NO CLASIFICASTE"...
+  userFinish() {
+    const l = this.league;
+    let last = null;
+    for (const r of l.rounds) if (r.some((m) => m.a === l.userId || m.b === l.userId)) last = r;
+    if (!last) {
+      const pos = standings(l, userZone(l)).find((r) => r.id === l.userId).pos;
+      return t('league.notQualified', { pos });
+    }
+    if (last.length === 1) return t('league.runnerUp');
+    return t('league.outIn', { round: roundName(last.length * 2) });
   }
 
   confetti() {
@@ -379,7 +456,7 @@ export default class LeagueScene extends Phaser.Scene {
   }
 }
 
-// The league is over and the user's team finished first.
+// The tournament is over and the user's team won the final.
 function userWonLeague(league) {
-  return isFinished(league) && standings(league)[0].id === league.userId;
+  return league.champion === league.userId;
 }

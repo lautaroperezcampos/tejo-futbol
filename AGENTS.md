@@ -69,7 +69,7 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
 - `src/scenes/CupDrawScene.js` — "ARMÁ LOS GRUPOS": si en el sorteo se elige "lo armo yo",
   el jugador cambia selecciones de lugar en los grupos (o en los cruces de la primera ronda)
   antes de guardar la copa (`drawSlots`, `setSlots`, `randomSlots` de `src/cup/cup.js`).
-- `src/scenes/LeagueScene.js` — tabla, resultados de la fecha, próximo partido y campeón.
+- `src/scenes/LeagueScene.js` — tablas de las dos zonas, resultados, playoffs, próximo partido y campeón.
 - `src/scenes/CupScene.js` — copa: grupos, llaves, resultados, próximo partido y campeón.
 - `src/cup/nations.js` — las 48 selecciones (colores, fuerza, confederación, Mundiales).
 - `src/cup/flags.js` — banderas de las 48 dibujadas con Canvas 2D (`flagTexture`).
@@ -78,8 +78,10 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
 - Partidos de torneo: `GameScene` recibe `data.match` con `record(userGoals, rivalGoals)`
   y `back` (a dónde vuelve), así sirve igual para la liga y la copa; `knockout: true`
   activa el gol de oro.
-- `src/league/teams.js` — los 20 equipos: colores (titular y suplente), fuerza y choque de camisetas.
-- `src/league/league.js` — fixture, simulación, tabla, guardado en localStorage y bots por fuerza.
+- `src/league/teams.js` — los 30 equipos: colores (titular y suplente), fuerza, choque de
+  camisetas y `CLASSICS` (los clásicos, que van en zonas opuestas).
+- `src/league/league.js` — dos zonas de 15 + 2 interzonales (16 fechas) y playoffs desde
+  octavos: sorteo, fixture, simulación, tablas, guardado en localStorage y bots por fuerza.
 - `src/game/Bot.js` — inteligencia del bot (muy fácil, fácil, medio, difícil; valores en `BOT_LEVELS`).
 - `src/game/juice.js` — efectos: ojitos, red que se mueve, tribuna que salta, textos
   flotantes y detección de tiros al arco.

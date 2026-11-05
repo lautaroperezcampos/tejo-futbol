@@ -10,7 +10,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Publicado en Vercel.
 
 ## Modos de juego
-- **Liga Argentina:** elegís uno de los 20 equipos y jugás un torneo contra los demás (ver abajo).
+- **Liga Argentina:** elegís uno de los 30 equipos y jugás un torneo de dos zonas con playoffs (ver abajo).
 - **1 vs 1 local:** dos personas en el mismo teclado.
 - **Contra el bot:** dificultad fácil, media o difícil.
 - En 1 vs 1 y contra el bot se eligen los dos equipos antes de jugar: primero el del
@@ -19,18 +19,33 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   elegido, no el equipo.
 
 ## Liga Argentina
-- 20 equipos con sus colores reales (sin escudos): River, Boca, Racing, Independiente,
+- 30 equipos con sus colores reales (sin escudos): River, Boca, Racing, Independiente,
   Estudiantes, Gimnasia, San Lorenzo, Huracán, Unión, Talleres, Rosario Central, Newell's,
-  Vélez, Argentinos Juniors, Platense, Defensa y Justicia, Belgrano, Tigre, Banfield y
-  Atlético Tucumán.
-- Todos contra todos a una rueda: 19 fechas. Cada equipo es local 9 o 10 veces.
+  Vélez, Argentinos Juniors, Platense, Defensa y Justicia, Belgrano, Tigre, Banfield,
+  Atlético Tucumán, Lanús, Instituto, Independiente Rivadavia, Barracas Central, Central
+  Córdoba, Sarmiento, Aldosivi, Deportivo Riestra, Gimnasia de Mendoza y Estudiantes de
+  Río Cuarto.
+- **Dos zonas de 15**, sorteadas en cada liga nueva. Los clásicos van siempre separados,
+  uno en cada zona: River-Boca, Racing-Independiente, San Lorenzo-Huracán,
+  Estudiantes-Gimnasia, Central-Newell's, Talleres-Belgrano, Vélez-Argentinos,
+  Lanús-Banfield, Platense-Tigre, Independiente Rivadavia-Gimnasia de Mendoza y
+  Tucumán-Central Córdoba. Los 8 equipos sin clásico caen en una zona al azar.
+- **16 fechas**, y en todas juegan los 30: 14 partidos contra tu zona y 2 interzonales.
+  Uno es la **fecha de clásicos** (la 8, los que no tienen clásico juegan contra un rival
+  al azar de la otra zona); el otro es contra un rival al azar de la otra zona, distinto
+  del anterior. Los interzonales suman en la tabla de tu zona.
+- **Playoffs:** los 8 primeros de cada zona pasan a octavos de final, a partido único y
+  eliminación directa hasta la final: 1º contra el 8º de la otra zona, 2º contra 7º, etc.
+  Los dos primeros de zona recién se pueden cruzar en la final. Si tu partido termina
+  empatado se juega gol de oro; los partidos simulados se definen por penales.
+- Si no clasificás o te eliminan, podés simular el resto para ver quién sale campeón.
 - Partidos de **90 segundos**; se puede empatar. Cuando queda 1 minuto suena un silbato
   doble y aparece "¡QUEDA 1 MINUTO!". Los últimos 10 segundos el reloj se pone rojo,
   suena un pitido por segundo (más agudo en los últimos 3) y el número aparece grande y
   transparente en el medio. El reloj se frena durante el festejo de cada gol.
 - Puntos: 3 por ganar, 1 por empatar (para los dos), 0 por perder.
 - Tabla: Pts, PJ, G, E, P, GF, GC, DG. Desempate: diferencia de gol, después goles a favor.
-- Cada fecha jugás tu partido; los otros 9 se simulan según la fuerza de cada equipo.
+- Cada fecha jugás tu partido; los otros 14 se simulan según la fuerza de cada equipo.
 - **Fuerza de los equipos** (títulos, copas, historia y presente): define qué tan bien
   juega su bot y cómo le va en los partidos simulados. Se muestra con estrellas.
 - **Dificultad de la liga** (fácil, medio o difícil), elegida al crearla: corre a todos
@@ -38,7 +53,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Si dos camisetas se parecen, el visitante usa la alternativa.
 - Esc pausa el partido: podés seguir o abandonar (cuenta como derrota 0-3).
 - El progreso se guarda solo en el navegador; se puede empezar una liga nueva cuando quieras.
-- Al terminar: pantalla de campeón con copa, o tu posición final y quién salió campeón.
+- Al terminar: pantalla de campeón con copa, o hasta dónde llegaste y quién salió campeón.
 
 ## Cancha
 - Rectángulo vertical grande (680 × 920) con **esquinas redondeadas**, un arco arriba

@@ -5,8 +5,8 @@ import {
   titleText, uiText, ribbon, button, goTo, wipeIn, playMenuMusic, optionsButton, openOptions,
 } from '../ui.js';
 import { unlockAudio, sfx } from '../sound.js';
-import { loadLeague, totalRounds } from '../league/league.js';
-import { loadCup, stageLabel, isFinished as isCupFinished } from '../cup/cup.js';
+import { loadLeague, totalRounds, isFinished as isLeagueFinished, currentPlayoffRound } from '../league/league.js';
+import { loadCup, stageLabel, roundName, isFinished as isCupFinished } from '../cup/cup.js';
 import { padMenu } from '../gamepads.js';
 import { t } from '../i18n.js';
 
@@ -164,9 +164,9 @@ export default class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: trophy, angle: { from: -6, to: 6 }, duration: 1100, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
     const title = this.cardTitle(0, 40, t('menu.league'), 38);
     const saved = loadLeague();
-    const subText = saved && saved.round < totalRounds(saved)
-      ? t('menu.league.continue', { round: saved.round + 1, total: totalRounds(saved) })
-      : t('menu.league.sub');
+    let subText = t('menu.league.sub');
+    if (saved?.stage === 'zones') subText = t('menu.league.continue', { round: saved.round + 1, total: totalRounds(saved) });
+    else if (saved && !isLeagueFinished(saved)) subText = roundName(currentPlayoffRound(saved).length * 2);
     const sub = uiText(this, 0, 84, subText, 16);
     return this.makeCard('league', [trophy, title, sub], title);
   }
