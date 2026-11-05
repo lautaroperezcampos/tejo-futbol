@@ -15,8 +15,25 @@ export function newLeague(userId, difficulty = 'medium', hazards = false) {
   const { zones, pairs } = drawZones();
   return {
     userId, difficulty, hazards, zones, round: 0, schedule: buildSchedule(pairs), results: [], prevPositions: null,
-    stage: 'zones', rounds: [], eliminated: false, champion: null,
+    stage: 'zones', rounds: [], bracketSeen: false, eliminated: false, champion: null,
   };
+}
+
+// The user's results in trailerLeague, repeated: a good campaign, not a perfect one.
+const TRAILER_RESULTS = [[2, 1], [1, 0], [1, 1], [3, 1], [0, 1], [2, 0], [2, 2], [2, 1]];
+
+// A league with all 16 matchdays played and the user through to the round of 16, to
+// record the playoffs without playing the zones (see the ?trailer link in src/main.js).
+export function trailerLeague(userId, difficulty = 'medium') {
+  let league;
+  do {
+    league = newLeague(userId, difficulty, true);
+    for (let i = 0; league.stage === 'zones'; i++) {
+      const [userGoals, rivalGoals] = TRAILER_RESULTS[i % TRAILER_RESULTS.length];
+      recordUserMatch(league, userGoals, rivalGoals);
+    }
+  } while (league.eliminated);
+  return league;
 }
 
 export function loadLeague() {

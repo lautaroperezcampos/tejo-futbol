@@ -34,8 +34,10 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   Uno es la **fecha de clásicos** (la 8, los que no tienen clásico juegan contra un rival
   al azar de la otra zona); el otro es contra un rival al azar de la otra zona, distinto
   del anterior. Los interzonales suman en la tabla de tu zona.
-- **Playoffs:** los 8 primeros de cada zona pasan a octavos de final, a partido único y
-  eliminación directa hasta la final: 1º contra el 8º de la otra zona, 2º contra 7º, etc.
+- **Playoffs:** al terminar la fecha 16 ves tu posición en la tabla y, con un botón, el
+  **cuadro**: cuatro cruces de octavos de cada lado que se van cerrando hacia la final en
+  el medio, y que se va llenando con los resultados. Los 8 primeros de cada zona pasan a
+  octavos, a partido único y eliminación directa hasta la final: 1º contra el 8º de la otra zona, 2º contra 7º, etc.
   Los dos primeros de zona recién se pueden cruzar en la final. Si tu partido termina
   empatado se juega gol de oro; los partidos simulados se definen por penales.
 - Si no clasificás o te eliminan, podés simular el resto para ver quién sale campeón.

@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H } from './config.js';
+import { GAME_W, GAME_H, BOT_LEVELS } from './config.js';
+import { TEAM_BY_ID } from './league/teams.js';
+import { trailerLeague } from './league/league.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 import TeamSelectScene from './scenes/TeamSelectScene.js';
@@ -22,6 +24,19 @@ async function loadFonts() {
   await Promise.race([fonts, timeout]).catch(() => {});
 }
 
+// ?trailer=<team id>[&dificultad=<level>] replaces this browser's saved league with one
+// about to start the playoffs, for recording them. The link is then cleaned up so that
+// reloading the page doesn't start it over.
+function applyTrailerLink() {
+  const params = new URLSearchParams(window.location.search);
+  const team = params.get('trailer');
+  if (!TEAM_BY_ID[team]) return;
+  const level = params.get('dificultad');
+  trailerLeague(team, BOT_LEVELS[level] ? level : undefined);
+  window.history.replaceState(null, '', window.location.pathname);
+}
+
+applyTrailerLink();
 loadFonts().then(startGame);
 
 function startGame() {

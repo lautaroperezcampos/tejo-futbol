@@ -5,7 +5,7 @@ import { titleText, uiText, ribbon, button, goTo, wipeIn, playMenuMusic, options
 import { sfx, unlockAudio } from '../sound.js';
 import { TEAM_BY_ID, pickKits } from '../league/teams.js';
 import {
-  loadLeague, clearLeague, standings, nextUserMatch, isFinished, totalRounds, recordUserMatch, simulateToEnd,
+  loadLeague, saveLeague, clearLeague, standings, nextUserMatch, isFinished, totalRounds, recordUserMatch, simulateToEnd,
   currentPlayoffRound, isClassicRound, userZone,
 } from '../league/league.js';
 import { roundName } from '../cup/cup.js';
@@ -19,8 +19,11 @@ const BODY_BOTTOM = 880;
 // Column centres for the numeric stats (played, won, drawn, lost, goals for, against,
 // difference, points); their headers are league.cols in src/lang/.
 const COLS = [420, 465, 510, 555, 605, 655, 705, 765];
+// The playoff bracket: round of 16 on the outside, final in the middle. w: tie width in
+// each column, from the outside in; only the first one has room for full names.
+const BRACKET = { headY: 164, top: 182, bottom: 870, w: [156, 82, 82], finalW: 104, gap: 9, rowH: 42 };
 const VIEW_LABEL = {
-  zoneA: 'league.zoneA', zoneB: 'league.zoneB', bracket: 'cup.view.bracket', results: 'common.results', final: 'common.championBtn',
+  zoneA: 'league.zoneA', zoneB: 'league.zoneB', bracket: 'league.bracket', results: 'common.results', final: 'common.championBtn',
 };
 
 // League hub: the two zone tables, last round's results, the playoffs, next match and
@@ -32,6 +35,7 @@ export default class LeagueScene extends Phaser.Scene {
 
   init(data) {
     this.view = data.view ?? null; // null: the most useful one right now
+    this.revealBracket = !!data.reveal; // the ties pop in one by one
   }
 
   create() {
@@ -52,6 +56,8 @@ export default class LeagueScene extends Phaser.Scene {
 
     this.views = this.availableViews();
     if (isFinished(this.league) && this.view === 'results') this.view = 'final';
+    // Coming back from a playoff match, the bracket shows how it went.
+    if (this.league.stage === 'playoffs' && this.view === 'results') this.view = 'bracket';
     if (!this.views.includes(this.view)) this.view = this.views[0];
 
     this.drawHeader();
@@ -87,9 +93,16 @@ export default class LeagueScene extends Phaser.Scene {
     const l = this.league;
     const mine = `zone${userZone(l)}`;
     const other = mine === 'zoneA' ? 'zoneB' : 'zoneA';
+    if (this.awaitingBracket()) return [mine, other, 'results'];
     if (l.stage === 'zones') return l.results.length ? [mine, other, 'results'] : [mine, other];
     const views = ['bracket', 'results', mine, other];
     return l.stage === 'done' ? ['final', ...views] : views;
+  }
+
+  // The zones just ended: the user sees where they finished, and the main button reveals
+  // the bracket.
+  awaitingBracket() {
+    return this.league.stage === 'playoffs' && !this.league.bracketSeen;
   }
 
   // ---------- layout ----------
@@ -101,6 +114,7 @@ export default class LeagueScene extends Phaser.Scene {
       + (this.league.hazards ? `  ·  ${t('common.powerups')}` : '');
     let subtitle;
     if (isFinished(this.league)) subtitle = t('league.over', { level });
+    else if (this.awaitingBracket()) subtitle = t('league.zonesOver', { team: this.user.short, level });
     else if (this.league.stage === 'playoffs') {
       subtitle = t('league.stage', { stage: roundName(currentPlayoffRound(this.league).length * 2), team: this.user.short, level });
     } else subtitle = t('league.round', { round, total: totalRounds(this.league), team: this.user.short, level });
@@ -110,9 +124,13 @@ export default class LeagueScene extends Phaser.Scene {
   drawFooter() {
     const l = this.league;
     const btnY = 1018;
-    const m = nextUserMatch(l);
+    const awaiting = this.awaitingBracket();
+    const m = awaiting ? null : nextUserMatch(l);
 
-    if (m) {
+    if (awaiting) {
+      const { pos } = standings(l, userZone(l)).find((r) => r.id === l.userId);
+      titleText(this, CX, 925, t(l.eliminated ? 'league.notQualified' : 'league.qualified', { pos }), 26, PALETTE.yellow);
+    } else if (m) {
       const home = TEAM_BY_ID[m.home];
       const away = TEAM_BY_ID[m.away];
       const kits = pickKits(home, away);
@@ -144,7 +162,8 @@ export default class LeagueScene extends Phaser.Scene {
       const quit = button(this, 342, btnY, 200, 66, t('common.quit'), () => this.openResetModal(), 19);
       footer.push([quit, () => this.openResetModal()]);
       let label = t('cup.simulate');
-      if (m) label = m.knockout ? t('cup.play') : t('league.play', { n: l.round + 1 });
+      if (awaiting) label = t('league.seeBracket');
+      else if (m) label = m.knockout ? t('cup.play') : t('league.play', { n: l.round + 1 });
       this.mainBtn = button(this, 610, btnY, 320, 66, label, () => this.mainAction(), 24);
       footer.push([this.mainBtn, () => this.mainAction()]);
     }
@@ -193,6 +212,13 @@ export default class LeagueScene extends Phaser.Scene {
       return;
     }
     if (this.leaving) return;
+    if (this.awaitingBracket()) {
+      this.league.bracketSeen = true;
+      saveLeague(this.league);
+      sfx.confirm();
+      goTo(this, 'League', { view: 'bracket', reveal: true });
+      return;
+    }
     const m = nextUserMatch(this.league);
     if (!m) {
       // Out of the tournament: play out the rest of it.
@@ -348,11 +374,94 @@ export default class LeagueScene extends Phaser.Scene {
     add(uiText(this, CX, TABLE_TOP + ROW_H * (rows.length + 1) + 26, t('league.legend'), 15, '#bfb3ff'));
   }
 
-  // The current playoff round (or the final, once it's over).
+  // The whole bracket: four ties on each side, closing in on the final in the middle.
   renderBracket() {
-    const round = currentPlayoffRound(this.league);
-    this.content.add(uiText(this, CX, TABLE_TOP - 15, roundName(round.length * 2), 24));
-    this.matchList(round, TABLE_TOP + 30);
+    const { rounds } = this.league;
+    const { headY, top, bottom, w, gap, finalW } = BRACKET;
+    const lines = this.add.graphics();
+    this.content.add(lines);
+    lines.lineStyle(3, 0xffffff, 0.45);
+    const slot = (bottom - top) / 4;
+    const midY = top + slot * 2;
+    this.content.add(this.add.image(CX, midY - 150, 'trophy').setScale(0.3));
+    this.content.add(uiText(this, CX, headY, t('league.col.2'), 14, PALETTE.yellow));
+
+    [0, 1].forEach((side) => {
+      let x = 10;
+      w.forEach((width, r) => {
+        const count = 4 >> r;
+        const left = side === 0 ? x : GAME_W - x - width;
+        const label = t(`league.col.${16 >> r}`);
+        this.content.add(uiText(this, left + width / 2, headY, label, 14, PALETTE.yellow));
+        for (let k = 0; k < count; k++) {
+          const y = top + slot * (2 ** r) * (k + 0.5);
+          this.drawTie(left, y, width, rounds[r]?.[k + side * count], r > 0, (r * 4 + k) * 70);
+          // Elbow to the tie this one feeds (a straight line into the final).
+          const fromX = side === 0 ? left + width : left;
+          const toX = side === 0 ? fromX + gap : fromX - gap;
+          const parentY = r === w.length - 1 ? y : top + slot * (2 ** (r + 1)) * (Math.floor(k / 2) + 0.5);
+          const elbowX = (fromX + toX) / 2;
+          lines.lineBetween(fromX, y, elbowX, y);
+          lines.lineBetween(elbowX, y, elbowX, parentY);
+          lines.lineBetween(elbowX, parentY, toX, parentY);
+        }
+        x += width + gap;
+      });
+    });
+    this.drawTie(CX - finalW / 2, midY, finalW, rounds[3]?.[0], true, 16 * 70);
+    if (rounds.flat().some((m) => m.pens)) this.content.add(uiText(this, CX, bottom + 8, t('cup.pens'), 14, '#bfb3ff'));
+
+    if (this.revealBracket) {
+      this.revealBracket = false;
+      lines.setAlpha(0);
+      this.tweens.add({ targets: lines, alpha: 1, delay: 500, duration: 500 });
+    }
+  }
+
+  // One tie of the bracket, vertically centred on y; an empty box while it's undecided.
+  // compact: a three-letter code instead of the name.
+  drawTie(x, y, w, m, compact, delay) {
+    const { rowH } = BRACKET;
+    const g = this.add.graphics();
+    const tie = this.add.container(x, y - rowH, [g]);
+    this.content.add(tie);
+    g.fillStyle(COLORS.ink, 1);
+    g.fillRoundedRect(-3, -3, w + 6, rowH * 2 + 6, 10);
+
+    [['a', 'ag'], ['b', 'bg']].forEach(([side, goals], row) => {
+      const rowY = row * rowH;
+      const cy = rowY + rowH / 2;
+      const id = m?.[side];
+      const isUser = id === this.league.userId;
+      g.fillStyle(isUser ? COLORS.yellow : (row ? 0x24164f : 0x2a1a5c), 1);
+      g.fillRoundedRect(0, rowY, w, rowH, row ? { tl: 0, tr: 0, bl: 8, br: 8 } : { tl: 8, tr: 8, bl: 0, br: 0 });
+      if (!id) return;
+      const team = TEAM_BY_ID[id];
+      const lost = m.winner && m.winner !== id;
+      const color = isUser ? PALETTE.ink : PALETTE.white;
+      const style = { fontFamily: FONTS.ui, fontStyle: '900', fontSize: '14px', color };
+      const kit = this.add.image(18, cy, kitTexture(this, team.home, '')).setScale(0.2);
+      const code = team.short.replace(/[^A-ZÁÉÍÓÚÑ]/g, '').slice(0, 3);
+      const name = this.add.text(34, cy, compact ? code : team.short, style).setOrigin(0, 0.5);
+      tie.add([kit, name]);
+      let room = w - 40;
+      if (m[goals] !== null) {
+        const pens = m.pens && m.winner === id ? '*' : '';
+        const score = this.add.text(w - 6, cy, `${m[goals]}${pens}`, { ...style, fontFamily: FONTS.title, fontSize: '16px' }).setOrigin(1, 0.5);
+        tie.add(score);
+        room -= score.width + 4;
+      }
+      if (name.width > room) name.setScale(room / name.width);
+      if (lost) {
+        kit.setAlpha(0.45);
+        name.setAlpha(0.45);
+      }
+    });
+
+    if (this.revealBracket) {
+      tie.setAlpha(0).setScale(0.8);
+      this.tweens.add({ targets: tie, alpha: 1, scale: 1, delay, duration: 220, ease: 'Back.Out' });
+    }
   }
 
   renderResults() {

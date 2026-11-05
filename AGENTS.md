@@ -82,6 +82,9 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   camisetas y `CLASSICS` (los clásicos, que van en zonas opuestas).
 - `src/league/league.js` — dos zonas de 15 + 2 interzonales (16 fechas) y playoffs desde
   octavos: sorteo, fixture, simulación, tablas, guardado en localStorage y bots por fuerza.
+  El link `?trailer=<id del equipo>[&dificultad=<nivel>]` (`src/main.js`, `trailerLeague`)
+  reemplaza la liga guardada por una con las 16 fechas jugadas y ese equipo clasificado,
+  para grabar los playoffs sin jugar las zonas.
 - `src/game/Bot.js` — inteligencia del bot (muy fácil, fácil, medio, difícil; valores en `BOT_LEVELS`).
 - `src/game/juice.js` — efectos: ojitos, red que se mueve, tribuna que salta, textos
   flotantes y detección de tiros al arco.
