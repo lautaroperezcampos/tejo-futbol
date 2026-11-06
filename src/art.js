@@ -37,6 +37,7 @@ export function makeTextures(scene) {
   const bSize = (BALL_R + 3) * 2 * S;
   canvasTexture(tex, 'ball', bSize, bSize, (ctx) => drawBall(ctx, bSize));
   canvasTexture(tex, 'burst', 160, 160, (ctx) => drawBurst(ctx, 160));
+  makeFanSheet(tex);
 }
 
 // Player texture for a team kit, built the first time it's needed. Returns its key.
@@ -47,6 +48,52 @@ export function kitTexture(scene, kit, number) {
     canvasTexture(scene.textures, key, size, size, (ctx) => drawPlayer(ctx, size, kit, number));
   }
   return key;
+}
+
+// Goal celebration fans: every shirt and skin colour, with the arms down and up, on one
+// sheet. Each fan is one image from it, so a jumping crowd only moves images around
+// instead of drawing hundreds of circles every frame.
+export const CROWD_COLORS = [C.pink, C.yellow, C.cyan, C.purple, '#ff8a3d', '#ffffff', '#3dd68c'];
+export const CROWD_SKIN = ['#f5c9a0', '#d9a074', '#a86b45', '#7a4a2c'];
+export const FAN = { size: 24, headY: 8, scale: S }; // cell size and head height, in game px
+
+export function fanFrame(color, skin, armsUp) {
+  return `${color}-${skin}-${armsUp ? 1 : 0}`;
+}
+
+function makeFanSheet(tex) {
+  const cell = FAN.size * FAN.scale;
+  const cols = CROWD_COLORS.length * CROWD_SKIN.length;
+  const sheet = tex.createCanvas('fans', cols * cell, cell * 2);
+  const ctx = sheet.context;
+  const circle = (x, y, r, color) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  CROWD_COLORS.forEach((color, c) => CROWD_SKIN.forEach((skin, s) => [false, true].forEach((armsUp, row) => {
+    const col = c * CROWD_SKIN.length + s;
+    sheet.add(fanFrame(c, s, armsUp), 0, col * cell, row * cell, cell, cell);
+    ctx.save();
+    ctx.translate(col * cell, row * cell);
+    ctx.scale(FAN.scale, FAN.scale);
+    ctx.translate(FAN.size / 2, FAN.headY);
+    circle(0, 6, 6.5, color);
+    circle(0, 0, 4.2, skin);
+    if (armsUp) {
+      ctx.strokeStyle = skin;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-5, 3);
+      ctx.lineTo(-8, -6);
+      ctx.moveTo(5, 3);
+      ctx.lineTo(8, -6);
+      ctx.stroke();
+    }
+    ctx.restore();
+  })));
+  sheet.refresh();
 }
 
 function canvasTexture(tex, key, w, h, draw) {

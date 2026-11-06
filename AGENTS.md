@@ -95,7 +95,8 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   para grabar los playoffs sin jugar las zonas.
 - `src/game/Bot.js` — inteligencia del bot (muy fácil, fácil, medio, difícil; valores en `BOT_LEVELS`).
 - `src/game/juice.js` — efectos: ojitos, red que se mueve, tribuna que salta, textos
-  flotantes y detección de tiros al arco.
+  flotantes y detección de tiros al arco. La tribuna son imágenes de la hoja `fans` (`art.js`) en una
+  capa que solo se muestra en el festejo: no dibujarla con `Graphics`, cuesta 20 ms por cuadro.
 - `src/game/Particles.js` — partículas livianas (polvo, pasto, fuego) dibujadas en un Graphics.
 - `src/game/Replay.js` — graba los últimos segundos para la repetición del gol.
 - `src/game/Hazards.js` — power-ups opcionales (hielo, jabón, arco gigante, hongo y poción):

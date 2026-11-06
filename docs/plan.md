@@ -87,6 +87,8 @@
   yo" para armar los grupos o las llaves a mano (`CupDrawScene`, `drawSlots`/`setSlots`).
 - [x] 32. Traducciones desde la API Traducila (`TRADUCILA`, `loadTranslations`), con
   `src/lang/` como respaldo. Proyecto "Tejo Fútbol" con las keys en en y pt.
+- [x] 33. Festejo de gol más liviano: los hinchas son imágenes de una hoja (`makeFanSheet`)
+  dentro de una capa, en vez de dibujar 582 hinchas con círculos en cada cuadro.
 
 ## Ideas para después
 - Controles táctiles para celular.

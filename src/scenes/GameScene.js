@@ -156,7 +156,7 @@ export default class GameScene extends Phaser.Scene {
     this.asUI(() => optionsButton(this, GAME_W - 40, GAME_H - 38, 0.85, () => this.openOptionsFromMatch()).setDepth(25));
 
     // Juice state.
-    this.fans = makeFans();
+    this.crowd = makeFans(this);
     this.net = null;
     this.celebration = null;
     this.replay = new Replay(3000);
@@ -1911,7 +1911,7 @@ export default class GameScene extends Phaser.Scene {
     this.fire.update(dt);
     this.grass.update(dt);
     if (!drawNetRipple(this.netGfx, this.net, now)) this.net = null;
-    if (!drawCrowd(this.crowdGfx, this.fans, this.celebration, now)) this.celebration = null;
+    if (!drawCrowd(this.crowdGfx, this.crowd, this.celebration, now)) this.celebration = null;
     this.updateCamera(realDt);
 
     if (this.state === 'playing') this.speedText.setText(`x${(speed / BALL.baseSpeed).toFixed(1)}`);

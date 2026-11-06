@@ -4,6 +4,9 @@ import {
   FIELD, GAME_W, GAME_H, MOUTH_L, MOUTH_R, GOAL_W, GOAL_DEPTH, COLORS, PALETTE,
 } from '../config.js';
 import { titleText } from '../ui.js';
+import {
+  CROWD_COLORS, CROWD_SKIN, FAN, fanFrame,
+} from '../art.js';
 
 const INK = COLORS.ink;
 
@@ -130,21 +133,27 @@ export function drawNetRipple(g, net, now) {
 
 // ---------- crowd celebration ----------
 
-const CROWD_COLORS = [COLORS.pink, COLORS.yellow, COLORS.cyan, COLORS.purple, 0xff8a3d, 0xffffff, 0x3dd68c];
-const SKIN = [0xf5c9a0, 0xd9a074, 0xa86b45, 0x7a4a2c];
-
-// Fans in the side and bottom stands; drawn only while celebrating, over the static crowd.
-export function makeFans() {
+// Fans in the side and bottom stands: one image each (see makeFanSheet in art.js), all in
+// a layer that's hidden except while celebrating, over the static crowd, so they cost
+// nothing the rest of the time. Returns { layer, fans }.
+export function makeFans(scene) {
   const fans = [];
+  const layer = scene.add.layer().setDepth(0.5).setVisible(false);
   let seed = 3;
   const rnd = () => {
     seed = (seed * 16807) % 2147483647;
     return seed / 2147483647;
   };
-  const add = (x, y) => fans.push({
-    x, y, color: CROWD_COLORS[Math.floor(rnd() * CROWD_COLORS.length)],
-    skin: SKIN[Math.floor(rnd() * SKIN.length)], phase: rnd() * Math.PI * 2, speed: 14 + rnd() * 8,
-  });
+  const add = (x, y) => {
+    const color = Math.floor(rnd() * CROWD_COLORS.length);
+    const skin = Math.floor(rnd() * CROWD_SKIN.length);
+    const image = scene.add.image(x, y, 'fans', fanFrame(color, skin, false))
+      .setOrigin(0.5, FAN.headY / FAN.size).setScale(1 / FAN.scale);
+    layer.add(image);
+    fans.push({
+      image, y, color, skin, armsUp: false, phase: rnd() * Math.PI * 2, speed: 14 + rnd() * 8,
+    });
+  };
   for (let y = 104; y < GAME_H - 30; y += 13) {
     for (const x of [8, 21, 34]) add(x + rnd() * 3, y);
     for (const x of [786, 799, 812]) add(x + rnd() * 3, y);
@@ -152,34 +161,38 @@ export function makeFans() {
   for (let x = 6; x < GAME_W; x += 13) {
     for (const y of [1096, 1110]) add(x, y + rnd() * 3);
   }
-  return fans;
+  return { layer, fans };
 }
 
-export function drawCrowd(g, fans, celebration, now) {
-  g.clear();
+export function drawCrowd(g, { layer, fans }, celebration, now) {
   if (!celebration) return false;
   const age = (now - celebration.t0) / 1000;
-  if (age > 2.2) return false;
+  if (age > 2.2) {
+    g.clear();
+    layer.setVisible(false);
+    return false;
+  }
   const energy = Math.min(1, (2.2 - age) * 2);
 
-  g.fillStyle(0x24124f, 1);
-  g.fillRect(0, 96, 42, GAME_H - 96);
-  g.fillRect(GAME_W - 42, 96, 42, GAME_H - 96);
-  g.fillRect(0, GAME_H - 30, GAME_W, 30);
+  // The first frame covers the stands and brings the fans out.
+  if (!celebration.shown) {
+    celebration.shown = true;
+    g.clear();
+    g.fillStyle(0x24124f, 1);
+    g.fillRect(0, 96, 42, GAME_H - 96);
+    g.fillRect(GAME_W - 42, 96, 42, GAME_H - 96);
+    g.fillRect(0, GAME_H - 30, GAME_W, 30);
+    layer.setVisible(true);
+  }
 
   const t = now / 1000;
   for (const f of fans) {
     const jump = Math.max(0, Math.sin(t * f.speed + f.phase)) * 7 * energy;
-    const y = f.y - jump;
-    g.fillStyle(f.color, 1);
-    g.fillCircle(f.x, y + 6, 6.5);
-    g.fillStyle(f.skin, 1);
-    g.fillCircle(f.x, y, 4.2);
-    if (jump > 3) {
-      // Arms up.
-      g.lineStyle(2, f.skin, 1);
-      g.lineBetween(f.x - 5, y + 3, f.x - 8, y - 6);
-      g.lineBetween(f.x + 5, y + 3, f.x + 8, y - 6);
+    f.image.y = f.y - jump;
+    const armsUp = jump > 3;
+    if (armsUp !== f.armsUp) {
+      f.armsUp = armsUp;
+      f.image.setFrame(fanFrame(f.color, f.skin, armsUp), false, false);
     }
   }
   return true;
