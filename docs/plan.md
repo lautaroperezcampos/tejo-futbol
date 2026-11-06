@@ -90,6 +90,8 @@
 - [x] 33. Festejo de gol más liviano: los hinchas son imágenes de una hoja (`makeFanSheet`)
   dentro de una capa, en vez de dibujar 582 hinchas con círculos en cada cuadro.
 - [x] 34. Solo español, inglés y portugués: se sacan francés, italiano, alemán y MyMemory.
+- [x] 35. Créditos en OPCIONES con el logo de Lagartija Studio y los creadores
+  (`creditsPanel`, `CREATORS`, `STUDIO_LOGO`).
 
 ## Ideas para después
 - Controles táctiles para celular.

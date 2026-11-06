@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H, COLORS } from '../config.js';
+import { GAME_W, GAME_H, COLORS, STUDIO_LOGO } from '../config.js';
 import {
-  titleText, uiText, button, iconButton, controlsPanel, openSoundPanel, drawGamepadIcon, drawSpeakerIcon,
-  drawGlobeIcon,
+  titleText, uiText, button, iconButton, controlsPanel, creditsPanel, openSoundPanel, drawGamepadIcon,
+  drawSpeakerIcon, drawGlobeIcon, drawStarIcon,
 } from '../ui.js';
 import {
   sfx, unlockAudio, getChannel, isMuted, iconLevel, toggleMute, onVolumeChange,
@@ -13,13 +13,15 @@ import {
 } from '../i18n.js';
 
 const CX = GAME_W / 2;
-const CARD = { x: 110, y: 270, w: GAME_W - 220, h: 590 };
+const CARD = { x: 110, y: 210, w: GAME_W - 220, h: 700 };
 const LANGUAGE = 2; // index of the language row
-const DONE = 3;
+const CREDITS = 3;
+const DONE = 4;
 
 // "OPCIONES", opened over any screen with openOptions() (ui.js, the gear button or O):
 // CONTROLES opens the controls panel on top of this one, SONIDO opens the sound panel
-// (SoundScene) and IDIOMA cycles through the languages. The screen below stays paused
+// (SoundScene), IDIOMA cycles through the languages and CRÉDITOS shows who made the game
+// (creditsPanel, same as the controls panel). The screen below stays paused
 // until this closes.
 export default class OptionsScene extends Phaser.Scene {
   constructor() {
@@ -31,6 +33,12 @@ export default class OptionsScene extends Phaser.Scene {
     this.focus = data.focus ?? 0;
     this.controls = null;
     this.closing = false;
+  }
+
+  preload() {
+    if (!this.textures.exists(STUDIO_LOGO.key)) {
+      this.load.image(STUDIO_LOGO.key, `${import.meta.env.BASE_URL}${STUDIO_LOGO.file}`);
+    }
   }
 
   create() {
@@ -60,8 +68,11 @@ export default class OptionsScene extends Phaser.Scene {
     const language = iconButton(this, CX, y + 395, w - 90, 92, {
       title: t('options.language'), sub: this.languageSummary(), drawIcon: drawGlobeIcon,
     }, () => this.press(LANGUAGE));
-    const done = button(this, CX, y + 498, 240, 62, t('common.ready'), () => this.press(DONE), 26);
-    this.items = [controls, sound, language, done];
+    const credits = iconButton(this, CX, y + 505, w - 90, 92, {
+      title: t('options.credits'), sub: t('options.credits.sub'), drawIcon: drawStarIcon,
+    }, () => this.press(CREDITS));
+    const done = button(this, CX, y + 608, 240, 62, t('common.ready'), () => this.press(DONE), 26);
+    this.items = [controls, sound, language, credits, done];
     this.items.forEach((item, i) => item.zone.on('pointerover', () => this.setFocus(i)));
     uiText(this, CX, y + h - 26, t('options.hint'), 14, '#bfb3ff');
 
@@ -119,6 +130,7 @@ export default class OptionsScene extends Phaser.Scene {
     if (index === 0) this.controls = controlsPanel(this, () => { this.controls = null; });
     else if (index === 1) openSoundPanel(this);
     else if (index === LANGUAGE) this.changeLanguage(1);
+    else if (index === CREDITS) this.controls = creditsPanel(this, () => { this.controls = null; });
     else this.close();
   }
 

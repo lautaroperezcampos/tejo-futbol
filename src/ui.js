@@ -1,6 +1,6 @@
 // Shared cartoon UI pieces: chunky outlined text, buttons, the purple ribbon banner and
 // the striped wipe used between screens.
-import { COLORS, PALETTE, FONTS, GAME_W, GAME_H, BOT_LEVELS } from './config.js';
+import { COLORS, PALETTE, FONTS, GAME_W, GAME_H, BOT_LEVELS, CREATORS, STUDIO_LOGO } from './config.js';
 import { t, botLevelName } from './i18n.js';
 import { startLoop, stopLoop } from './music.js';
 import { unlockAudio, sfx, isMuted, toggleMute, onVolumeChange } from './sound.js';
@@ -270,6 +270,20 @@ export function drawGlobeIcon(g) {
   g.lineBetween(-13, -8, 13, -8);
   g.lineBetween(-13, 8, 13, 8);
   g.strokeCircle(0, 0, 16);
+}
+
+// Star (credits).
+export function drawStarIcon(g) {
+  const points = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 8 : 18;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    points.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+  }
+  g.fillStyle(COLORS.yellow, 1);
+  g.fillPoints(points, true);
+  g.lineStyle(3, COLORS.ink, 1);
+  g.strokePoints(points, true);
 }
 
 // Gear (options): a toothed wheel with a hole in the middle.
@@ -545,6 +559,57 @@ export function controlsPanel(scene, onClose) {
   dim.on('pointerdown', close);
   const key = (code) => {
     if (['Escape', 'Enter', 'Space', 'KeyC', 'Tab'].includes(code)) close();
+  };
+  sfx.confirm();
+  return { container, key, close };
+}
+
+// The credits, over whatever scene opens it: the studio logo (the scene loads it, see
+// OptionsScene.preload) and who made the game. Works like controlsPanel: the scene passes
+// its key presses to panel.key(code). Returns { container, key(code), close() }.
+export function creditsPanel(scene, onClose) {
+  const cx = GAME_W / 2;
+  const left = 90;
+  const width = GAME_W - 180;
+  const top = 250;
+  const height = 620;
+
+  const dim = scene.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.8).setOrigin(0).setInteractive();
+  const g = scene.add.graphics();
+  g.fillStyle(COLORS.ink, 1);
+  g.fillRoundedRect(left - 6, top + 6, width + 12, height, 28);
+  g.fillStyle(COLORS.purpleDark, 1);
+  g.fillRoundedRect(left, top, width, height, 26);
+  g.lineStyle(5, COLORS.ink, 1);
+  g.strokeRoundedRect(left, top, width, height, 26);
+  const body = scene.add.zone(cx, top + height / 2, width, height).setInteractive();
+  const parts = [dim, g, body, titleText(scene, cx, top + 66, t('options.credits'), 50)];
+
+  // Without the logo (it failed to load) the panel still works, with a gap.
+  if (scene.textures.exists(STUDIO_LOGO.key)) {
+    parts.push(scene.add.image(cx, top + 228, STUDIO_LOGO.key).setDisplaySize(STUDIO_LOGO.w, STUDIO_LOGO.h));
+  }
+  parts.push(uiText(scene, cx, top + 366, t('credits.by'), 20, PALETTE.yellow));
+  CREATORS.forEach((name, i) => {
+    parts.push(titleText(scene, cx, top + 416 + i * 56, name.toUpperCase(), 32));
+  });
+
+  const ok = button(scene, cx, top + height - 60, 240, 62, t('common.ready'), () => close(), 26);
+  ok.setActive(true);
+  parts.push(ok.container, ok.zone);
+
+  const container = scene.add.container(0, 0, parts).setDepth(900);
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    sfx.back();
+    container.destroy();
+    onClose?.();
+  };
+  dim.on('pointerdown', close);
+  const key = (code) => {
+    if (['Escape', 'Enter', 'Space', 'Tab'].includes(code)) close();
   };
   sfx.confirm();
   return { container, key, close };

@@ -263,6 +263,10 @@ En "Antes de jugar" de los amistosos se elige la **CANCHA** (queda recordada):
 Al empezar el partido aparece "¡ESTÁ LLOVIENDO!" o "¡CANCHA EN MAL ESTADO!". Los torneos
 se juegan siempre en cancha normal. Los números están en `PITCH` de `src/config.js`.
 
+## Créditos
+En **OPCIONES → CRÉDITOS** aparecen el logo de **Lagartija Studio** y los creadores del
+juego: Lautaro Perez Campos y Fernando Rodriguez.
+
 ## Idiomas
 El juego está en **español** (el idioma de siempre, el que arranca por defecto),
 **inglés** y **portugués de Brasil**. Se cambia en **OPCIONES → IDIOMA** con ← → (o

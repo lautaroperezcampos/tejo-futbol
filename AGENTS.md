@@ -41,7 +41,8 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   4 temas que cambia en cada gol; un gol con un power-up activo pone el quinto), cantos de hinchada (bajan la música mientras suenan), grito de gol y "uuuh". Los cantos se disparan desde
   `GameScene.updateChant()`; la música del menú, con `playMenuMusic()` de `src/ui.js`.
 - `src/art.js` — todos los gráficos (cancha, tribuna, jugadores, pelota, explosión),
-  dibujados con Canvas 2D al iniciar; no hay archivos de imagen.
+  dibujados con Canvas 2D al iniciar. La única imagen es el logo del estudio
+  (`public/logo-lagartija.png`), que carga `OptionsScene` para los créditos.
 - `src/ui.js` — textos con contorno, la cinta violeta de los carteles y el botón de
   opciones (`optionsButton`, engranaje arriba a la derecha en cada pantalla; también con
   la tecla O, y la M silencia todo). `openOptions(scene)` abre las opciones,
@@ -49,8 +50,9 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   `iconButton` (botón ancho con ícono) y los íconos `draw*Icon` que usa la pausa
   (`GameScene.makePauseMenu`).
 - `src/scenes/OptionsScene.js` — "OPCIONES": botones CONTROLES (abre `controlsPanel`),
-  SONIDO (abre `SoundScene`) e IDIOMA (← → cambia el idioma y redibuja la pantalla de atrás,
-  salvo un partido en curso). Se abre encima de cualquier pantalla (también desde la
+  SONIDO (abre `SoundScene`), IDIOMA (← → cambia el idioma y redibuja la pantalla de atrás,
+  salvo un partido en curso) y CRÉDITOS (abre `creditsPanel`, nombres en `CREATORS` de
+  `src/config.js`). Se abre encima de cualquier pantalla (también desde la
   pausa) y la deja en pausa hasta cerrarse.
 - `src/scenes/SoundScene.js` — menú de sonido (un deslizador por canal + silenciar todo),
   abierto desde las opciones. `music.js` aplica a cada audio grabado el volumen de su

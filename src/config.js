@@ -3,6 +3,10 @@
 export const GAME_W = 820;
 export const GAME_H = 1120;
 
+// Who made the game, in the credits panel. Names aren't translated.
+export const CREATORS = ['Lautaro Perez Campos', 'Fernando Rodriguez'];
+export const STUDIO_LOGO = { key: 'studioLogo', file: 'logo-lagartija.png', w: 250, h: 201 };
+
 // Playable area (inside the white lines). The stands and scoreboard sit around it.
 export const FIELD = { left: 70, right: 750, top: 130, bottom: 1050 };
 export const CORNER_R = 90; // rounded corners; the ball bounces off the curve
