@@ -271,6 +271,11 @@ momento. En medio de un partido el cambio se ve desde la próxima pantalla (no s
 el partido). La elección queda guardada en el navegador.
 - Se traduce todo lo que se lee: menús, carteles del partido, estadísticas, liga, copa y
   los nombres de las 48 selecciones (Alemania → Germany / Alemanha).
+- **Francés, italiano y alemán** se traducen en vivo con la **API de MyMemory** la primera
+  vez que los elegís (se ve el porcentaje en OPCIONES) y quedan guardados en el navegador.
+  Es traducción automática desde el inglés. Las selecciones van en inglés. Si no hay
+  internet o se termina el cupo diario de la API, lo que falta se ve en español y sigue
+  la próxima vez.
 - No se traducen el nombre del juego (TEJO FÚTBOL) ni los nombres de los clubes.
 - Los textos están en `src/lang/` (`es.js`, `en.js`, `pt.js`) y se piden con `t()` de
   `src/i18n.js`.

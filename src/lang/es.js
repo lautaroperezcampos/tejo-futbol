@@ -57,6 +57,7 @@ export const STRINGS = {
   'options.sound.muted': 'Todo silenciado (M)',
   'options.sound.summary': 'Música {music}  ·  Hinchada {crowd}  ·  Efectos {sfx}',
   'options.language': 'IDIOMA',
+  'options.translateFailed': 'No se pudo traducir',
   'options.hint': '↑ ↓ elegir  ·  ← → idioma  ·  Enter / A: aceptar  ·  Esc: cerrar',
   'sound.music': 'MÚSICA',
   'sound.music.sub': 'Menú y partido',

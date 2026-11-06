@@ -23,7 +23,10 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   que ve el jugador sale de `t('clave', { datos })`; los textos están en `src/lang/es.js`,
   `en.js` y `pt.js` (mismas claves; si falta una se usa la de español). Los nombres de las
   selecciones en otros idiomas están en `NATIONS` de esos archivos. El idioma se guarda en
-  localStorage (`tejo-futbol-idioma`) y se cambia en Opciones.
+  localStorage (`tejo-futbol-idioma`) y se cambia en Opciones. Francés, italiano y alemán
+  (`api: true` en `LANGUAGES`) no tienen archivo: `src/translator.js` los pide a la API
+  de MyMemory desde los textos de `en.js` y los guarda en localStorage; agregar textos
+  nuevos en `lang/` alcanza, se piden solos.
 - `src/sound.js` — efectos de sonido generados con Web Audio (no hay archivos de audio).
   Pasan por un refuerzo y un limitador; los volúmenes base de todo el audio están en
   `AUDIO` de `src/config.js`. También guarda los tres volúmenes que elige el jugador

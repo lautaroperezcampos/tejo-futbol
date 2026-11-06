@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H, COLORS } from '../config.js';
+import { GAME_W, GAME_H, COLORS, TRANSLATE } from '../config.js';
 import {
   titleText, uiText, button, iconButton, controlsPanel, openSoundPanel, drawGamepadIcon, drawSpeakerIcon,
   drawGlobeIcon,
@@ -8,7 +8,9 @@ import {
   sfx, unlockAudio, getChannel, isMuted, iconLevel, toggleMute, onVolumeChange,
 } from '../sound.js';
 import { padMenu } from '../gamepads.js';
-import { t, getLang, setLang, LANGUAGES } from '../i18n.js';
+import {
+  t, getLang, setLang, LANGUAGES, startTranslation, translationStatus, onTranslation,
+} from '../i18n.js';
 
 const CX = GAME_W / 2;
 const CARD = { x: 110, y: 270, w: GAME_W - 220, h: 590 };
@@ -71,6 +73,14 @@ export default class OptionsScene extends Phaser.Scene {
     });
     this.events.once('shutdown', stop);
 
+    // Languages from the API: shows the progress and redraws everything when it's done.
+    onTranslation((fetched) => {
+      if (fetched) this.redraw();
+      else language.setLabel(t('options.language'), this.languageSummary());
+    });
+    this.events.once('shutdown', () => onTranslation(null));
+    this.time.delayedCall(TRANSLATE.startDelay, startTranslation);
+
     const onKey = (event) => {
       unlockAudio();
       const c = event.code;
@@ -102,7 +112,10 @@ export default class OptionsScene extends Phaser.Scene {
   }
 
   languageSummary() {
-    return `◀  ${LANGUAGES.find((l) => l.id === getLang()).label}  ▶`;
+    const status = translationStatus();
+    const label = `◀  ${LANGUAGES.find((l) => l.id === getLang()).label}  ▶`;
+    if (status?.failed) return `${label}   ${t('options.translateFailed')}`;
+    return status ? `${label}   ${status.percent} %` : label;
   }
 
   setFocus(index, silent = false) {
@@ -128,6 +141,10 @@ export default class OptionsScene extends Phaser.Scene {
     const i = LANGUAGES.findIndex((l) => l.id === getLang());
     setLang(LANGUAGES[(i + dir + LANGUAGES.length) % LANGUAGES.length].id);
     sfx.select();
+    this.redraw();
+  }
+
+  redraw() {
     if (this.from !== 'Game') {
       const below = this.scene.get(this.from);
       // It comes back running; pause it again as soon as it's built.

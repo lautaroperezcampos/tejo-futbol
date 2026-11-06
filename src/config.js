@@ -155,6 +155,14 @@ export const FONTS = {
   ui: '"Rubik", "Arial", sans-serif',
 };
 
+// Languages translated live with an API (src/translator.js).
+export const TRANSLATE = {
+  parallel: 4, // texts asked for at the same time
+  saveEvery: 10, // texts between saves, so closing the game halfway loses little
+  startDelay: 800, // ms on a language before translating it, to skip those just passed by
+  skip: ['league.cols'], // abbreviations that only work as they are
+};
+
 // League: two zones (see src/league/league.js). The top of each zone goes to the playoffs.
 export const LEAGUE = {
   qualifiers: 8, // teams per zone that reach the round of 16
