@@ -1,8 +1,11 @@
-// Languages: Spanish (the default), English and Brazilian Portuguese, written by hand, and
-// French, Italian and German, translated live with an API (src/translator.js). Every text
-// the player sees goes through t(key, params): it looks the key up in the current language
-// (src/lang/ or the API's translation), falls back to Spanish and fills {name} placeholders
-// from params. The choice is saved in localStorage.
+// Languages: Spanish (the default), English and Brazilian Portuguese, and French, Italian
+// and German. Every text the player sees goes through t(key, params) and {name}
+// placeholders are filled from params.
+// English and Portuguese come from the Traducila API, whose keys are the Spanish texts (see
+// loadTranslations); src/lang/ has the Spanish texts and the copy used for anything that
+// API didn't deliver. French, Italian and German are translated live with another API
+// (src/translator.js). The choice is saved in localStorage.
+import { TRADUCILA } from './config.js';
 import * as es from './lang/es.js';
 import * as en from './lang/en.js';
 import * as pt from './lang/pt.js';
@@ -26,12 +29,15 @@ const language = (id) => LANGUAGES.find((l) => l.id === id);
 let current = load();
 setHtmlLang();
 
-// What the API has translated so far, by language.
+// What the live API has translated so far, by language.
 const remote = {};
 function remoteStrings(id) {
   remote[id] ??= loadTranslation(id);
   return remote[id];
 }
+
+// Language id -> { Spanish text: translation }, filled by loadTranslations().
+const traducila = {};
 
 function load() {
   try {
@@ -61,7 +67,30 @@ export function setLang(id) {
   }
 }
 
-// Asks the API for what's missing of the current language, if it's one of those.
+// Downloads the Traducila translations (call before the game starts). Never fails: a
+// language that doesn't arrive just keeps using src/lang/.
+export async function loadTranslations() {
+  const { url, projectId, timeout } = TRADUCILA;
+  // The API stores line breaks as \r\n; the game's texts use \n.
+  const clean = (text) => text.replace(/\r\n/g, '\n');
+  await Promise.all(LANGUAGES.filter((l) => l.id !== 'es' && !l.api).map(async ({ id }) => {
+    try {
+      const res = await fetch(`${url}/${projectId}/${id}`, { signal: AbortSignal.timeout(timeout) });
+      const { data, error } = await res.json();
+      if (error) throw new Error(error);
+      traducila[id] = Object.fromEntries(data.words.map((w) => [clean(w.key), clean(w.translate)]));
+    } catch (err) {
+      console.warn(`Traducila: ${id} no disponible, se usa src/lang/`, err);
+    }
+  }));
+}
+
+// Traducila's translation of a Spanish text in the current language, if it has one.
+function fromTraducila(spanish) {
+  return traducila[current]?.[spanish];
+}
+
+// Asks the live API for what's missing of the current language, if it's one of those.
 let job = null; // the language being translated
 let status = null;
 let listener = null;
@@ -95,14 +124,19 @@ export function onTranslation(callback) {
 }
 
 export function t(key, params = {}) {
-  const text = LANGS[current]?.STRINGS[key] ?? (language(current).api ? remoteStrings(current)[key] : null) ?? es.STRINGS[key] ?? key;
+  const text = fromTraducila(es.STRINGS[key])
+    ?? LANGS[current]?.STRINGS[key]
+    ?? (language(current).api ? remoteStrings(current)[key] : null)
+    ?? es.STRINGS[key]
+    ?? key;
   return text.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
 }
 
-// A national team's [name, short name] in the current language, or undefined to keep the
-// Spanish ones from src/cup/nations.js. Languages from the API use the English names.
-export function nationName(id) {
-  return (LANGS[current] ?? en).NATIONS?.[id];
+// A national team's name in the current language. `index` is 0 for the full name and 1 for
+// the short one; `spanish` is that name in src/cup/nations.js. Languages from the live API
+// use the English names.
+export function nationName(id, index, spanish) {
+  return fromTraducila(spanish) ?? (LANGS[current] ?? en).NATIONS?.[id]?.[index] ?? spanish;
 }
 
 // Bot difficulty as shown in sentences ("Muy fácil"); levelLabel() in ui.js upper-cases it.

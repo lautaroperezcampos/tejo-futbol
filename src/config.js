@@ -85,6 +85,14 @@ export const AUDIO = {
 // height, width of the clock column (tournaments), kit size and dash ring radius.
 export const SCORE_BOX = { x: 16, y: 12, w: 132, rowH: 56, clockW: 72, kitScale: 0.3, ringR: 24 };
 
+// Traducila, the translation API: the game asks it for English and Portuguese when it
+// starts, and gives up after `timeout` ms (src/lang/ covers whatever doesn't arrive).
+export const TRADUCILA = {
+  url: 'https://traducila.vercel.app/api/translations',
+  projectId: '0f146251-dbc0-48bb-b8f9-3b12d5bd417d',
+  timeout: 2500, // ms
+};
+
 export const WIN_GOALS = 5; // default length of a friendly
 
 // Friendly lengths to pick from in "Antes de jugar": first to N goals, or N minutes on the

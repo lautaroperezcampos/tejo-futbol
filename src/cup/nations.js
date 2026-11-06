@@ -83,8 +83,8 @@ const WORLD_CUPS = { brasil: 5, alemania: 4, italia: 4, argentina: 3, francia: 2
 
 export const NATIONS = RAW.map(([id, name, short, strength, pattern, c1, c2, away]) => ({
   id, strength,
-  get name() { return nationName(id)?.[0] ?? name; },
-  get short() { return nationName(id)?.[1] ?? short; },
+  get name() { return nationName(id, 0, name); },
+  get short() { return nationName(id, 1, short); },
   home: { pattern, colors: [c1, c2] },
   away: away ?? { pattern: 'trim', colors: [c2, c1] },
   titles: WORLD_CUPS[id] ?? 0,

@@ -20,10 +20,15 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
 - `src/main.js` — configuración de Phaser y lista de escenas.
 - `src/config.js` — todas las constantes del juego (tamaños, velocidades, goles para ganar).
 - `src/i18n.js` — idiomas: español (por defecto), inglés y portugués de Brasil. Todo texto
-  que ve el jugador sale de `t('clave', { datos })`; los textos están en `src/lang/es.js`,
-  `en.js` y `pt.js` (mismas claves; si falta una se usa la de español). Los nombres de las
-  selecciones en otros idiomas están en `NATIONS` de esos archivos. El idioma se guarda en
-  localStorage (`tejo-futbol-idioma`) y se cambia en Opciones. Francés, italiano y alemán
+  que ve el jugador sale de `t('clave', { datos })`. El inglés y el portugués vienen de la
+  API **Traducila** (`TRADUCILA` en `src/config.js`, `loadTranslations()` al arrancar), cuyas
+  keys son los textos en español. `src/lang/es.js` tiene el español; `en.js` y `pt.js`, la
+  copia de respaldo si la API no responde o le falta un texto (mismas claves; si falta una
+  se usa la de español). Los nombres de las selecciones en otros idiomas están en `NATIONS`
+  de esos archivos. El idioma se guarda en localStorage (`tejo-futbol-idioma`) y se cambia
+  en Opciones. **Al agregar o cambiar un texto**, actualizar los tres archivos y cargarlo
+  también en el panel de Traducila (key en español + phrases en y pt): la key tiene que ser
+  idéntica al texto de `es.js`, incluidos los `{datos}`. Francés, italiano y alemán
   (`api: true` en `LANGUAGES`) no tienen archivo: `src/translator.js` los pide a la API
   de MyMemory desde los textos de `en.js` y los guarda en localStorage; agregar textos
   nuevos en `lang/` alcanza, se piden solos.
@@ -105,7 +110,8 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
 
 ## Convenciones
 - Código y nombres en inglés; documentación en español. Los textos que ve el jugador van
-  en `src/lang/` (los tres idiomas) y se usan con `t()`, nunca sueltos en el código.
+  en `src/lang/` (los tres idiomas) y en Traducila, y se usan con `t()`, nunca sueltos en
+  el código.
 - Los números del juego van en `src/config.js`, no sueltos en el código.
 - La física de la pelota es propia (no usa Arcade Physics) y se calcula en sub-pasos
   para que la pelota nunca atraviese paredes ni jugadores. Mantener eso al cambiarla.

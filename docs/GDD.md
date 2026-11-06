@@ -277,5 +277,9 @@ el partido). La elección queda guardada en el navegador.
   internet o se termina el cupo diario de la API, lo que falta se ve en español y sigue
   la próxima vez.
 - No se traducen el nombre del juego (TEJO FÚTBOL) ni los nombres de los clubes.
-- Los textos están en `src/lang/` (`es.js`, `en.js`, `pt.js`) y se piden con `t()` de
-  `src/i18n.js`.
+- Las traducciones vienen de **Traducila**, la API de traducción de Programación 2
+  (UNRaf): al arrancar, el juego baja el inglés y el portugués del proyecto "Tejo Fútbol"
+  (`GET /api/translations/{project_id}/{idioma}`). Espera como máximo 2,5 s.
+- Si la API no responde o le falta un texto, se usa la copia de `src/lang/`, así que el
+  juego nunca se queda sin textos.
+- El español es la base y está en `src/lang/es.js`; todo se pide con `t()` de `src/i18n.js`.

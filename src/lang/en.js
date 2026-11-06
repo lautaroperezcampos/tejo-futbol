@@ -251,7 +251,7 @@ export const STRINGS = {
   'game.win3': 'YOU WON!  ·  +3 POINTS',
   'game.lose0': 'YOU LOST  ·  0 POINTS',
   'game.continue': 'CONTINUE',
-  'game.pause': 'PAUSED',
+  'game.pause': 'PAUSE',
   'game.quitToMenu': 'QUIT TO MENU',
   'game.quitMatchSub': 'You lose the match 0-3',
   'game.quitFriendlySub': 'This match ends',

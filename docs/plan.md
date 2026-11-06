@@ -85,6 +85,8 @@
 - [x] 31. Copa: Q / E y L1 / R1 (dibujados al lado de las pestañas) cambian de continente
   en el selector y ↑ ↓ cambian de fila; sorteo "lo armo
   yo" para armar los grupos o las llaves a mano (`CupDrawScene`, `drawSlots`/`setSlots`).
+- [x] 32. Traducciones desde la API Traducila (`TRADUCILA`, `loadTranslations`), con
+  `src/lang/` como respaldo. Proyecto "Tejo Fútbol" con las keys en en y pt.
 
 ## Ideas para después
 - Controles táctiles para celular.
