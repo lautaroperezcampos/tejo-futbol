@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { GAME_W, GAME_H, COLORS, TRANSLATE } from '../config.js';
+import { GAME_W, GAME_H, COLORS } from '../config.js';
 import {
   titleText, uiText, button, iconButton, controlsPanel, openSoundPanel, drawGamepadIcon, drawSpeakerIcon,
   drawGlobeIcon,
@@ -9,7 +9,7 @@ import {
 } from '../sound.js';
 import { padMenu } from '../gamepads.js';
 import {
-  t, getLang, setLang, LANGUAGES, startTranslation, translationStatus, onTranslation,
+  t, getLang, setLang, LANGUAGES,
 } from '../i18n.js';
 
 const CX = GAME_W / 2;
@@ -73,14 +73,6 @@ export default class OptionsScene extends Phaser.Scene {
     });
     this.events.once('shutdown', stop);
 
-    // Languages from the API: shows the progress and redraws everything when it's done.
-    onTranslation((fetched) => {
-      if (fetched) this.redraw();
-      else language.setLabel(t('options.language'), this.languageSummary());
-    });
-    this.events.once('shutdown', () => onTranslation(null));
-    this.time.delayedCall(TRANSLATE.startDelay, startTranslation);
-
     const onKey = (event) => {
       unlockAudio();
       const c = event.code;
@@ -112,10 +104,7 @@ export default class OptionsScene extends Phaser.Scene {
   }
 
   languageSummary() {
-    const status = translationStatus();
-    const label = `◀  ${LANGUAGES.find((l) => l.id === getLang()).label}  ▶`;
-    if (status?.failed) return `${label}   ${t('options.translateFailed')}`;
-    return status ? `${label}   ${status.percent} %` : label;
+    return `◀  ${LANGUAGES.find((l) => l.id === getLang()).label}  ▶`;
   }
 
   setFocus(index, silent = false) {

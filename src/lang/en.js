@@ -56,7 +56,6 @@ export const STRINGS = {
   'options.sound.muted': 'Everything muted (M)',
   'options.sound.summary': 'Music {music}  ·  Crowd {crowd}  ·  Effects {sfx}',
   'options.language': 'LANGUAGE',
-  'options.translateFailed': 'Could not translate',
   'options.hint': '↑ ↓ choose  ·  ← → language  ·  Enter / A: accept  ·  Esc: close',
   'sound.music': 'MUSIC',
   'sound.music.sub': 'Menu and match',

@@ -89,6 +89,7 @@
   `src/lang/` como respaldo. Proyecto "Tejo Fútbol" con las keys en en y pt.
 - [x] 33. Festejo de gol más liviano: los hinchas son imágenes de una hoja (`makeFanSheet`)
   dentro de una capa, en vez de dibujar 582 hinchas con círculos en cada cuadro.
+- [x] 34. Solo español, inglés y portugués: se sacan francés, italiano, alemán y MyMemory.
 
 ## Ideas para después
 - Controles táctiles para celular.
