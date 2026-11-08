@@ -108,7 +108,7 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   En celular, `GameScene.layoutMobile()` cambia el tamaño del juego a la forma de la
   pantalla mientras dura el partido (y lo devuelve a 820 x 1120 al salir): barra del
   marcador arriba (`makeMobileHud`), solo la cancha en la cámara principal y la franja de
-  `src/game/TouchControls.js` (joystick, dash deslizando, patear) abajo. La cámara de UI
+  `src/game/TouchControls.js` (joystick y los botones DASH y PATEAR en diagonal) abajo. La cámara de UI
   queda corrida para que lo armado para 820 x 1120 caiga sobre la cancha: en pantalla,
   y = y de UI - `uiCam.scrollY`. Medidas en `MOBILE_LAYOUT` de `src/config.js`.
   `GameScene` ya tiene un método `touch()` (la pelota tocó algo): los controles táctiles

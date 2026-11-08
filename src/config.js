@@ -175,13 +175,14 @@ export const MOBILE_LAYOUT = {
   barH: 118,
   minBand: 420,
   touch: {
-    sideX: 200, // distance of the joystick and the kick button from the side
+    joyX: 200, // joystick resting place, from its side
     joyR: 130, // how far the knob goes from the centre (full speed at the edge)
     knobR: 56,
-    kickR: 120,
     deadZone: 0.15, // fraction of joyR that doesn't move the player
-    // A dash flick: the thumb travels `distance` in at most `ms`; `cooldown` ms between two.
-    flick: { distance: 200, ms: 150, cooldown: 400 },
+    // The buttons, in a diagonal on the other side: x from that side, dy from the middle
+    // of the strip (positive: lower).
+    kick: { x: 170, dy: 55, r: 118 },
+    dash: { x: 355, dy: -100, r: 78 },
   },
 };
 

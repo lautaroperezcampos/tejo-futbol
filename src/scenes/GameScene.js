@@ -1906,7 +1906,7 @@ export default class GameScene extends Phaser.Scene {
     // is held (like in Haxball).
     this.rings.clear();
     this.drawDashBars(now);
-    this.touchPad?.draw(now, this.p1.dash >= 1);
+    this.touchPad?.draw(now, this.p1.dash);
     // Dash charge ring around each player: a growing arc, a pulsing yellow circle when full.
     for (const p of [this.p1, this.p2]) {
       const r = p.r + 11;

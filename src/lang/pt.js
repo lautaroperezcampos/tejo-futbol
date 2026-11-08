@@ -61,6 +61,7 @@ export const STRINGS = {
   'credits.by': 'Criado por',
   'options.touch.left': 'Joystick à esquerda  ·  toque para trocar',
   'options.touch.right': 'Joystick à direita  ·  toque para trocar',
+  'touch.dash': 'DASH',
   'touch.kick': 'CHUTAR',
   'mobile.rotate': 'Gire o celular para jogar',
   'options.hint': '↑ ↓ escolher  ·  ← → idioma  ·  Enter / A: aceitar  ·  Esc: fechar',

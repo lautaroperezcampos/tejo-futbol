@@ -61,6 +61,7 @@ export const STRINGS = {
   'credits.by': 'Created by',
   'options.touch.left': 'Joystick on the left  ·  tap to switch',
   'options.touch.right': 'Joystick on the right  ·  tap to switch',
+  'touch.dash': 'DASH',
   'touch.kick': 'KICK',
   'mobile.rotate': 'Turn your phone upright to play',
   'options.hint': '↑ ↓ choose  ·  ← → language  ·  Enter / A: accept  ·  Esc: close',

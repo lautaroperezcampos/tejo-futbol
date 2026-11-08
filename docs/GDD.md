@@ -150,10 +150,14 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   el medio (con el reloj abajo en los torneos) y el engranaje de opciones. La cámara no
   hace zoom ni sigue la pelota mientras se juega: siempre se ve la cancha entera.
 - Abajo, la franja de **controles táctiles**:
-  - **Joystick**: aparece donde apoyás el pulgar en tu mitad de la franja y lo sigue si
-    se va lejos. El aro se pone **amarillo** cuando el dash está cargado ("¡DASH
-    LISTO!"), y el dash se tira **deslizando rápido** el pulgar hacia donde querés ir.
-  - **Patear**: botón grande; toda esa mitad de la franja cuenta, no solo el círculo.
+  - **Joystick**, solo para moverse: aparece donde apoyás el pulgar en tu mitad de la
+    franja y lo sigue si se va lejos.
+  - Del otro lado, **dos botones en diagonal**: **PATEAR** grande, abajo hacia el borde, y
+    **DASH** más chico, arriba hacia el medio, para pasar el pulgar de DASH a PATEAR y
+    meter el super zapatazo. El aro de DASH se llena con la carga y se pone amarillo
+    cuando está listo. El dash va hacia donde te movés; quieto, hacia donde te moviste
+    por última vez (al empezar, hacia el arco rival).
+  - PATEAR toma toda esa mitad de la franja menos la zona de DASH.
   - Vibra al patear, al cargarse el dash y al tirarlo (en Android; los iPhone no vibran).
 - En **OPCIONES → CONTROLES** se dan vuelta: joystick a la derecha y patear a la
   izquierda. Se puede cambiar en medio del partido (desde la pausa) y queda guardado.
