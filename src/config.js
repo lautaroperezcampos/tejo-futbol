@@ -167,6 +167,24 @@ export const FONTS = {
   ui: '"Rubik", "Arial", sans-serif',
 };
 
+// Phone version (src/mobile.js), in game units (the screen is 820 wide). The match shows
+// only the pitch (crop), under a scoreboard bar, and leaves at least minBand at the
+// bottom for the touch controls.
+export const MOBILE_LAYOUT = {
+  crop: { x: 60, y: 86, w: 700, h: 1008 }, // the pitch with its border, without the stands
+  barH: 118,
+  minBand: 420,
+  touch: {
+    sideX: 200, // distance of the joystick and the kick button from the side
+    joyR: 130, // how far the knob goes from the centre (full speed at the edge)
+    knobR: 56,
+    kickR: 120,
+    deadZone: 0.15, // fraction of joyR that doesn't move the player
+    // A dash flick: the thumb travels `distance` in at most `ms`; `cooldown` ms between two.
+    flick: { distance: 200, ms: 150, cooldown: 400 },
+  },
+};
+
 // League: two zones (see src/league/league.js). The top of each zone goes to the playoffs.
 export const LEAGUE = {
   qualifiers: 8, // teams per zone that reach the round of 16

@@ -2,8 +2,9 @@ import * as Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, STUDIO_LOGO } from '../config.js';
 import {
   titleText, uiText, button, iconButton, controlsPanel, creditsPanel, openSoundPanel, drawGamepadIcon,
-  drawSpeakerIcon, drawGlobeIcon, drawStarIcon,
+  drawSpeakerIcon, drawGlobeIcon, drawStarIcon, centerOnTallScreen,
 } from '../ui.js';
+import { MOBILE, touchInverted, setTouchInverted } from '../mobile.js';
 import {
   sfx, unlockAudio, getChannel, isMuted, iconLevel, toggleMute, onVolumeChange,
 } from '../sound.js';
@@ -42,7 +43,8 @@ export default class OptionsScene extends Phaser.Scene {
   }
 
   create() {
-    const dim = this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.75).setOrigin(0).setInteractive();
+    centerOnTallScreen(this);
+    const dim = this.add.rectangle(0, -GAME_H, GAME_W, GAME_H * 3, COLORS.ink, 0.75).setOrigin(0).setInteractive();
     dim.on('pointerdown', () => this.close());
 
     const g = this.add.graphics();
@@ -60,8 +62,9 @@ export default class OptionsScene extends Phaser.Scene {
     titleText(this, CX, y + 66, t('options.title'), 58).setAngle(-3);
 
     const controls = iconButton(this, CX, y + 175, w - 90, 92, {
-      title: t('options.controls'), sub: t('options.controls.sub'), drawIcon: drawGamepadIcon,
+      title: t('options.controls'), sub: this.controlsSummary(), drawIcon: drawGamepadIcon,
     }, () => this.press(0));
+    this.controlsRow = controls;
     const sound = iconButton(this, CX, y + 285, w - 90, 92, {
       title: t('options.sound'), sub: this.soundSummary(), drawIcon: (icon) => drawSpeakerIcon(icon, iconLevel()),
     }, () => this.press(1));
@@ -94,6 +97,7 @@ export default class OptionsScene extends Phaser.Scene {
       const n = this.items.length;
       if (c === 'ArrowUp' || c === 'KeyW') this.setFocus((this.focus + n - 1) % n);
       else if (c === 'ArrowDown' || c === 'KeyS') this.setFocus((this.focus + 1) % n);
+      else if ((c === 'ArrowLeft' || c === 'ArrowRight') && MOBILE && this.focus === 0) this.switchTouchSide();
       else if (c === 'ArrowLeft' || c === 'KeyA') this.changeLanguage(-1);
       else if (c === 'ArrowRight' || c === 'KeyD') this.changeLanguage(1);
       else if (c === 'Enter' || c === 'Space') this.press(this.focus);
@@ -114,6 +118,18 @@ export default class OptionsScene extends Phaser.Scene {
     return t('options.sound.summary', { music: pct('music'), crowd: pct('crowd'), sfx: pct('sfx') });
   }
 
+  // On a phone the controls row says which side the joystick is on, and switches it.
+  controlsSummary() {
+    if (!MOBILE) return t('options.controls.sub');
+    return t(touchInverted() ? 'options.touch.right' : 'options.touch.left');
+  }
+
+  switchTouchSide() {
+    setTouchInverted(!touchInverted());
+    sfx.select();
+    this.controlsRow.setLabel(t('options.controls'), this.controlsSummary());
+  }
+
   languageSummary() {
     return `◀  ${LANGUAGES.find((l) => l.id === getLang()).label}  ▶`;
   }
@@ -127,7 +143,8 @@ export default class OptionsScene extends Phaser.Scene {
   press(index) {
     if (this.controls || this.closing) return;
     this.setFocus(index, true);
-    if (index === 0) this.controls = controlsPanel(this, () => { this.controls = null; });
+    if (index === 0 && MOBILE) this.switchTouchSide();
+    else if (index === 0) this.controls = controlsPanel(this, () => { this.controls = null; });
     else if (index === 1) openSoundPanel(this);
     else if (index === LANGUAGE) this.changeLanguage(1);
     else if (index === CREDITS) this.controls = creditsPanel(this, () => { this.controls = null; });

@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { GAME_W, GAME_H, BOT_LEVELS } from './config.js';
 import { TEAM_BY_ID } from './league/teams.js';
 import { trailerLeague } from './league/league.js';
+import { setupMobilePage } from './mobile.js';
 import { loadTranslations } from './i18n.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
@@ -38,6 +39,7 @@ function applyTrailerLink() {
 }
 
 applyTrailerLink();
+setupMobilePage();
 Promise.all([loadFonts(), loadTranslations()]).then(startGame);
 
 function startGame() {

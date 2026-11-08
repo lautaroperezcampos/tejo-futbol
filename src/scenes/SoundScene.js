@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS, PALETTE, FONTS } from '../config.js';
-import { titleText, uiText, button } from '../ui.js';
+import { titleText, uiText, button, centerOnTallScreen } from '../ui.js';
 import {
   sfx, unlockAudio, getChannel, setChannel, isMuted, toggleMute, onVolumeChange,
 } from '../sound.js';
@@ -34,7 +34,8 @@ export default class SoundScene extends Phaser.Scene {
   }
 
   create() {
-    const dim = this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.75).setOrigin(0).setInteractive();
+    centerOnTallScreen(this);
+    const dim = this.add.rectangle(0, -GAME_H, GAME_W, GAME_H * 3, COLORS.ink, 0.75).setOrigin(0).setInteractive();
     dim.on('pointerdown', () => this.close());
 
     const g = this.add.graphics();

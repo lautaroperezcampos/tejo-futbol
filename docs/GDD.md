@@ -6,7 +6,8 @@ Pong, Haxball y el tejo (air hockey): cada jugador defiende su arco y trata de m
 pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más rápida.
 
 ## Plataforma
-- Navegador de PC (teclado). No se juega en celular por ahora.
+- Navegador de PC (teclado o joystick) y **celular o tablet en vertical** (en prueba,
+  ver "Versión celular"). El mismo link: el juego se da cuenta solo de cuál es.
 - Publicado en Vercel.
 
 ## Modos de juego
@@ -138,6 +139,25 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   6 s ("¡MINI!"). Un tamaño nuevo reemplaza al anterior (el hongo cancela la poción y al
   revés). El cambio de tamaño es suave y en cada saque todos vuelven al tamaño normal.
 - Se borran en cada saque.
+
+## Versión celular (en prueba)
+- Se elige sola al abrir el juego: si lo principal es el dedo (celular o tablet) va esta
+  versión; si es el mouse (PC, también una notebook con pantalla táctil), la de siempre.
+  Para probarla desde la PC: agregar `?celular` al link (y `?pc` fuerza la de PC).
+- Se juega con el celular **parado**. Acostado aparece "Girá el celular para jugar".
+- En el partido se ve **solo la cancha**, sin tribunas, más grande (un 14% más que con
+  tribunas), con una **barra arriba**: camiseta y nombre de cada equipo, el resultado en
+  el medio (con el reloj abajo en los torneos) y el engranaje de opciones. La cámara no
+  hace zoom ni sigue la pelota mientras se juega: siempre se ve la cancha entera.
+- Abajo, la franja de **controles táctiles**:
+  - **Joystick**: aparece donde apoyás el pulgar en tu mitad de la franja y lo sigue si
+    se va lejos. El aro se pone **amarillo** cuando el dash está cargado ("¡DASH
+    LISTO!"), y el dash se tira **deslizando rápido** el pulgar hacia donde querés ir.
+  - **Patear**: botón grande; toda esa mitad de la franja cuenta, no solo el círculo.
+  - Vibra al patear, al cargarse el dash y al tirarlo (en Android; los iPhone no vibran).
+- En **OPCIONES → CONTROLES** se dan vuelta: joystick a la derecha y patear a la
+  izquierda. Se puede cambiar en medio del partido (desde la pausa) y queda guardado.
+- Los menús son los mismos de la PC, achicados; se manejan tocando.
 
 ## Controles
 | Acción | Jugador 1 (abajo) | Jugador 2 (arriba) |

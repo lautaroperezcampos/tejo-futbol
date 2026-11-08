@@ -103,6 +103,16 @@ Juego de fútbol 1 vs 1 en cancha vertical (mezcla de Pong, Haxball y tejo) hech
   tiro al rival (el hongo vuelve al dueño) y efectos. El tamaño de cada jugador vive en
   `p.size` / `p.r` (radio actual): usar `p.r` y no `PLAYER_R` en choques del jugador.
 - `src/gamepads.js` — joystick (Gamepad API); `padMenu()` lo conecta a los menús.
+- `src/mobile.js` — versión celular: `MOBILE` (pantalla táctil, o `?celular` / `?pc` en el
+  link), lado de los controles (`touchInverted`), `vibrate()` y ajustes de la página.
+  En celular, `GameScene.layoutMobile()` cambia el tamaño del juego a la forma de la
+  pantalla mientras dura el partido (y lo devuelve a 820 x 1120 al salir): barra del
+  marcador arriba (`makeMobileHud`), solo la cancha en la cámara principal y la franja de
+  `src/game/TouchControls.js` (joystick, dash deslizando, patear) abajo. La cámara de UI
+  queda corrida para que lo armado para 820 x 1120 caiga sobre la cancha: en pantalla,
+  y = y de UI - `uiCam.scrollY`. Medidas en `MOBILE_LAYOUT` de `src/config.js`.
+  `GameScene` ya tiene un método `touch()` (la pelota tocó algo): los controles táctiles
+  son `this.touchPad`.
 - `GameScene` usa dos cámaras: la principal (zoom/seguimiento) y una de UI fija. Todo
   objeto nuevo va al mundo salvo que se cree dentro de `this.asUI(() => ...)`.
 - Cambios de pantalla: usar `goTo(scene, key, data)` de `src/ui.js` y llamar

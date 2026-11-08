@@ -2,7 +2,7 @@ import * as Phaser from 'phaser';
 import {
   GAME_W, GAME_H, FIELD, CORNER_R, MID_Y, CENTER_X, MOUTH_L, MOUTH_R, POST_R, GOAL_DEPTH,
   PLAYER_R, PLAYER_SPEED, KICKOFF_OFFSET, BALL_R, BALL, KICK, WIN_GOALS, GOAL_PAUSE,
-  KICKOFF_DELAY, COLORS, PALETTE, FONTS, DASH, HAZARDS, SCORE_BOX, STALL, PITCH,
+  KICKOFF_DELAY, COLORS, PALETTE, FONTS, DASH, HAZARDS, SCORE_BOX, STALL, PITCH, MOBILE_LAYOUT,
 } from '../config.js';
 import { t, botLevelName } from '../i18n.js';
 import { makeTextures, kitTexture, SPRITE_SCALE } from '../art.js';
@@ -24,6 +24,8 @@ import {
   floatText, drawEyes, drawNetRipple, makeFans, drawCrowd, headingIntoGoal,
 } from '../game/juice.js';
 import { MATCH_SECONDS, botConfigFor } from '../league/league.js';
+import { MOBILE, vibrate } from '../mobile.js';
+import TouchControls from '../game/TouchControls.js';
 import { mainColor, pickKits, TEAM_BY_ID } from '../league/teams.js';
 
 const TRAIL_LEN = 12;
@@ -150,10 +152,15 @@ export default class GameScene extends Phaser.Scene {
     if (m) this.timeLeft = MATCH_SECONDS * 1000;
     else this.timeLeft = this.minutes ? this.minutes * 60000 : null;
     this.paused = false;
-    this.asUI(() => this.makeHud());
-    // Options button (gear) in the bottom corner, above the pause screen: it pauses the
-    // match and opens the options over the pause menu.
-    this.asUI(() => optionsButton(this, GAME_W - 40, GAME_H - 38, 0.85, () => this.openOptionsFromMatch()).setDepth(25));
+    if (this.mobile) {
+      this.asUI(() => this.makeMobileHud());
+      this.touchPad = this.asUI(() => new TouchControls(this, this.mobile.band, this.uiCam.scrollY));
+    } else {
+      this.asUI(() => this.makeHud());
+      // Options button (gear) in the bottom corner, above the pause screen: it pauses the
+      // match and opens the options over the pause menu.
+      this.asUI(() => optionsButton(this, GAME_W - 40, GAME_H - 38, 0.85, () => this.openOptionsFromMatch()).setDepth(25));
+    }
 
     // Juice state.
     this.crowd = makeFans(this);
@@ -166,7 +173,7 @@ export default class GameScene extends Phaser.Scene {
     this.rally = 0;
     this.onFire = false;
     this.camPunch = null;
-    this.cam = { zoom: 1, x: CENTER_X, y: GAME_H / 2 };
+    this.cam = { zoom: 1, ...this.cameraHome() };
     this.playTime = 0; // ms of actual play (stops for goals, replays and pauses)
     this.hazards = this.hazardsOn ? new Hazards(this) : null;
     this.statusGfx = this.add.graphics().setDepth(4.4); // ice cubes over frozen players
@@ -208,10 +215,43 @@ export default class GameScene extends Phaser.Scene {
     const main = this.cameras.main;
     main.setBounds(0, 0, GAME_W, GAME_H);
     this.uiCam = this.cameras.add(0, 0, GAME_W, GAME_H);
+    this.mobile = null;
+    this.touchPad = null;
+    if (MOBILE) this.layoutMobile();
     this.creatingUI = false;
     const route = (obj) => (this.creatingUI ? main : this.uiCam).ignore(obj);
     this.events.on('addedtoscene', route);
     this.events.once('shutdown', () => this.events.off('addedtoscene', route));
+  }
+
+  // Phone: the canvas takes the shape of the screen, with the scoreboard bar on top, just
+  // the pitch (no stands) under it and the touch controls in the space left at the bottom.
+  // The UI camera is shifted so the usual 820 x 1120 layout (banners, pause) sits over the
+  // pitch; screen y = UI y - uiCam.scrollY.
+  layoutMobile() {
+    const { crop, barH, minBand } = MOBILE_LAYOUT;
+    const h = Math.max(GAME_H, Math.round((GAME_W * window.innerHeight) / window.innerWidth));
+    this.scale.setGameSize(GAME_W, h);
+    this.events.once('shutdown', () => this.scale.setGameSize(GAME_W, GAME_H));
+    const fieldH = Math.min((crop.h * GAME_W) / crop.w, h - barH - minBand);
+    const zoom = fieldH / crop.h;
+    const fieldW = crop.w * zoom;
+    this.cameras.main.setViewport((GAME_W - fieldW) / 2, barH, fieldW, fieldH);
+    this.uiCam.setSize(GAME_W, h);
+    this.uiCam.setScroll(0, GAME_H / 2 - (barH + fieldH / 2));
+    this.mobile = {
+      zoom, barH, center: { x: crop.x + crop.w / 2, y: crop.y + crop.h / 2 }, band: { top: barH + fieldH, bottom: h },
+    };
+  }
+
+  // Where the camera looks when nothing's going on.
+  cameraHome() {
+    return this.mobile ? { ...this.mobile.center } : { x: CENTER_X, y: GAME_H / 2 };
+  }
+
+  // A dark layer over the whole screen (on a phone it's taller than the usual layout).
+  screenShade(alpha) {
+    return this.add.rectangle(0, this.uiCam.scrollY, GAME_W, this.scale.height, COLORS.ink, alpha).setOrigin(0);
   }
 
   asUI(fn) {
@@ -310,6 +350,44 @@ export default class GameScene extends Phaser.Scene {
     this.speedText = this.add.text(tagX, cy + 8, 'x1.0', { fontFamily: FONTS.title, fontSize: '20px', color: PALETTE.ink })
       .setOrigin(0.5).setDepth(9);
 
+    this.updateHud();
+  }
+
+  // Phone: the scoreboard is a bar over the pitch. Each team's kit (with its dash ring) and
+  // name on its side, the score in the middle with the clock under it, and the gear.
+  makeMobileHud() {
+    const top = this.uiCam.scrollY; // the top of the screen, in UI coordinates
+    const { barH } = this.mobile;
+    const cy = top + 50;
+    const g = this.add.graphics().setDepth(8);
+    g.fillStyle(COLORS.purpleDark, 1);
+    g.fillRect(0, top - 400, GAME_W, barH + 400);
+    g.fillStyle(COLORS.ink, 1);
+    g.fillRect(0, top + barH - 8, GAME_W, 8);
+    g.fillRoundedRect(CENTER_X - 84, cy - 36, 168, 72, 18);
+    g.lineStyle(5, COLORS.yellow, 1);
+    g.strokeRoundedRect(CENTER_X - 84, cy - 36, 168, 72, 18);
+
+    this.hudRows = {};
+    for (const [key, dir] of [['p1', -1], ['p2', 1]]) {
+      const kitX = CENTER_X + dir * 300;
+      this.add.image(kitX, cy, kitTexture(this, key === 'p1' ? this.p1Kit : this.p2Kit, '')).setScale(SCORE_BOX.kitScale).setDepth(9);
+      const name = titleText(this, kitX - dir * 40, cy, key === 'p1' ? this.p1Name : this.p2Name, 26)
+        .setOrigin(dir < 0 ? 0 : 1, 0.5).setDepth(9);
+      if (name.width > 170) name.setScale(170 / name.width);
+      const score = titleText(this, CENTER_X + dir * 44, cy, '0', 40, PALETTE.titleFill).setDepth(9);
+      this.hudRows[key] = { x: kitX, y: cy, score };
+    }
+    titleText(this, CENTER_X, cy, '-', 34).setDepth(9);
+    this.dashBars = this.add.graphics().setDepth(9.5);
+    if (this.timeLeft !== null) {
+      this.clockText = this.add.text(CENTER_X, top + 98, '', { fontFamily: FONTS.title, fontSize: '22px', color: PALETTE.white })
+        .setOrigin(0.5).setDepth(9);
+      this.updateClock();
+    }
+    // The ball speed tag isn't shown on phones, but it's kept up to date like on a PC.
+    this.speedText = this.add.text(0, 0, '', {}).setVisible(false);
+    optionsButton(this, GAME_W - 44, cy, 0.7, () => this.openOptionsFromMatch()).setDepth(25);
     this.updateHud();
   }
 
@@ -897,7 +975,7 @@ export default class GameScene extends Phaser.Scene {
     const height = buttonsTop - top + buttons.length * 92 + 10;
 
     this.asUI(() => {
-      const parts = [this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.65).setOrigin(0)];
+      const parts = [this.screenShade(0.65)];
       const card = this.add.graphics();
       card.fillStyle(COLORS.ink, 1);
       card.fillRoundedRect(cx - w / 2 - 6, top + 8, w + 12, height, 30);
@@ -1046,7 +1124,7 @@ export default class GameScene extends Phaser.Scene {
     const w = 560;
     const top = 220;
     const height = 600;
-    const parts = [this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.7).setOrigin(0)];
+    const parts = [this.screenShade(0.7)];
 
     const card = this.add.graphics();
     card.fillStyle(COLORS.ink, 1);
@@ -1359,13 +1437,16 @@ export default class GameScene extends Phaser.Scene {
       (k.d.isDown || (this.bot && k.right.isDown) ? 1 : 0) - (k.a.isDown || (this.bot && k.left.isDown) ? 1 : 0),
       (k.s.isDown || (this.bot && k.down.isDown) ? 1 : 0) - (k.w.isDown || (this.bot && k.up.isDown) ? 1 : 0),
     );
-    this.applyInput(this.p1, mergeMove(p1Keys, p1Pads), time, {
+    // On a phone the touch controls drive player 1 (a joystick, if connected, still works).
+    const touch = this.touchPad?.read();
+    const touchMoving = touch && (touch.move.x || touch.move.y);
+    this.applyInput(this.p1, touchMoving ? touch.move : mergeMove(p1Keys, p1Pads), time, {
       kickPressed: Phaser.Input.Keyboard.JustDown(k.space) || (this.bot && Phaser.Input.Keyboard.JustDown(k.enter))
-        || p1Pads.some((p) => p.kickPressed),
-      kickHeld: k.space.isDown || (this.bot && k.enter.isDown) || p1Pads.some((p) => p.kickHeld),
+        || p1Pads.some((p) => p.kickPressed) || !!touch?.kickPressed,
+      kickHeld: k.space.isDown || (this.bot && k.enter.isDown) || p1Pads.some((p) => p.kickHeld) || !!touch?.kickHeld,
     });
 
-    if (p1Pads.some((p) => p.dashPressed)) this.dashQueued.add(this.p1);
+    if (p1Pads.some((p) => p.dashPressed) || touch?.dash) this.dashQueued.add(this.p1);
     if (p2Pads.some((p) => p.dashPressed)) this.dashQueued.add(this.p2);
 
     if (this.bot) {
@@ -1434,6 +1515,7 @@ export default class GameScene extends Phaser.Scene {
         p.dash = Math.min(1, p.dash + (dt * 1000) / DASH.charge);
         if (p.dash === 1) {
           sfx.dashReady();
+          if (p === this.p1) vibrate(30);
           floatText(this, p.x, p.y - 50, t('game.dashReady'), PALETTE.cyan, 22);
         }
       }
@@ -1824,6 +1906,7 @@ export default class GameScene extends Phaser.Scene {
     // is held (like in Haxball).
     this.rings.clear();
     this.drawDashBars(now);
+    this.touchPad?.draw(now, this.p1.dash >= 1);
     // Dash charge ring around each player: a growing arc, a pulsing yellow circle when full.
     for (const p of [this.p1, this.p2]) {
       const r = p.r + 11;
@@ -1920,12 +2003,14 @@ export default class GameScene extends Phaser.Scene {
 
   // Gentle zoom that follows the ball as it speeds up; punches in on goals and slow
   // motion, and goes close for the replay.
+  // On a phone the whole pitch always stays in view: no zoom or follow while playing.
   updateCamera(realDt) {
     const b = this.ball;
     const now = this.time.now;
+    const home = this.cameraHome();
     let zoom = 1;
-    let x = CENTER_X;
-    let y = GAME_H / 2;
+    let x = home.x;
+    let y = home.y;
     if (this.state === 'replay') {
       zoom = 1.35;
       x = b.x;
@@ -1934,7 +2019,7 @@ export default class GameScene extends Phaser.Scene {
       zoom = 1.18;
       x = this.camPunch.x;
       y = this.camPunch.y;
-    } else if (this.state === 'playing') {
+    } else if (this.state === 'playing' && !this.mobile) {
       const ratio = this.speedRatio();
       const slow = now < this.slowmoUntil;
       zoom = 1 + 0.07 * ratio + (slow ? 0.12 : 0);
@@ -1947,7 +2032,7 @@ export default class GameScene extends Phaser.Scene {
     this.cam.x += (x - this.cam.x) * a;
     this.cam.y += (y - this.cam.y) * a;
     const cam = this.cameras.main;
-    cam.setZoom(this.cam.zoom);
+    cam.setZoom(this.cam.zoom * (this.mobile ? this.mobile.zoom : 1));
     cam.centerOn(this.cam.x, this.cam.y);
   }
 }

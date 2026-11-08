@@ -29,18 +29,19 @@ const WIPE_COLORS = [COLORS.purple, COLORS.yellow, COLORS.ink, COLORS.pink, COLO
 
 function makeWipe(scene) {
   const g = scene.add.graphics();
+  const h = scene.scale.height; // taller than GAME_H during a match on a phone
   const stripe = 90;
   for (let i = 0, x = -WIPE_SKEW; x < GAME_W + WIPE_SKEW; i++, x += stripe) {
     g.fillStyle(WIPE_COLORS[i % WIPE_COLORS.length], 1);
     g.fillPoints([
       { x, y: 0 }, { x: x + stripe + 1, y: 0 },
-      { x: x + stripe + 1 - WIPE_SKEW, y: GAME_H }, { x: x - WIPE_SKEW, y: GAME_H },
+      { x: x + stripe + 1 - WIPE_SKEW, y: h }, { x: x - WIPE_SKEW, y: h },
     ], true);
   }
   // Extra cover on the trailing side so no gap shows while it slides.
   g.fillStyle(COLORS.purple, 1);
-  g.fillRect(-WIPE_SPAN, 0, WIPE_SPAN - WIPE_SKEW, GAME_H);
-  const c = scene.add.container(0, 0, [g]).setDepth(1000);
+  g.fillRect(-WIPE_SPAN, 0, WIPE_SPAN - WIPE_SKEW, h);
+  const c = scene.add.container(0, (scene.uiCam ?? scene.cameras.main).scrollY, [g]).setDepth(1000);
   return c;
 }
 
@@ -73,6 +74,13 @@ export function wipeIn(scene) {
     targets: wipe, x: GAME_W + WIPE_SPAN, duration: 380, ease: 'Cubic.Out',
     onComplete: () => wipe.destroy(),
   });
+}
+
+// Screens opened over a match on a phone, where the screen is taller than the usual
+// layout: centres the 820 x 1120 layout on it.
+export function centerOnTallScreen(scene) {
+  const extra = scene.scale.height - GAME_H;
+  if (extra > 0) scene.cameras.main.setScroll(0, -extra / 2);
 }
 
 export function titleText(scene, x, y, text, size, color = PALETTE.titleFill) {
@@ -488,7 +496,7 @@ export function controlsPanel(scene, onClose) {
   const height = 840;
   const parts = [];
 
-  const dim = scene.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.8).setOrigin(0).setInteractive();
+  const dim = scene.add.rectangle(0, -GAME_H, GAME_W, GAME_H * 3, COLORS.ink, 0.8).setOrigin(0).setInteractive();
   const g = scene.add.graphics();
   g.fillStyle(COLORS.ink, 1);
   g.fillRoundedRect(left - 6, top + 6, width + 12, height, 28);
@@ -574,7 +582,7 @@ export function creditsPanel(scene, onClose) {
   const top = 250;
   const height = 620;
 
-  const dim = scene.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.ink, 0.8).setOrigin(0).setInteractive();
+  const dim = scene.add.rectangle(0, -GAME_H, GAME_W, GAME_H * 3, COLORS.ink, 0.8).setOrigin(0).setInteractive();
   const g = scene.add.graphics();
   g.fillStyle(COLORS.ink, 1);
   g.fillRoundedRect(left - 6, top + 6, width + 12, height, 28);
