@@ -92,6 +92,10 @@
 - [x] 34. Solo español, inglés y portugués: se sacan francés, italiano, alemán y MyMemory.
 - [x] 35. Créditos en OPCIONES con el logo de Lagartija Studio y los creadores
   (`creditsPanel`, `CREATORS`, `STUDIO_LOGO`).
+- [x] 36. Celular: el botón de la barra es la pausa (las opciones, adentro) y un botón
+  para saltar la repetición del gol.
+- [x] 37. Dificultades del bot en escalones parejos (fácil más difícil, medio un poco
+  más fácil) y el primer power-up a los 3 o 4 s de cada saque.
 
 ## Ideas para después
 - Controles táctiles para celular.

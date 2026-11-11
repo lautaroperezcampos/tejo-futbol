@@ -53,7 +53,9 @@ export const DASH = {
 // big goal, mushroom or shrink potion; see src/game/Hazards.js). Whoever hits it with the
 // ball wins it: most go to the rival, the mushroom makes its owner bigger.
 export const HAZARDS = {
-  spawnMin: 6000, // ms between spawns (random in this range)
+  firstMin: 3000, // ms from each kickoff to the first item (random in this range)
+  firstMax: 4500,
+  spawnMin: 6000, // ms between the next ones (random in this range)
   spawnMax: 12000,
   lifetime: 9000, // ms an item stays on the pitch
   maxOnField: 2,
@@ -195,23 +197,24 @@ export const LEAGUE = {
 export const BOT_LEVELS = {
   // dash: 'none' never; 'defense' only to save a shot it can't reach walking;
   // 'smart' also to hit a power shot when it's lined up with the opponent's goal.
-  // The four levels go up in even steps, gentle enough for someone playing for the first
-  // time (each one is what the level below it used to be). Very easy barely plays: it
+  // The four levels go up in even steps between very easy and hard: every number moves
+  // about a third of the way at each level, so no step is much bigger than the others.
+  // Gentle enough for someone playing for the first time. Very easy barely plays: it
   // walks, reacts very late, almost never kicks and its kicks and body are soft. Its
   // kicks are weak (kickPower), its body soaks up the ball (bodyDamp), so its shots can
   // be stopped, and it only goes after the ball some of the time (aggression). Easy
-  // keeps a little of that; levels without these use the normal values.
+  // and medium keep less of that each; levels without these use the normal values.
   veryEasy: {
     speed: 0.2, reaction: 850, predict: 'none', kickChance: 0.05, error: 140, dash: 'none',
     kickPower: 0.4, bodyDamp: 0.45, aggression: 0.15,
   },
   easy: {
-    speed: 0.32, reaction: 520, predict: 'none', kickChance: 0.15, error: 90, dash: 'none',
-    kickPower: 0.6, bodyDamp: 0.6, aggression: 0.3,
+    speed: 0.37, reaction: 500, predict: 'none', kickChance: 0.28, error: 100, dash: 'none',
+    kickPower: 0.6, bodyDamp: 0.6, aggression: 0.45,
   },
   medium: {
-    speed: 0.55, reaction: 260, predict: 'straight', kickChance: 0.5, error: 40, dash: 'none',
-    kickPower: 0.85, aggression: 0.75,
+    speed: 0.54, reaction: 290, predict: 'straight', kickChance: 0.52, error: 60, dash: 'none',
+    kickPower: 0.8, bodyDamp: 0.75, aggression: 0.72,
   },
   hard: { speed: 0.72, reaction: 160, predict: 'straight', kickChance: 0.75, error: 24, dash: 'defense' },
 };

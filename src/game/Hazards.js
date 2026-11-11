@@ -27,12 +27,13 @@ export default class Hazards {
     this.lastBall = null;
   }
 
-  // Clears the pitch and schedules the next item (called at every kickoff).
+  // Clears the pitch and schedules the first item soon (called at every kickoff), so they
+  // show up even when goals come quickly.
   reset(playTime) {
     for (const item of this.items) item.parts.forEach((part) => part.destroy());
     this.items = [];
     this.lastBall = null;
-    this.nextSpawn = playTime + Phaser.Math.Between(HAZARDS.spawnMin, HAZARDS.spawnMax);
+    this.nextSpawn = playTime + Phaser.Math.Between(HAZARDS.firstMin, HAZARDS.firstMax);
   }
 
   update(playTime, ball, players) {

@@ -322,7 +322,7 @@ export function botConfigFor(strength, difficulty = 'medium') {
     reaction: lerp(low.reaction, hard.reaction, t),
     kickChance: lerp(low.kickChance, hard.kickChance, t),
     error: lerp(low.error, hard.error, t),
-    predict: t > 0.6 ? hard.predict : 'straight',
+    predict: t > 0.6 ? hard.predict : low.predict,
     dash: t > 0.5 ? hard.dash : 'none',
     // Soft kicks and body only at the weak end of a league.
     kickPower: lerp(low.kickPower ?? 1, 1, t),

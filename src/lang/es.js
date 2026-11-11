@@ -270,6 +270,7 @@ export const STRINGS = {
   'game.rally': '¡{n} REBOTES!',
   'game.replay': 'REPETICIÓN',
   'game.skip': 'ESPACIO / A: SALTAR',
+  'game.skipTouch': 'SALTAR REPETICIÓN ▶',
   'game.oneMinute': '¡QUEDA 1 MINUTO!',
   'game.dashReady': '¡DASH LISTO!',
   'game.superShot': '¡SUPER ZAPATAZO!',

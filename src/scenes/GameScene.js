@@ -7,8 +7,8 @@ import {
 import { t, botLevelName } from '../i18n.js';
 import { makeTextures, kitTexture, SPRITE_SCALE } from '../art.js';
 import {
-  titleText, uiText, ribbon, goTo, wipeIn, optionsButton, openOptions, iconButton,
-  drawPlayIcon, drawGearIcon, drawExitIcon,
+  titleText, uiText, ribbon, goTo, wipeIn, optionsButton, openOptions, iconButton, button,
+  drawPlayIcon, drawGearIcon, drawExitIcon, drawPauseIcon,
 } from '../ui.js';
 import { sfx, unlockAudio } from '../sound.js';
 import {
@@ -387,7 +387,9 @@ export default class GameScene extends Phaser.Scene {
     }
     // The ball speed tag isn't shown on phones, but it's kept up to date like on a PC.
     this.speedText = this.add.text(0, 0, '', {}).setVisible(false);
-    optionsButton(this, GAME_W - 44, cy, 0.7, () => this.openOptionsFromMatch()).setDepth(25);
+    // On a phone this corner button is the pause: it opens only the pause menu (the options
+    // are a button inside it), and tapping it again resumes.
+    optionsButton(this, GAME_W - 44, cy, 0.7, () => this.pauseFromButton(), drawPauseIcon).setDepth(25);
     this.updateHud();
   }
 
@@ -1185,6 +1187,11 @@ export default class GameScene extends Phaser.Scene {
     openOptions(this);
   }
 
+  pauseFromButton() {
+    if (this.state === 'over' || this.leaving) return;
+    this.togglePause();
+  }
+
   pauseFocus(i, silent = false) {
     if (!silent && i !== this.pauseIndex) sfx.select();
     this.pauseIndex = i;
@@ -1308,11 +1315,23 @@ export default class GameScene extends Phaser.Scene {
       const dot = this.add.circle(46, -50, 11, 0xff3040).setStrokeStyle(3, 0xffffff);
       const label = titleText(this, 210, -50, t('game.replay'), 36);
       const skip = uiText(this, GAME_W - 90, GAME_H + 40, t('game.skip'), 18, PALETTE.yellow).setOrigin(1, 0.5);
+      skip.setVisible(!this.mobile); // on a phone the touch button below says it
       this.tweens.add({ targets: [top, dot, label], y: '+=100', duration: 250, ease: 'Cubic.Out' });
       this.tweens.add({ targets: [bottom, skip], y: '-=80', duration: 250, ease: 'Cubic.Out' });
       this.tweens.add({ targets: dot, alpha: 0.2, duration: 400, yoyo: true, repeat: -1 });
       return this.add.container(0, 0, [top, bottom, dot, label, skip]).setDepth(15);
     });
+    // On a phone the touch controls cover that bottom strip: a big button there skips it.
+    if (this.mobile) {
+      const { band } = this.mobile;
+      const y = (band.top + band.bottom) / 2 + this.uiCam.scrollY;
+      this.skipButton = this.asUI(() => button(this, CENTER_X, y, 470, 96, t('game.skipTouch'), () => {
+        if (this.state === 'replay' && !this.paused) this.endReplay();
+      }, 34));
+      this.skipButton.setActive(true);
+      this.skipButton.container.setDepth(40);
+      this.skipButton.zone.setDepth(40);
+    }
   }
 
   stepReplay(delta) {
@@ -1330,6 +1349,11 @@ export default class GameScene extends Phaser.Scene {
   endReplay() {
     if (this.replayUI) this.replayUI.destroy();
     this.replayUI = null;
+    if (this.skipButton) {
+      this.skipButton.container.destroy();
+      this.skipButton.zone.destroy();
+      this.skipButton = null;
+    }
     this.trail.length = 0;
     this.ball.vx = this.ball.vy = 0;
     this.state = 'goal';

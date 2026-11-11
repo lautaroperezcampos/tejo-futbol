@@ -115,7 +115,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 ## Power-ups: hielo, jabón, arco gigante, hongo y poción (opcional)
 - Se activa en la pantalla "ANTES DE JUGAR" (después de elegir los equipos en 1 vs 1 o
   contra el bot, y al crear la liga, junto con la dificultad).
-- Cada 6 a 12 segundos de juego aparece en una mitad al azar un **cubo de hielo**, un
+- El primero sale a los 3 o 4 segundos de cada saque y después, cada 6 a 12 segundos de juego, aparece en una mitad al azar un **cubo de hielo**, un
   **jabón**, un **arco gigante**, un **hongo** o una **poción** (máximo 2 a la vez). Dura 9 segundos y titila antes de desaparecer.
 - Casi todos son **power-ups contra el rival** (el hongo es para vos) y se ganan **con la pelota**: cuando la pelota choca
   con uno, se lo lleva el último que tocó la pelota (con una patada o con el cuerpo,
@@ -147,8 +147,12 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - Se juega con el celular **parado**. Acostado aparece "Girá el celular para jugar".
 - En el partido se ve **solo la cancha**, sin tribunas, más grande (un 14% más que con
   tribunas), con una **barra arriba**: camiseta y nombre de cada equipo, el resultado en
-  el medio (con el reloj abajo en los torneos) y el engranaje de opciones. La cámara no
-  hace zoom ni sigue la pelota mientras se juega: siempre se ve la cancha entera.
+  el medio (con el reloj abajo en los torneos) y el botón de **pausa**. Tocarlo abre solo
+  la pausa (las opciones son un botón adentro de ella) y tocarlo de nuevo sigue el
+  partido. La cámara no hace zoom ni sigue la pelota mientras se juega: siempre se ve la
+  cancha entera.
+- En la **repetición del gol** aparece un botón grande **SALTAR REPETICIÓN** sobre los
+  controles táctiles.
 - Abajo, la franja de **controles táctiles**:
   - **Joystick**, solo para moverse: aparece donde apoyás el pulgar en tu mitad de la
     franja y lo sigue si se va lejos.
@@ -200,14 +204,17 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
   los torneos el reloj va a la derecha del recuadro.
 
 ## Bot
-Cuatro niveles que suben de a escalones parejos, pensados para que alguien que juega por
-primera vez pueda ganar (cada nivel es lo que antes era el de abajo):
+Cuatro niveles que suben de a escalones parejos: en cada nivel la velocidad, la reacción,
+la chance de patear, la puntería, la fuerza y las ganas de ir a buscar la pelota avanzan
+más o menos un tercio del camino entre muy fácil y difícil. Pensados para que alguien que
+juega por primera vez pueda ganar:
 - Muy fácil: casi no juega. Camina despacio, reacciona tardísimo, casi nunca patea y
   cuando patea es flojito; su cuerpo frena la pelota. No usa el dash.
 - Fácil (pensado para chicos): muy lento, reacciona tarde, no anticipa la pelota,
   ataca poco, sus patadas son flojas y su cuerpo frena la pelota. No usa el dash.
 - Medio: juega de verdad pero lento y se equivoca bastante; patea la mitad de las veces,
-  con patadas un poco más flojas, y a veces no va a buscar la pelota. No usa el dash.
+  con patadas y cuerpo un poco más flojos, y a veces no va a buscar la pelota. No usa el
+  dash.
 - Difícil: partido parejo. Defiende y patea casi siempre. Usa el dash solo para salvar un
   gol que caminando no llega a tapar.
 

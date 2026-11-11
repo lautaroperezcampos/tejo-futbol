@@ -269,6 +269,7 @@ export const STRINGS = {
   'game.rally': '{n} BOUNCES!',
   'game.replay': 'REPLAY',
   'game.skip': 'SPACE / A: SKIP',
+  'game.skipTouch': 'SKIP REPLAY ▶',
   'game.oneMinute': '1 MINUTE LEFT!',
   'game.dashReady': 'DASH READY!',
   'game.superShot': 'SUPER SHOT!',

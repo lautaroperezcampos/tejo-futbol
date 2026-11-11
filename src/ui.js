@@ -294,6 +294,16 @@ export function drawStarIcon(g) {
   g.strokePoints(points, true);
 }
 
+// Pause: two white bars.
+export function drawPauseIcon(g) {
+  g.fillStyle(0xffffff, 1);
+  g.fillRoundedRect(-12, -14, 9, 28, 3);
+  g.fillRoundedRect(3, -14, 9, 28, 3);
+  g.lineStyle(3, COLORS.ink, 1);
+  g.strokeRoundedRect(-12, -14, 9, 28, 3);
+  g.strokeRoundedRect(3, -14, 9, 28, 3);
+}
+
 // Gear (options): a toothed wheel with a hole in the middle.
 export function drawGearIcon(g) {
   const teeth = 8;
@@ -386,7 +396,7 @@ export function openOptions(scene) {
 // Round "OPCIONES" button with a gear: a click (or the O key) opens the options panel,
 // or runs `onOpen` instead. It also handles the M key, which mutes or unmutes everything;
 // while muted a little red speaker badge shows on the gear.
-export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions(scene)) {
+export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions(scene), drawIcon = drawGearIcon) {
   const r = 30;
   const g = scene.add.graphics();
   const badge = scene.add.graphics({ x: r * 0.72, y: r * 0.72 });
@@ -400,7 +410,7 @@ export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions
   g.fillEllipse(0, -r * 0.45, r * 1.3, r * 0.6);
   g.lineStyle(4, COLORS.ink, 1);
   g.strokeCircle(0, 0, r);
-  drawGearIcon(g);
+  drawIcon(g);
 
   const drawBadge = () => {
     badge.clear();

@@ -269,6 +269,7 @@ export const STRINGS = {
   'game.rally': '{n} QUIQUES!',
   'game.replay': 'REPLAY',
   'game.skip': 'ESPAÇO / A: PULAR',
+  'game.skipTouch': 'PULAR REPLAY ▶',
   'game.oneMinute': 'FALTA 1 MINUTO!',
   'game.dashReady': 'DASH PRONTO!',
   'game.superShot': 'SUPER CHUTAÇO!',
