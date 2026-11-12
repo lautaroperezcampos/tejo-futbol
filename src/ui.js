@@ -396,7 +396,8 @@ export function openOptions(scene) {
 // Round "OPCIONES" button with a gear: a click (or the O key) opens the options panel,
 // or runs `onOpen` instead. It also handles the M key, which mutes or unmutes everything;
 // while muted a little red speaker badge shows on the gear.
-export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions(scene), drawIcon = drawGearIcon) {
+// onKey is what the O key does (the same as a click unless given).
+export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions(scene), drawIcon = drawGearIcon, onKey = onOpen) {
   const r = 30;
   const g = scene.add.graphics();
   const badge = scene.add.graphics({ x: r * 0.72, y: r * 0.72 });
@@ -434,7 +435,7 @@ export function optionsButton(scene, x, y, scale = 1, onOpen = () => openOptions
   });
   zone.on('pointerover', () => container.setScale(scale * 1.1));
   zone.on('pointerout', () => container.setScale(scale));
-  scene.input.keyboard.on('keydown-O', onOpen);
+  scene.input.keyboard.on('keydown-O', onKey);
   scene.input.keyboard.on('keydown-M', () => {
     unlockAudio();
     toggleMute();

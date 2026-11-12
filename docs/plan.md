@@ -96,6 +96,8 @@
   para saltar la repetición del gol.
 - [x] 37. Dificultades del bot en escalones parejos (fácil más difícil, medio un poco
   más fácil) y el primer power-up a los 3 o 4 s de cada saque.
+- [x] 38. PC: el botón de la esquina del partido es la pausa (las opciones, adentro), como
+  en el celular.
 
 ## Ideas para después
 - Controles táctiles para celular.

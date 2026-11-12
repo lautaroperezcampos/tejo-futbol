@@ -157,9 +157,12 @@ export default class GameScene extends Phaser.Scene {
       this.touchPad = this.asUI(() => new TouchControls(this, this.mobile.band, this.uiCam.scrollY));
     } else {
       this.asUI(() => this.makeHud());
-      // Options button (gear) in the bottom corner, above the pause screen: it pauses the
-      // match and opens the options over the pause menu.
-      this.asUI(() => optionsButton(this, GAME_W - 40, GAME_H - 38, 0.85, () => this.openOptionsFromMatch()).setDepth(25));
+      // Pause button in the bottom corner, above the pause screen: a click opens only the
+      // pause menu (the options are a button inside it) and another click resumes. The O
+      // key still opens the options straight away.
+      this.asUI(() => optionsButton(
+        this, GAME_W - 40, GAME_H - 38, 0.85, () => this.pauseFromButton(), drawPauseIcon, () => this.openOptionsFromMatch(),
+      ).setDepth(25));
     }
 
     // Juice state.
@@ -1178,7 +1181,7 @@ export default class GameScene extends Phaser.Scene {
     return this.add.container(0, 0, parts);
   }
 
-  // The gear in the corner (or O): pauses first, then opens the options over the pause menu.
+  // The O key: pauses first, then opens the options over the pause menu.
   openOptionsFromMatch() {
     if (!this.paused) {
       if (this.state === 'over') return;

@@ -54,7 +54,7 @@ pelota en el arco rival. La pelota nunca frena y con cada rebote se hace más r�
 - **Dificultad de la liga** (fácil, medio o difícil), elegida al crearla: corre a todos
   los bots hacia arriba o hacia abajo, pero los grandes siempre juegan mejor que los chicos.
 - Si dos camisetas se parecen, el visitante usa la alternativa.
-- Esc pausa el partido: podés seguir o abandonar (cuenta como derrota 0-3).
+- Esc, o el botón de pausa de la esquina de abajo, pausa el partido: podés seguir o abandonar (cuenta como derrota 0-3). El botón abre solo la pausa; las opciones son un botón adentro de ella.
 - El progreso se guarda solo en el navegador; se puede empezar una liga nueva cuando quieras.
 - Al terminar: pantalla de campeón con copa, o hasta dónde llegaste y quién salió campeón.
 
